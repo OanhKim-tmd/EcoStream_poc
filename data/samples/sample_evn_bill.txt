@@ -1,0 +1,30 @@
+TẬP ĐOÀN ĐIỆN LỰC VIỆT NAM
+TỔNG CÔNG TY ĐIỆN LỰC TP HÀ NỘI
+CÔNG TY ĐIỆN LỰC BẮC TỪ LIÊM
+
+HÓA ĐƠN GIÁ TRỊ GIA TĂNG (TIỀN ĐIỆN)
+Kỳ hóa đơn: Tháng 03/2026 (Từ ngày 01/03/2026 đến ngày 31/03/2026)
+Số hóa đơn: 0048291 / Ký hiệu: 1C26TEE
+Mã khách hàng: PD04000389201
+Tên đơn vị: CÔNG TY CỔ PHẦN MAY MẶC ECOSTREAM VIỆT NAM
+Địa chỉ: Lô CN-08, Khu Công nghiệp Nam Thăng Long, Bắc Từ Liêm, TP. Hà Nội
+Mã số thuế: 0109283746
+Mục đích sử dụng: Sản xuất công nghiệp - Trạm chuyên dùng 560kVA
+
+THÔNG SỐ ĐO ĐẾM VÀ SẢN LƯỢNG ĐIỆN NĂNG TIÊU THỤ:
+------------------------------------------------------------------------------------------------
+Biểu giá                    Chỉ số cũ    Chỉ số mới   Hệ số nhân   Sản lượng điện tiêu thụ (kWh)   Đơn giá (VNĐ)   Thành tiền (VNĐ)
+------------------------------------------------------------------------------------------------
+Giờ bình thường (BT)         142,500      164,800         1.0                 22,300               1,738          38,757,400
+Giờ cao điểm (CD)             48,200       56,650         1.0                  8,450               3,076          25,992,200
+Giờ thấp điểm (TD)            89,100      103,600         1.0                 14,500               1,100          15,950,000
+------------------------------------------------------------------------------------------------
+Tổng điện năng tiêu thụ: 45,250 kWh
+Cộng tiền điện: 80,699,600 VNĐ
+Thuế suất GTGT (8%): 6,455,968 VNĐ
+Tổng cộng tiền thanh toán: 87,155,568 đồng
+(Bằng chữ: Tám mươi bảy triệu một trăm năm mươi lăm nghìn năm trăm sáu mươi tám đồng)
+
+Người lập biểu: Nguyễn Thu Trang
+Kế toán trưởng: Trần Đình Minh
+Đại diện EVN: Hệ thống Hóa đơn Điện tử EVN HANOI (Chữ ký số xác thực hợp lệ)
