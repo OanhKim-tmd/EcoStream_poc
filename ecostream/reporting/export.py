@@ -385,22 +385,24 @@ class ReportExporter:
         from reportlab.pdfbase import pdfmetrics
         from reportlab.pdfbase.ttfonts import TTFont
 
-        # Register system Arial or fallback
-        font_name = "Arial"
-        font_name_bold = "Arial-Bold"
-        for font_candidate in ["C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/tahoma.ttf", "C:/Windows/Fonts/calibri.ttf"]:
+        # Register system TrueType font or fallback to standard Helvetica
+        font_name = "Helvetica"
+        font_name_bold = "Helvetica-Bold"
+        for font_candidate in [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/tahoma.ttf",
+            "C:/Windows/Fonts/calibri.ttf",
+        ]:
             if os.path.exists(font_candidate):
                 try:
-                    pdfmetrics.registerFont(TTFont("Arial", font_candidate))
-                    bold_candidate = font_candidate.replace(".ttf", "bd.ttf")
-                    if os.path.exists(bold_candidate):
-                        pdfmetrics.registerFont(TTFont("Arial-Bold", bold_candidate))
-                    else:
-                        pdfmetrics.registerFont(TTFont("Arial-Bold", font_candidate))
+                    pdfmetrics.registerFont(TTFont("CustomSans", font_candidate))
+                    font_name = "CustomSans"
+                    font_name_bold = "CustomSans"
                     break
                 except Exception:
-                    font_name = "Helvetica"
-                    font_name_bold = "Helvetica-Bold"
+                    pass
 
         s = report.summary
         rel = s.reliability

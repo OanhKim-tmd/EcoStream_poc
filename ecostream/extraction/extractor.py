@@ -5,7 +5,12 @@ import json
 from typing import List
 from ecostream.ingestion.loaders import IngestedDocument
 from ecostream.models.activity import ActivityRecord
-from ecostream.extraction.parsers import EVNBillParser, FuelInvoiceParser, TabularCSVParser
+from ecostream.extraction.parsers import (
+    EVNBillParser,
+    FuelInvoiceParser,
+    TabularCSVParser,
+    MarkdownTableParser,
+)
 
 
 class ExtractionEngine:
@@ -36,7 +41,13 @@ class ExtractionEngine:
             if parsed:
                 records.extend(parsed)
 
-        # 4. Optional Live LLM Fallback (if enabled and no records found)
+        # 4. Check Markdown Pipe Tables (from MarkItDown Excel / PDF tables)
+        if MarkdownTableParser.can_parse(doc):
+            parsed = MarkdownTableParser.parse(doc)
+            if parsed:
+                records.extend(parsed)
+
+        # 5. Optional Live LLM Fallback (if enabled and no records found)
         if not records and self.enable_live_llm and self.gemini_key:
             llm_records = self._extract_with_gemini(doc)
             if llm_records:

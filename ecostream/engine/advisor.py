@@ -106,6 +106,32 @@ class CarbonAdvisor:
                 )
             )
 
+        # 4. Check for OCR-extracted or scanned records
+        ocr_records = [
+            r for r in records
+            if "OCR" in (r.evidence.extraction_method or "") or r.evidence.document_type.endswith("_OCR")
+        ]
+        if ocr_records:
+            recs.append(
+                ReductionRecommendation(
+                    id="REC-OCR-UPGRADE",
+                    title="Chuyển đổi chứng từ ảnh scan sang hóa đơn điện tử số có chữ ký điện tử",
+                    priority="LOW",
+                    category="DATA_QUALITY_UPGRADE",
+                    current_gap=(
+                        f"Có {len(ocr_records)} hoạt động trích xuất từ chứng từ qua cơ chế OCR (ảnh/scan). "
+                        "Dù bóc tách thành công, dữ liệu scan vẫn chịu biên độ kiểm tra chất lượng chặt chẽ hơn."
+                    ),
+                    action_required=(
+                        "Lưu trữ và upload trực tiếp hóa đơn điện tử gốc dạng PDF/XML từ nhà cung cấp "
+                        "để tối đa hóa chỉ số Extraction Confidence lên mức Audit-Ready tuyệt đối."
+                    ),
+                    potential_confidence_gain_pct=4.0,
+                    target_scope=EmissionScope.SCOPE_3,
+                    affected_item_ids=[r.id for r in ocr_records],
+                )
+            )
+
         return recs
 
     @classmethod

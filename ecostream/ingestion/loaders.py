@@ -7,16 +7,21 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
+from ecostream.ingestion.markitdown_normalizer import MarkItDownNormalizer
+
+
 class IngestedDocument(BaseModel):
     """Normalized ingested document representation."""
     filename: str
-    file_type: str = Field(description="TXT, CSV, PDF_TEXT, EXCEL, JSON")
-    content: str = Field(description="Raw text content or serialized table")
+    file_type: str = Field(description="TXT, CSV, PDF_TEXT, PDF_OCR, EXCEL_SHEET, DOCX, IMAGE_OCR, JSON")
+    content: str = Field(description="Raw text content or serialized Markdown table")
     metadata: dict = Field(default_factory=dict)
 
 
 class DocumentIngestionLoader:
     """Loads and normalizes business documents from filesystem or web uploads."""
+
+    _normalizer = MarkItDownNormalizer()
 
     @classmethod
     def load_from_text(cls, filename: str, text: str, metadata: Optional[dict] = None) -> IngestedDocument:
@@ -39,38 +44,46 @@ class DocumentIngestionLoader:
         filename = os.path.basename(filepath)
         ext = os.path.splitext(filepath)[1].lower()
 
+        # Fast path for plain text and logs
         if ext in [".txt", ".ocr", ".log"]:
             with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-                return cls.load_from_text(filename, f.read(), {"source_path": filepath})
-
-        elif ext == ".csv":
-            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-                content = f.read()
-            return IngestedDocument(
-                filename=filename,
-                file_type="CSV",
-                content=content,
-                metadata={"source_path": filepath},
-            )
-
-        elif ext == ".json":
-            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-                return IngestedDocument(
-                    filename=filename,
-                    file_type="JSON",
-                    content=f.read(),
-                    metadata={"source_path": filepath},
+                return cls.load_from_text(
+                    filename,
+                    f.read(),
+                    {"source_path": filepath, "original_filename": filename, "converter": "NATIVE_TEXT"},
                 )
 
-        else:
-            # Fallback text reading
-            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-                return IngestedDocument(
-                    filename=filename,
-                    file_type="TXT",
-                    content=f.read(),
-                    metadata={"source_path": filepath},
-                )
+        # Multi-format normalization via MarkItDown & OCR Normalizer
+        normalized = cls._normalizer.normalize_file(filepath)
+
+        ftype_map = {
+            ".csv": "CSV",
+            ".pdf": "PDF_OCR" if normalized.ocr_applied else "PDF_TEXT",
+            ".xlsx": "EXCEL_SHEET",
+            ".xls": "EXCEL_SHEET",
+            ".docx": "DOCX",
+            ".png": "IMAGE_OCR",
+            ".jpg": "IMAGE_OCR",
+            ".jpeg": "IMAGE_OCR",
+            ".json": "JSON",
+        }
+        file_type = ftype_map.get(ext, "TXT")
+
+        meta = {
+            "source_path": filepath,
+            "original_filename": filename,
+            "converter": normalized.converter_used,
+            "ocr_applied": normalized.ocr_applied,
+            "page_count": normalized.page_count,
+        }
+        meta.update(normalized.raw_metadata)
+
+        return IngestedDocument(
+            filename=filename,
+            file_type=file_type,
+            content=normalized.markdown_content,
+            metadata=meta,
+        )
 
     @classmethod
     def load_directory(cls, dir_path: str) -> List[IngestedDocument]:

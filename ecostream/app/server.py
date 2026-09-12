@@ -123,19 +123,18 @@ async def upload_documents(
 ):
     """Upload custom business files (text invoices, CSV manifests, Excel) for processing."""
     documents: List[IngestedDocument] = []
-    for f in files:
-        raw_bytes = await f.read()
-        try:
-            content_str = raw_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            content_str = raw_bytes.decode("latin-1", errors="replace")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        for f in files:
+            safe_filename = os.path.basename(f.filename or "uploaded_doc")
+            tmp_path = os.path.join(tmpdir, safe_filename)
+            content_bytes = await f.read()
+            with open(tmp_path, "wb") as buf:
+                buf.write(content_bytes)
 
-        doc = DocumentIngestionLoader.load_from_text(
-            filename=f.filename,
-            text=content_str,
-            metadata={"uploaded_at": datetime.now().isoformat()},
-        )
-        documents.append(doc)
+            doc = DocumentIngestionLoader.load_file(tmp_path)
+            doc.filename = safe_filename
+            doc.metadata["uploaded_at"] = datetime.now().isoformat()
+            documents.append(doc)
 
     report = execute_pipeline(
         documents=documents,

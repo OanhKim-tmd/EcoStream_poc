@@ -371,3 +371,191 @@ class TabularCSVParser:
                 records.append(record)
 
         return records
+
+
+class MarkdownTableParser:
+    """Parses GitHub-Flavored Markdown (GFM) pipe-delimited tables produced by MarkItDown from Excel or PDF."""
+
+    @classmethod
+    def can_parse(cls, doc: IngestedDocument) -> bool:
+        # Don't hijack EVN or Fuel if they can parse it
+        if EVNBillParser.can_parse(doc) or FuelInvoiceParser.can_parse(doc):
+            return False
+        content = doc.content
+        return "|" in content and bool(re.search(r"\|\s*[-:]{2,}\s*\|", content))
+
+    @classmethod
+    def parse(cls, doc: IngestedDocument) -> List[ActivityRecord]:
+        records: List[ActivityRecord] = []
+        lines = doc.content.splitlines()
+
+        current_page = 1
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            if line.startswith("<!-- page:") and "-->" in line:
+                m_p = re.search(r"<!-- page:\s*(\d+)\s*-->", line)
+                if m_p:
+                    current_page = int(m_p.group(1))
+                i += 1
+                continue
+
+            # Detect start of table: line starts with | and next line is separator
+            if line.startswith("|") and line.endswith("|") and i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                if next_line.startswith("|") and re.search(r"\|\s*[-:]{2,}\s*\|", next_line):
+                    # Table found!
+                    header_line = line
+                    headers = [c.strip().lower() for c in header_line.strip("|").split("|")]
+                    i += 2  # skip header and separator
+                    row_idx = 0
+                    while i < len(lines) and lines[i].strip().startswith("|") and lines[i].strip().endswith("|"):
+                        row_line = lines[i].strip()
+                        cols = [c.strip() for c in row_line.strip("|").split("|")]
+                        if len(cols) >= len(headers):
+                            row_dict = {headers[j]: cols[j] for j in range(len(headers))}
+                            parsed_rec = cls._parse_table_row(row_dict, doc, row_line, row_idx + 1, current_page)
+                            if parsed_rec:
+                                records.append(parsed_rec)
+                                row_idx += 1
+                        i += 1
+                    continue
+            i += 1
+        return records
+
+    @classmethod
+    def _parse_table_row(
+        cls,
+        row: dict,
+        doc: IngestedDocument,
+        raw_snippet: str,
+        row_num: int,
+        page_num: int,
+    ) -> Optional[ActivityRecord]:
+        ocr_applied = doc.metadata.get("ocr_applied", False)
+        base_confidence = 0.90 if ocr_applied else 0.95
+        method_tag = "MARKITDOWN_OCR_TABLE" if ocr_applied else "MARKITDOWN_TABLE_PARSER"
+        page_label = f"Page {page_num}, Table Row {row_num}" if page_num > 1 else f"Table Row {row_num}"
+
+        # 1. Check logistics / freight columns (distance + weight)
+        weight_key = next((k for k in row if any(w in k for w in ["tải trọng", "khối lượng", "weight", "tấn", "kg", "tons"])), None)
+        dist_key = next((k for k in row if any(d in k for d in ["quãng đường", "km", "distance", "cự ly"])), None)
+        route_key = next((k for k in row if any(r in k for r in ["tuyến", "lộ trình", "chặng", "route", "mô tả", "hàng hóa"])), None)
+
+        if weight_key and dist_key:
+            try:
+                w_val = clean_num(row[weight_key])
+                d_val = clean_num(row[dist_key])
+                # Normalize kg to tons if needed
+                if "kg" in weight_key or (w_val > 100 and "tấn" not in weight_key):
+                    w_val = w_val / 1000.0
+                ton_km = round(w_val * d_val, 2)
+                route_desc = row.get(route_key, f"Road Freight Shipment {row_num}")
+
+                return ActivityRecord(
+                    id=f"ACT-MDTAB-LOG-{row_num}",
+                    description=f"Road Freight: {route_desc} ({w_val:.1f}t x {d_val:.1f}km)",
+                    scope=EmissionScope.SCOPE_3,
+                    category=ActivityCategory.UPSTREAM_TRANSPORTATION,
+                    quantity=ton_km,
+                    unit="ton-km",
+                    measurement_type=MeasurementType.PRIMARY_INVOICED,
+                    evidence=EvidenceProvenance(
+                        source_document=doc.filename,
+                        document_type="FREIGHT_MANIFEST",
+                        page_or_line=page_label,
+                        snippet=raw_snippet,
+                        extraction_method=method_tag,
+                        extraction_confidence=base_confidence,
+                    ),
+                    quality=DataQualityIndicator(
+                        completeness_score=0.95,
+                        temporal_score=0.95,
+                        geographical_score=0.95,
+                        source_reliability_score=0.90,
+                        extraction_confidence_score=base_confidence,
+                    ),
+                )
+            except Exception:
+                pass
+
+        # 2. Check purchased goods / materials (item, quantity, unit, cost)
+        item_key = next((k for k in row if any(w in k for w in ["mặt hàng", "tên hàng", "sản phẩm", "item", "vật liệu", "tên hàng hóa"])), None)
+        qty_key = next((k for k in row if any(q in q for q in ["số lượng", "khối lượng", "quantity", "qty", "s.lượng"] if q in k)), None)
+        unit_key = next((k for k in row if any(u in k for u in ["đơn vị", "đvt", "unit"])), None)
+        cost_key = next((k for k in row if any(c in k for c in ["thành tiền", "tổng tiền", "tiền", "chi phí", "cost", "vnđ", "vnd"])), None)
+
+        if item_key:
+            item_desc = row[item_key].strip()
+            unit_val = row.get(unit_key, "").strip().lower() if unit_key else "kg"
+            cost_val = None
+            if cost_key:
+                try:
+                    cost_val = clean_num(row[cost_key])
+                except Exception:
+                    pass
+
+            # Physical quantity present
+            if qty_key:
+                try:
+                    q_val = clean_num(row[qty_key])
+                    if q_val > 0:
+                        return ActivityRecord(
+                            id=f"ACT-MDTAB-MAT-{row_num}",
+                            description=f"Purchased Materials: {item_desc}",
+                            scope=EmissionScope.SCOPE_3,
+                            category=ActivityCategory.PURCHASED_GOODS,
+                            quantity=q_val,
+                            unit=unit_val or "kg",
+                            cost_vnd=cost_val,
+                            measurement_type=MeasurementType.PRIMARY_INVOICED,
+                            evidence=EvidenceProvenance(
+                                source_document=doc.filename,
+                                document_type="SUPPLIER_PURCHASE_ORDER",
+                                page_or_line=page_label,
+                                snippet=raw_snippet,
+                                extraction_method=method_tag,
+                                extraction_confidence=base_confidence,
+                            ),
+                            quality=DataQualityIndicator(
+                                completeness_score=0.95,
+                                temporal_score=0.95,
+                                geographical_score=0.90,
+                                source_reliability_score=0.90,
+                                extraction_confidence_score=base_confidence,
+                            ),
+                        )
+                except Exception:
+                    pass
+
+            # Spend proxy fallback
+            if cost_val and cost_val > 0:
+                is_freight = any(w in item_desc.lower() for w in ["vận chuyển", "logistics", "freight", "xe", "bốc xếp"])
+                cat = ActivityCategory.UPSTREAM_TRANSPORTATION if is_freight else ActivityCategory.PURCHASED_GOODS
+                return ActivityRecord(
+                    id=f"ACT-MDTAB-SPEND-{row_num}",
+                    description=f"Spend-based Estimate: {item_desc}",
+                    scope=EmissionScope.SCOPE_3,
+                    category=cat,
+                    quantity=cost_val,
+                    unit="VND",
+                    cost_vnd=cost_val,
+                    measurement_type=MeasurementType.SPEND_BASED_PROXY,
+                    evidence=EvidenceProvenance(
+                        source_document=doc.filename,
+                        document_type="SPEND_LEDGER",
+                        page_or_line=page_label,
+                        snippet=raw_snippet,
+                        extraction_method=f"{method_tag}_SPEND",
+                        extraction_confidence=base_confidence,
+                    ),
+                    quality=DataQualityIndicator(
+                        completeness_score=0.55,
+                        temporal_score=0.90,
+                        geographical_score=0.80,
+                        source_reliability_score=0.40,
+                        extraction_confidence_score=base_confidence,
+                    ),
+                )
+
+        return None
