@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# EcoStream Runs & Artifacts
+runs/*
+!runs/.gitkeep
+data/samples/test_input.xlsx
+
+

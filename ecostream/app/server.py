@@ -1,9 +1,10 @@
-"""FastAPI web service serving the EcoStream Interactive Carbon & Reliability Dashboard."""
+"""FastAPI web service serving the EcoStream Interactive Carbon & Reliability Dashboard with Multi-Agent Orchestrator."""
 
 import os
 import sys
 import shutil
 import tempfile
+import socket
 from datetime import datetime
 from typing import List, Optional
 
@@ -18,22 +19,19 @@ if sys.platform == "win32":
 import uvicorn
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from ecostream.ingestion.loaders import DocumentIngestionLoader, IngestedDocument
-from ecostream.extraction.extractor import ExtractionEngine
-from ecostream.factors.database import get_factor_database
-from ecostream.engine.calculator import CarbonCalculator
-from ecostream.engine.reliability import ReliabilityEngine
-from ecostream.engine.advisor import CarbonAdvisor
+from ecostream.orchestrator.pipeline import WorkflowOrchestrator
+from ecostream.orchestrator.state import BlackboardWorkspace
 from ecostream.models.results import AuditReport
 from ecostream.reporting.export import ReportExporter
+from ecostream.factors.database import get_factor_database
 
 app = FastAPI(
-    title="EcoStream AI Carbon Engine",
-    description="Interactive carbon footprint calculation, provenance auditing, and data reliability engine for SMEs.",
-    version="0.1.0",
+    title="EcoStream Multi-Agent AI Carbon Engine",
+    description="Multi-agent carbon accounting, Decree 06/2022 Mẫu 02 mitigation, and audit query/assumption logs.",
+    version="0.2.0",
 )
 
 app.add_middleware(
@@ -46,53 +44,13 @@ app.add_middleware(
 
 # Locate base directories
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-SAMPLES_DIR = os.path.join(os.path.dirname(BASE_DIR), "data", "samples")
+SAMPLES_DIR = os.path.join(PROJECT_ROOT, "data", "samples")
+RUNS_DIR = os.path.join(PROJECT_ROOT, "runs")
 
 # Cache latest generated report
 _latest_report: Optional[AuditReport] = None
-
-
-def execute_pipeline(
-    documents: List[IngestedDocument],
-    company_name: str = "EcoGarment Vietnam JSC",
-    facility_location: str = "Nam Thang Long IP, Hanoi, Vietnam",
-    reporting_period: str = "Tháng 03/2026",
-    industry_sector: str = "Garment & Textile Manufacturing",
-) -> AuditReport:
-    global _latest_report
-
-    extractor = ExtractionEngine()
-    records = extractor.extract_batch(documents)
-
-    calc_engine = CarbonCalculator(get_factor_database())
-    calculations = calc_engine.calculate_all(records)
-    scopes, total_tonnes, total_min, total_max = calc_engine.aggregate_scopes(calculations)
-
-    reliability = ReliabilityEngine.evaluate(records)
-
-    summary = CarbonAdvisor.compile_summary(
-        company_name=company_name,
-        facility_location=facility_location,
-        reporting_period=reporting_period,
-        industry_sector=industry_sector,
-        records=records,
-        calculations=calculations,
-        scopes=scopes,
-        total_tonnes=total_tonnes,
-        total_min=total_min,
-        total_max=total_max,
-        reliability=reliability,
-    )
-
-    report = AuditReport(
-        report_id=f"ECO-RPT-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
-        generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        summary=summary,
-        calculations=calculations,
-    )
-    _latest_report = report
-    return report
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -104,97 +62,260 @@ def serve_index():
     return HTMLResponse("<h2>EcoStream Dashboard UI is being loaded...</h2>")
 
 
+@app.get("/monitor", response_class=HTMLResponse)
+def serve_monitor():
+    monitor_path = os.path.join(STATIC_DIR, "monitor.html")
+    if os.path.exists(monitor_path):
+        with open(monitor_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse("<h2>EcoStream Live Workflow Monitor is being loaded...</h2>")
+
+
+
 @app.get("/api/demo")
 def run_demo():
-    """Run benchmark case study with bundled sample Vietnamese SME documents."""
-    docs = DocumentIngestionLoader.load_directory(SAMPLES_DIR)
-    if not docs:
-        raise HTTPException(status_code=404, detail="Sample files not found.")
-    report = execute_pipeline(docs)
-    return report.model_dump()
+    """Run benchmark case study using multi-agent workflow on data/samples/input.xlsx."""
+    global _latest_report
+    sample_xlsx = os.path.join(SAMPLES_DIR, "input.xlsx")
+    if not os.path.exists(sample_xlsx):
+        from scripts.generate_mock_excel import generate_benchmark_excel
+        generate_benchmark_excel(sample_xlsx)
+
+    orch = WorkflowOrchestrator(offline_mode=True)
+    res = orch.run_pipeline(
+        input_files=[sample_xlsx],
+        company_name="EcoGarment Vietnam JSC",
+        facility_name="Nhà máy May & Năng lượng Hà Nam",
+        reporting_year=2026,
+    )
+
+    # Build backward-compatible AuditReport structure
+    deliv_json = os.path.join(orch.workspace.deliverables_dir, "final_inventory_summary.json")
+    if os.path.exists(deliv_json):
+        with open(deliv_json, "r", encoding="utf-8") as f:
+            import json
+            report_data = json.load(f)
+            _latest_report = AuditReport(**report_data)
+            return report_data
+
+    return res
 
 
 @app.post("/api/upload")
 async def upload_documents(
     files: List[UploadFile] = File(...),
     company: str = Form("EcoGarment Vietnam JSC"),
-    period: str = Form("Tháng 03/2026"),
-    location: str = Form("Hanoi, Vietnam"),
+    period: str = Form("2026"),
+    location: str = Form("Nhà máy May & Năng lượng Hà Nam"),
 ):
-    """Upload custom business files (text invoices, CSV manifests, Excel) for processing."""
-    documents: List[IngestedDocument] = []
-    with tempfile.TemporaryDirectory() as tmpdir:
+    """Upload custom business files (Excel, PDF, Word, CSV) and run multi-agent pipeline."""
+    global _latest_report
+    temp_dir = tempfile.mkdtemp()
+    saved_paths = []
+    try:
         for f in files:
-            safe_filename = os.path.basename(f.filename or "uploaded_doc")
-            tmp_path = os.path.join(tmpdir, safe_filename)
-            content_bytes = await f.read()
-            with open(tmp_path, "wb") as buf:
-                buf.write(content_bytes)
+            dest_path = os.path.join(temp_dir, f.filename)
+            with open(dest_path, "wb") as out_f:
+                content = await f.read()
+                out_f.write(content)
+            saved_paths.append(dest_path)
 
-            doc = DocumentIngestionLoader.load_file(tmp_path)
-            doc.filename = safe_filename
-            doc.metadata["uploaded_at"] = datetime.now().isoformat()
-            documents.append(doc)
+        # Parse year if available
+        year_num = 2026
+        try:
+            import re
+            m = re.search(r"\b(202\d)\b", period)
+            if m:
+                year_num = int(m.group(1))
+        except Exception:
+            pass
 
-    report = execute_pipeline(
-        documents=documents,
-        company_name=company,
-        reporting_period=period,
-        facility_location=location,
-    )
-    return report.model_dump()
+        orch = WorkflowOrchestrator(offline_mode=True)
+        res = orch.run_pipeline(
+            input_files=saved_paths,
+            company_name=company,
+            facility_name=location,
+            reporting_year=year_num,
+        )
+
+        deliv_json = os.path.join(orch.workspace.deliverables_dir, "final_inventory_summary.json")
+        if os.path.exists(deliv_json):
+            with open(deliv_json, "r", encoding="utf-8") as f:
+                import json
+                report_data = json.load(f)
+                _latest_report = AuditReport(**report_data)
+                return report_data
+
+        return res
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-@app.get("/api/report/html", response_class=HTMLResponse)
-def get_report_html():
-    """Export the most recent calculation as printable standalone HTML."""
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    return HTMLResponse(ReportExporter.to_html(_latest_report))
+@app.get("/api/orchestrator/runs")
+def list_runs():
+    """List all pipeline execution runs in blackboard workspace."""
+    if not os.path.exists(RUNS_DIR):
+        return {"runs": []}
+    runs = []
+    for r_name in sorted(os.listdir(RUNS_DIR), reverse=True):
+        r_dir = os.path.join(RUNS_DIR, r_name)
+        if os.path.isdir(r_dir):
+            workspace = BlackboardWorkspace(r_name, RUNS_DIR)
+            state = workspace.load_state()
+            queries = workspace.load_intermediate_json("query_log.json") or []
+            assumptions = workspace.load_intermediate_json("assumption_log.json") or []
+            deliverables = workspace.list_deliverables()
+            intermediate_files = workspace.list_intermediate_files()
+
+            runs.append({
+                "run_id": r_name,
+                "state": state.model_dump() if state else None,
+                "phase": state.phase.value if state else "UNKNOWN",
+                "progress_pct": state.progress_pct if state else 0.0,
+                "start_time": state.start_time if state else None,
+                "end_time": state.end_time if state else None,
+                "queries_count": len(queries),
+                "assumptions_count": len(assumptions),
+                "deliverables_count": len(deliverables),
+                "intermediate_count": len(intermediate_files),
+                "has_deliverables": len(deliverables) > 0,
+            })
+    return {"runs": runs}
 
 
-@app.get("/api/report/markdown", response_class=PlainTextResponse)
-def get_report_markdown():
-    """Export the most recent calculation as Markdown."""
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    return PlainTextResponse(ReportExporter.to_markdown(_latest_report))
+@app.get("/api/orchestrator/runs/{run_id}")
+def get_run_details(run_id: str):
+    """Get state, index, intermediate extractions, logs, and deliverables for a specific run."""
+    workspace = BlackboardWorkspace(run_id, RUNS_DIR)
+    state = workspace.load_state()
+    if not state:
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found.")
+
+    index = workspace.load_index()
+    scope1 = workspace.load_intermediate_json("scope1_extracted.json")
+    scope2 = workspace.load_intermediate_json("scope2_extracted.json")
+    scope3 = workspace.load_intermediate_json("scope3_extracted.json")
+    mitigation = workspace.load_intermediate_json("mitigation_extracted.json")
+    math_results = workspace.load_intermediate_json("math_results.json")
+    mitigation_summary = workspace.load_intermediate_json("mitigation_summary.json")
+    queries = workspace.load_intermediate_json("query_log.json")
+    assumptions = workspace.load_intermediate_json("assumption_log.json")
+    intermediate_files = workspace.list_intermediate_files()
+    deliverables = workspace.list_deliverables()
+    manifest = workspace.get_file_manifest()
+
+    return {
+        "run_id": run_id,
+        "state": state.model_dump(),
+        "index": index.model_dump() if index else None,
+        "intermediate": {
+            "scope1": scope1 or [],
+            "scope2": scope2 or [],
+            "scope3": scope3 or [],
+            "mitigation": mitigation or [],
+            "math_results": math_results,
+            "mitigation_summary": mitigation_summary,
+            "queries": queries or [],
+            "assumptions": assumptions or [],
+        },
+        "intermediate_files": intermediate_files,
+        "deliverables": deliverables,
+        "manifest": manifest,
+        "math_results": math_results,
+        "mitigation_summary": mitigation_summary,
+        "queries": queries or [],
+        "assumptions": assumptions or [],
+    }
 
 
-@app.get("/api/report/pdf")
-def get_report_pdf():
-    """Export the most recent calculation as an audit-ready standalone vector PDF."""
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    from fastapi.responses import Response
-    pdf_bytes = ReportExporter.to_pdf(_latest_report)
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": "inline; filename=EcoStream_Carbon_Audit_Report.pdf"},
-    )
+@app.get("/api/orchestrator/runs/{run_id}/files")
+def get_run_files(run_id: str):
+    """Get directory tree manifest for a specific run."""
+    workspace = BlackboardWorkspace(run_id, RUNS_DIR)
+    if not os.path.exists(workspace.run_dir):
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found.")
+    return workspace.get_file_manifest()
+
+
+@app.get("/api/orchestrator/runs/{run_id}/intermediate/{filename}")
+def get_intermediate_file(run_id: str, filename: str):
+    """Fetch raw intermediate JSON/text file."""
+    workspace = BlackboardWorkspace(run_id, RUNS_DIR)
+    fpath = os.path.join(workspace.intermediate_dir, filename)
+    if not os.path.exists(fpath):
+        raise HTTPException(status_code=404, detail=f"Intermediate file {filename} not found in run {run_id}.")
+
+    if filename.endswith(".json"):
+        with open(fpath, "r", encoding="utf-8") as f:
+            import json
+            return json.load(f)
+    return FileResponse(fpath, media_type="text/plain; charset=utf-8", filename=filename)
+
+
+
+@app.get("/api/orchestrator/runs/{run_id}/deliverables/{filename}")
+def download_deliverable(run_id: str, filename: str):
+    """Download a generated deliverable file (.md, .html, .docx, .pdf, .json)."""
+    workspace = BlackboardWorkspace(run_id, RUNS_DIR)
+    fpath = os.path.join(workspace.deliverables_dir, filename)
+    if not os.path.exists(fpath):
+        raise HTTPException(status_code=404, detail=f"Deliverable {filename} not found for run {run_id}.")
+
+    media_type = "application/octet-stream"
+    if filename.endswith(".html"):
+        media_type = "text/html"
+    elif filename.endswith(".md") or filename.endswith(".txt"):
+        media_type = "text/markdown; charset=utf-8"
+    elif filename.endswith(".json"):
+        media_type = "application/json"
+    elif filename.endswith(".pdf"):
+        media_type = "application/pdf"
+    elif filename.endswith(".docx"):
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+    return FileResponse(fpath, media_type=media_type, filename=filename)
 
 
 @app.get("/api/factors")
 def list_factors():
-    """List all registered emission factors with uncertainty and source reference."""
+    """List all standard emission factors registered in the database."""
     db = get_factor_database()
-    return [f.model_dump() for f in db._factors.values()]
+    return [f.model_dump() for f in db.get_all_factors()]
 
 
-def find_available_port(preferred_port: int, host: str = "127.0.0.1") -> int:
-    import socket
-    ports_to_try = [preferred_port, 8080, 8501, 8888, 5000, 3000]
-    # Deduplicate while preserving order
-    candidate_ports = []
-    for p in ports_to_try:
-        if p not in candidate_ports:
-            candidate_ports.append(p)
+@app.get("/api/export/markdown", response_class=PlainTextResponse)
+@app.get("/api/report/markdown", response_class=PlainTextResponse)
+def export_markdown():
+    global _latest_report
+    if not _latest_report:
+        run_demo()
+    md_content = ReportExporter.to_markdown(_latest_report)
+    return PlainTextResponse(content=md_content, media_type="text/markdown; charset=utf-8")
 
-    for port in candidate_ports:
+
+@app.get("/api/export/html", response_class=HTMLResponse)
+@app.get("/api/report/html", response_class=HTMLResponse)
+def export_html():
+    global _latest_report
+    if not _latest_report:
+        run_demo()
+    html_content = ReportExporter.to_html(_latest_report)
+    return HTMLResponse(content=html_content)
+
+
+@app.get("/api/export/pdf")
+@app.get("/api/report/pdf")
+def export_pdf():
+    global _latest_report
+    if not _latest_report:
+        run_demo()
+    pdf_bytes = ReportExporter.to_pdf(_latest_report)
+    return Response(content=pdf_bytes, media_type="application/pdf")
+
+
+def find_available_port(start_port: int = 8080, host: str = "127.0.0.1", max_attempts: int = 20) -> int:
+    """Find the first available TCP port."""
+    for port in range(start_port, start_port + max_attempts):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.bind((host, port))
@@ -213,7 +334,7 @@ def find_available_port(preferred_port: int, host: str = "127.0.0.1") -> int:
 
 def run_server(host: str = "127.0.0.1", port: int = 8080):
     actual_port = find_available_port(port, host)
-    print(f"\n[EcoStream] Web Server is live at: http://{host}:{actual_port}\n")
+    print(f"\n[EcoStream] Multi-Agent Web Server is live at: http://{host}:{actual_port}\n")
     uvicorn.run(app, host=host, port=actual_port)
 
 

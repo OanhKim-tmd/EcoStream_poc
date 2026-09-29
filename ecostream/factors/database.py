@@ -33,6 +33,12 @@ class EmissionFactorDatabase:
     def get(self, factor_id: str) -> Optional[EmissionFactor]:
         return self._factors.get(factor_id)
 
+    def get_all_factors(self) -> List[EmissionFactor]:
+        return list(self._factors.values())
+
+    def list_factors(self) -> List[EmissionFactor]:
+        return list(self._factors.values())
+
     def find_best_match(
         self,
         scope: EmissionScope,
@@ -69,8 +75,12 @@ class EmissionFactorDatabase:
             ("carton", "thùng", "giấy", "bao bì carton"): "EF-SCOPE3-CARTON",
             ("pe", "plastic", "nilon", "nhựa", "màng co"): "EF-SCOPE3-PLASTIC-FILM",
             ("cotton", "vải", "dệt", "textile", "sợi"): "EF-SCOPE3-COTTON-FABRIC",
-            ("diesel", "điêzen", "dầu", "do 0.05"): "EF-SCOPE1-DIESEL",
+            ("diesel", "điêzen", "dầu do", "do 0.05"): "EF-SCOPE1-DIESEL",
             ("xăng", "gasoline", "petrol", "ron"): "EF-SCOPE1-PETROL",
+            ("than", "coal", "anthracite", "bituminous"): "EF-SCOPE1-COAL",
+            ("dầu fo", "fuel oil", "heavy oil", "mazut"): "EF-SCOPE1-FO",
+            ("khí tự nhiên", "natural gas", "cng", "lng"): "EF-SCOPE1-NATURAL-GAS",
+            ("lpg", "gas lpg", "khí gas", "gas"): "EF-SCOPE1-LPG",
             ("điện", "evn", "kwh", "grid"): "EF-SCOPE2-VN-GRID",
             ("vận chuyển", "freight", "xe tải", "truck"): "EF-SCOPE3-ROAD-FREIGHT-TK",
         }
@@ -131,6 +141,45 @@ class EmissionFactorDatabase:
                 year=2023,
                 default_uncertainty_pct=10.0,
                 description="Industrial heating, canteen, and thermal processes.",
+            ),
+            EmissionFactor(
+                factor_id="EF-SCOPE1-COAL",
+                name="Industrial Coal / Bituminous Anthracite (Than đá công nghiệp)",
+                scope=EmissionScope.SCOPE_1,
+                category=ActivityCategory.STATIONARY_COMBUSTION,
+                factor_value=2.4200,
+                unit="kg",
+                source="IPCC Guidelines 2006 / Circular 17/2022/TT-BTNMT",
+                geography="VN",
+                year=2023,
+                default_uncertainty_pct=10.0,
+                description="Stationary thermal boilers and industrial power generation.",
+            ),
+            EmissionFactor(
+                factor_id="EF-SCOPE1-FO",
+                name="Heavy Fuel Oil / Mazut (Dầu FO)",
+                scope=EmissionScope.SCOPE_1,
+                category=ActivityCategory.STATIONARY_COMBUSTION,
+                factor_value=3.1200,
+                unit="kg",
+                source="IPCC Guidelines 2006",
+                geography="VN",
+                year=2023,
+                default_uncertainty_pct=8.0,
+                description="Industrial thermal heating and heavy power combustion.",
+            ),
+            EmissionFactor(
+                factor_id="EF-SCOPE1-NATURAL-GAS",
+                name="Natural Gas / CNG (Khí tự nhiên)",
+                scope=EmissionScope.SCOPE_1,
+                category=ActivityCategory.STATIONARY_COMBUSTION,
+                factor_value=2.0200,
+                unit="m3",
+                source="IPCC Guidelines 2006",
+                geography="VN",
+                year=2023,
+                default_uncertainty_pct=7.0,
+                description="Natural gas pipeline and compressed natural gas fuel.",
             ),
 
             # Scope 2 - Purchased Electricity (Vietnam Grid)

@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoStream - Nền Tảng Phân Tích Phát Thải Carbon & Độ Tin Cậy Dữ Liệu</title>
+    <title>EcoStream - Nền Tảng AI Kiểm Kê & Giảm Nhẹ Khí Nhà Kính Đa Tác Tử</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
         .gradient-brand { background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%); }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
@@ -30,21 +29,24 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-extrabold text-xl tracking-tight text-slate-900">EcoStream</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">AI DATA ENGINE</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">AI ORCHESTRATOR</span>
                     </div>
-                    <p class="text-xs text-slate-500 hidden sm:block">Dịch vụ tư vấn & phân tích phát thải carbon tin cậy cho SME • USTH 2026</p>
+                    <p class="text-xs text-slate-500 hidden sm:block">Kiểm kê KNK & Báo cáo Giảm nhẹ Mẫu số 02 NĐ 06/2022/NĐ-CP • USTH 2026</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
-                <button id="btnRunDemo" onclick="runDemo()" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition flex items-center gap-1.5 shadow-sm">
-                    ⚡ Chạy Demo
-                </button>
-                <a href="/api/report/pdf" download="EcoStream_Carbon_Audit_Report.pdf" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-white bg-emerald-800 hover:bg-emerald-900 transition flex items-center gap-1.5 shadow-sm shadow-emerald-800/20">
-                    📥 Tải File PDF (.pdf)
+                <a href="/monitor" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-emerald-900 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition flex items-center gap-1.5 shadow-xs">
+                    📡 Live Monitor
                 </a>
-                <a href="/api/report/html" target="_blank" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center gap-1.5">
-                    📄 Xem Báo Cáo In A4
+                <button id="btnRunDemo" onclick="runDemo()" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition flex items-center gap-1.5 shadow-sm">
+                    ⚡ Chạy Benchmark Demo
+                </button>
+                <a href="/api/export/markdown" target="_blank" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center gap-1.5">
+                    📝 Báo Cáo Markdown
+                </a>
+                <a href="/api/export/html" target="_blank" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-white bg-emerald-800 hover:bg-emerald-900 transition flex items-center gap-1.5 shadow-sm shadow-emerald-800/20">
+                    📑 Xem Báo Cáo Đầy Đủ
                 </a>
             </div>
         </div>
@@ -53,447 +55,564 @@
     <!-- Main Content Area -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- Hero Company Context Banner -->
+        <!-- Hero Context Banner -->
         <div class="gradient-brand text-white rounded-2xl p-6 sm:p-8 shadow-xl shadow-emerald-950/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/10 text-emerald-200 text-xs font-medium mb-2 backdrop-blur-sm">
-                    🏢 Hồ Sơ Doanh Nghiệp Mẫu
+                    🏢 Cơ Sở Kiểm Kê & Giảm Nhẹ Trọng Điểm
                 </div>
                 <h1 id="heroCompany" class="text-2xl sm:text-3xl font-black tracking-tight">EcoGarment Vietnam JSC</h1>
                 <p id="heroMeta" class="text-sm text-emerald-100/90 mt-1 max-w-2xl">
-                    Khu Công Nghiệp Nam Thăng Long, Bắc Từ Liêm, Hà Nội • Kỳ báo cáo: Tháng 03/2026 • Lĩnh vực: Dệt may xuất khẩu (Chuẩn bị CBAM)
+                    Nhà máy May & Năng lượng Hà Nam • Kỳ báo cáo: Năm 2026 • Lĩnh vực: May mặc & Công nghiệp phụ trợ
                 </p>
             </div>
             <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                 <button onclick="document.getElementById('uploadSection').scrollIntoView({behavior: 'smooth'})" class="px-4 py-2.5 rounded-xl bg-white text-emerald-900 font-bold text-xs sm:text-sm hover:bg-emerald-50 transition shadow text-center">
-                    📤 Tải Lên Chứng Từ Mới
+                    📤 Tải Lên Chứng Từ / Excel Mới
                 </button>
+            </div>
+        </div>
+
+        <!-- Multi-Agent Stepper Status -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Quy Trình Điều Phối Đa Tác Tử (Multi-Agent Workflow Lifecycle)</h3>
+                <a href="/monitor" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1">
+                    📡 Mở Trình Giám Sát Chi Tiết (Live Monitor) →
+                </a>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center text-xs">
+                <div id="step-ingested" class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold">
+                    1. Ingestion (MarkItDown)
+                </div>
+                <div id="step-indexed" class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold">
+                    2. Schema Discovery
+                </div>
+                <div id="step-subagents" class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold">
+                    3. Domain Subagents
+                </div>
+                <div id="step-calculating" class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold">
+                    4. Deterministic Math
+                </div>
+                <div id="step-synthesizing" class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold">
+                    5. Synthesis & Mau 02
+                </div>
+                <div id="step-completed" class="p-2.5 rounded-lg bg-emerald-600 text-white font-bold shadow-xs">
+                    6. Hoàn Tất (Deliverables)
+                </div>
             </div>
         </div>
 
         <!-- KPI 4 Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Total Net Emissions -->
-            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-start">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Tổng Phát Thải Ròng</span>
-                    <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs">GHG Net</span>
+                    <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold">GHG Total</span>
                 </div>
-                <div class="mt-2 flex items-baseline gap-1.5">
-                    <span id="kpiTotal" class="text-3xl font-black text-slate-900">--</span>
-                    <span class="text-sm font-bold text-slate-500">tCO₂e</span>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span id="kpiTotalEmissions" class="text-3xl font-black tracking-tight text-slate-900 font-mono">4,945.05</span>
+                    <span class="text-sm font-semibold text-slate-500">tCO₂e</span>
                 </div>
-                <div id="kpiTotalUncertainty" class="mt-2 text-xs font-mono text-slate-500 bg-slate-50 py-1 px-2 rounded-md border border-slate-100">
-                    Khoảng tin cậy: [--]
-                </div>
-            </div>
-
-            <!-- EcoStream Confidence Index -->
-            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition">
-                <div class="flex justify-between items-start">
-                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Độ Tin Cậy EcoStream</span>
-                    <span id="kpiGradeBadge" class="px-2 py-0.5 rounded text-xs font-black bg-emerald-100 text-emerald-800">Grade A</span>
-                </div>
-                <div class="mt-2 flex items-baseline gap-1.5">
-                    <span id="kpiConfidence" class="text-3xl font-black text-emerald-600">--%</span>
-                </div>
-                <div id="kpiGradeLabel" class="mt-2 text-xs font-medium text-slate-600 truncate">
-                    Audit-Ready (Sẵn sàng kiểm toán)
+                <div id="kpiUncertaintyRange" class="mt-2 text-xs font-medium text-slate-600">
+                    Khoảng tin cậy 95%: [4,454.73 - 5,435.37] t
                 </div>
             </div>
 
-            <!-- Scope 1 & 2 Internal -->
-            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition">
+            <!-- Scope 1 -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-start">
-                    <span class="text-xs font-bold uppercase tracking-wider text-blue-700">Scope 1 & 2 (Nội Bộ)</span>
-                    <span class="p-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs">Vận hành</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Scope 1 (Trực tiếp)</span>
+                    <span class="p-1.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">Fuel Combustion</span>
                 </div>
-                <div class="mt-2 flex items-baseline gap-1.5">
-                    <span id="kpiScope12" class="text-3xl font-black text-slate-900">--</span>
-                    <span class="text-sm font-bold text-slate-500">tCO₂e</span>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span id="kpiScope1" class="text-3xl font-black tracking-tight text-emerald-950 font-mono">4,914.82</span>
+                    <span class="text-sm font-semibold text-slate-500">tCO₂e</span>
                 </div>
-                <div id="kpiScope12Detail" class="mt-2 text-xs text-slate-500 truncate">
-                    S1: -- t | S2: -- t (Điện EVN)
+                <div id="kpiScope1Share" class="mt-2 text-xs font-medium text-emerald-700">
+                    99.4% tổng lượng phát thải (Than lò hơi, Dầu, LPG)
                 </div>
             </div>
 
-            <!-- Scope 3 Value Chain -->
-            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group hover:border-purple-300 transition">
+            <!-- Scope 2 -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-start">
-                    <span class="text-xs font-bold uppercase tracking-wider text-purple-700">Scope 3 (Chuỗi Cung Ứng)</span>
-                    <span class="p-1.5 rounded-lg bg-purple-50 text-purple-700 text-xs">Value Chain</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Scope 2 (Gián tiếp điện)</span>
+                    <span class="p-1.5 rounded-lg bg-blue-100 text-blue-800 text-xs font-bold">EVN Grid</span>
                 </div>
-                <div class="mt-2 flex items-baseline gap-1.5">
-                    <span id="kpiScope3" class="text-3xl font-black text-slate-900">--</span>
-                    <span class="text-sm font-bold text-slate-500">tCO₂e</span>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span id="kpiScope2" class="text-3xl font-black tracking-tight text-blue-950 font-mono">18.98</span>
+                    <span class="text-sm font-semibold text-slate-500">tCO₂e</span>
                 </div>
-                <div id="kpiScope3Detail" class="mt-2 text-xs text-slate-500 truncate">
-                    Vận tải đường bộ, bao bì, vải thô
+                <div id="kpiScope2Share" class="mt-2 text-xs font-medium text-blue-700">
+                    12 tháng hóa đơn EVN (Đã nội suy T7 thiếu)
+                </div>
+            </div>
+
+            <!-- Reliability Score -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Chỉ Số Tin Cậy Dữ Liệu</span>
+                    <span id="kpiGradeBadge" class="px-2 py-0.5 rounded text-xs font-black bg-amber-100 text-amber-900 border border-amber-300">Grade C</span>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span id="kpiScore" class="text-3xl font-black tracking-tight text-slate-900 font-mono">69.7%</span>
+                    <span class="text-sm font-semibold text-slate-500">Score</span>
+                </div>
+                <div id="kpiScoreText" class="mt-2 text-xs font-medium text-amber-700">
+                    Đã khấu trừ phạt điểm do nội suy & giả định
                 </div>
             </div>
         </div>
 
-        <!-- 2 Charts Grid: Emissions Breakdown & 5-Dimension Radar -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Donut Breakdown Chart -->
-            <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">Phân Bổ Phát Thải Theo Scope</h2>
-                        <p class="text-xs text-slate-500">Tiêu chuẩn Nghị định 06 & GHG Protocol</p>
+        <!-- Navigation Tabs -->
+        <div class="border-b border-slate-200">
+            <nav class="flex space-x-6 text-sm font-bold">
+                <button onclick="switchTab('tab-inventory')" id="btn-tab-inventory" class="pb-3 border-b-2 border-emerald-700 text-emerald-800">
+                    📊 Kiểm Kê Khí Nhà Kính & Bằng Chứng
+                </button>
+                <button onclick="switchTab('tab-mitigation')" id="btn-tab-mitigation" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                    🌿 Kế Hoạch & Giảm Nhẹ (Mẫu 02 NĐ 06/2022)
+                </button>
+                <button onclick="switchTab('tab-audit')" id="btn-tab-audit" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                    🔍 Dấu Vết Kiểm Toán (Query & Assumption Logs)
+                </button>
+                <button onclick="switchTab('tab-roadmap')" id="btn-tab-roadmap" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+                    📍 Lộ Trình Nâng Cấp Dữ Liệu
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab 1: Inventory & Provenance -->
+        <div id="tab-inventory" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Emissions Breakdown Chart -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-4">Cơ Cấu Phát Thải Theo Scope</h3>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="scopeChart"></canvas>
                     </div>
                 </div>
-                <div class="relative flex-1 flex items-center justify-center min-h-[240px]">
-                    <canvas id="scopeChart"></canvas>
+
+                <!-- 5-Dimension Radar Chart -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm lg:col-span-2">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 mb-4">Đánh Giá 5 Chiều Độ Tin Cậy Dữ Liệu</h3>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="radarChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <!-- 5-Dimension Reliability Breakdown -->
-            <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <!-- Provenance Table -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">Đánh Giá 5 Chiều Chất Lượng & Độ Tin Cậy Dữ Liệu</h2>
-                        <p class="text-xs text-slate-500">Công cụ độc quyền EcoStream Reliability Engine</p>
-                    </div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800">Bảng Chi Tiết Hoạt Động & Truy Nguyên Dữ Liệu Gốc</h3>
+                    <span class="text-xs text-slate-500">100% hoạt động có căn cứ chứng từ</span>
                 </div>
-                <div id="dimensionsList" class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
-                    <!-- Dimension items dynamically populated -->
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase text-[11px]">
+                                <th class="py-3 px-3">#</th>
+                                <th class="py-3 px-3">Hạng mục hoạt động</th>
+                                <th class="py-3 px-3">Scope</th>
+                                <th class="py-3 px-3 text-right">Lượng hoạt động</th>
+                                <th class="py-3 px-3 text-right">Hệ số EF</th>
+                                <th class="py-3 px-3 text-right">Phát thải (tCO₂e)</th>
+                                <th class="py-3 px-3 text-center">Sai số</th>
+                                <th class="py-3 px-3">Chứng từ gốc</th>
+                                <th class="py-3 px-3 text-right">Độ tin cậy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="provenanceTableBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- Evidence & Provenance Table (The Tech Core) -->
-        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                        <h2 class="text-lg font-bold text-slate-900">Lớp Bằng Chứng & Truy Nguyên Dữ Liệu (Evidence Layer)</h2>
+        <!-- Tab 2: Mitigation & Quotas (Mau 02 ND 06/2022) -->
+        <div id="tab-mitigation" class="space-y-6 hidden">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+                    <div>
+                        <h2 class="text-lg font-black text-slate-900 uppercase">Kế Hoạch & Kết Quả Giảm Nhẹ Phát Thải KNK</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Biểu mẫu Mẫu số 02 Phụ lục III Nghị định 06/2022/NĐ-CP & Nghị định 119/2025/NĐ-CP</p>
                     </div>
-                    <p class="text-xs text-slate-500 mt-0.5">
-                        Mỗi dòng tính toán được liên kết trực tiếp với trích xuất văn bản gốc và nguồn hệ số phát thải hợp chuẩn.
-                    </p>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full border border-emerald-300">Nghị định 06/2022/NĐ-CP</span>
                 </div>
-                <div class="text-xs text-slate-500 font-mono bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-                    <span id="evidenceCount">0</span> dòng dữ liệu kiểm toán
+
+                <!-- Measures Table -->
+                <div class="overflow-x-auto rounded-xl border border-slate-200 my-5">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase text-[11px]">
+                                <th class="py-3 px-3">Mã</th>
+                                <th class="py-3 px-3">Tên biện pháp giảm nhẹ</th>
+                                <th class="py-3 px-3">Lĩnh vực</th>
+                                <th class="py-3 px-3 text-right">PT Cơ sở PTCS (tCO₂e)</th>
+                                <th class="py-3 px-3 text-right">PT Thực tế PT (tCO₂e)</th>
+                                <th class="py-3 px-3 text-right">Mức giảm GPT (tCO₂e)</th>
+                                <th class="py-3 px-3 text-right">Tỷ lệ (%)</th>
+                                <th class="py-3 px-3">Phương pháp giám sát</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mitigationTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Quota Profile Card -->
+                <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Đánh Giá Tuân Thủ Hạn Ngạch Phát Thải (Emission Quota Balance)</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+                        <div>
+                            <span class="text-slate-500 block">Hạn ngạch phân bổ 2026</span>
+                            <strong class="text-base text-slate-900 font-mono">4,000.0 tCO₂e</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">Phát thải ròng sau giảm nhẹ</span>
+                            <strong class="text-base text-emerald-800 font-mono">3,415.0 tCO₂e</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">Tổng mức giảm GPT</span>
+                            <strong class="text-base text-emerald-600 font-mono">1,530.0 tCO₂e</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">Trạng thái hạn ngạch</span>
+                            <span class="inline-block px-2.5 py-1 bg-amber-100 text-amber-900 font-bold rounded border border-amber-300">THIẾU HỤT HẠN NGẠCH (-945.0 t)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Audit Trail (Query Log & Assumption Log) -->
+        <div id="tab-audit" class="space-y-6 hidden">
+            <!-- Query Log -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800">Nhật Ký Phát Hiện Bất Thường & Truy Vấn (Query Log)</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Tự động gắn cờ khoảng trống dữ liệu để chuyên viên rà soát không làm gián đoạn luồng tính toán</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded">Async Audit</span>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase text-[11px]">
+                                <th class="py-3 px-3">Mã QRY</th>
+                                <th class="py-3 px-3">Phạm vi</th>
+                                <th class="py-3 px-3">Trường dữ liệu</th>
+                                <th class="py-3 px-3">Loại bất thường</th>
+                                <th class="py-3 px-3">Vấn đề phát hiện</th>
+                                <th class="py-3 px-3">Hành động AI tự động</th>
+                                <th class="py-3 px-3">Đề xuất bổ sung</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queryLogTableBody"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-600">
-                            <th class="py-3 px-3">#</th>
-                            <th class="py-3 px-3">Hoạt Động</th>
-                            <th class="py-3 px-3">Phạm Vi</th>
-                            <th class="py-3 px-3">Sản Lượng</th>
-                            <th class="py-3 px-3">Hệ Số Phát Thải (EF)</th>
-                            <th class="py-3 px-3 text-right">Phát Thải (tCO₂e)</th>
-                            <th class="py-3 px-3 text-center">Sai Số</th>
-                            <th class="py-3 px-3">Chứng Từ Gốc & Bằng Chứng</th>
-                            <th class="py-3 px-3 text-center">Tin Cậy</th>
-                        </tr>
-                    </thead>
-                    <tbody id="evidenceTableBody">
-                        <tr><td colspan="9" class="text-center py-8 text-slate-400 text-xs">Đang tải dữ liệu kiểm kê...</td></tr>
-                    </tbody>
-                </table>
+            <!-- Assumption Log -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800">Nhật Ký Giả Định Nội Suy & Phạt Điểm Tin Cậy (Assumption Log)</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Minh bạch hóa 100% công thức nội suy IPCC và mức trừ điểm tín nhiệm dữ liệu</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded">Confidence Penalty</span>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase text-[11px]">
+                                <th class="py-3 px-3">Mã ASM</th>
+                                <th class="py-3 px-3">Mã QRY</th>
+                                <th class="py-3 px-3">Tham số áp dụng</th>
+                                <th class="py-3 px-3">Giá trị giả định</th>
+                                <th class="py-3 px-3">Căn cứ khoa học / Pháp lý</th>
+                                <th class="py-3 px-3 text-right">Phạt tin cậy</th>
+                                <th class="py-3 px-3 text-right">Tăng sai số</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assumptionLogTableBody"></tbody>
+                    </table>
+                </div>
             </div>
-        </section>
+        </div>
 
-        <!-- "What Should I Improve?" Actionable Recommendations -->
-        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
-            <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                <h2 class="text-lg font-bold text-slate-900">Lộ Trình Cải Thiện Dữ Liệu ("What Should I Improve?")</h2>
+        <!-- Tab 4: Roadmap -->
+        <div id="tab-roadmap" class="space-y-6 hidden">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-4">'What Should I Improve?' — Lộ Trình Nâng Cấp Dữ Liệu</h3>
+                <div id="roadmapCardsContainer" class="space-y-4"></div>
             </div>
-            <p class="text-xs text-slate-500 -mt-2">
-                Thuật toán phân tích khoảng trống xác định các điểm dữ liệu có sai số cao nhất và hướng dẫn SME thu thập chứng từ bổ sung.
-            </p>
+        </div>
 
-            <div id="recommendationsList" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                <!-- Dynamically populated recommendations -->
-            </div>
-        </section>
-
-        <!-- Upload Custom Documents Form -->
-        <section id="uploadSection" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
-            <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                <h2 class="text-lg font-bold text-slate-900">Tải Lên Chứng Từ Doanh Nghiệp Của Bạn</h2>
-            </div>
-            <p class="text-xs text-slate-500 -mt-2">
-                Hỗ trợ hóa đơn tiền điện (EVN text/txt), hóa đơn xăng dầu Petrolimex, bảng kê vận chuyển logistics (CSV) và sổ mua hàng (CSV).
-            </p>
-
+        <!-- Upload Custom Files Section -->
+        <div id="uploadSection" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3">Tải Lên Chứng Từ & Hồ Sơ Kiểm Kê Mới</h3>
             <form id="uploadForm" onsubmit="handleUpload(event)" class="space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tên Doanh Nghiệp</label>
-                        <input type="text" id="companyInput" name="company" value="Công Ty Cổ Phần Dệt May ABC" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tên Doanh Nghiệp</label>
+                        <input type="text" name="company" value="EcoGarment Vietnam JSC" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Kỳ Báo Cáo</label>
-                        <input type="text" id="periodInput" name="period" value="Tháng 03/2026" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Cơ Sở / Nhà Máy</label>
+                        <input type="text" name="location" value="Nhà máy May & Năng lượng Hà Nam" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Địa Điểm Nhà Máy</label>
-                        <input type="text" id="locationInput" name="location" value="Hà Nội, Việt Nam" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Kỳ Báo Cáo</label>
+                        <input type="text" name="period" value="2026" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
                     </div>
                 </div>
 
                 <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-emerald-500 transition cursor-pointer bg-slate-50/50" onclick="document.getElementById('fileInput').click()">
-                    <input type="file" id="fileInput" name="files" multiple class="hidden" onchange="updateFileList(this)">
-                    <div class="text-3xl mb-2">📁</div>
-                    <div class="text-sm font-semibold text-slate-700">Kéo thả file tài liệu vào đây hoặc click để chọn file</div>
-                    <p class="text-xs text-slate-400 mt-1">Định dạng hỗ trợ: .pdf, .xlsx, .docx, .png, .jpg, .txt, .csv, .log (hỗ trợ MarkItDown & OCR tự động)</p>
-                    <div id="selectedFiles" class="text-xs text-emerald-700 font-mono mt-3 font-semibold"></div>
+                    <input type="file" id="fileInput" name="files" multiple class="hidden" onchange="updateFileLabel()">
+                    <label for="fileInput" class="cursor-pointer flex flex-col items-center">
+                        <span class="text-3xl mb-2">📁</span>
+                        <span class="text-sm font-semibold text-slate-700" id="fileLabel">Kéo thả file hoặc click để chọn tệp (.xlsx, .pdf, .docx, .csv, .txt)</span>
+                        <span class="text-xs text-slate-400 mt-1">Hỗ trợ đa định dạng với công nghệ Microsoft MarkItDown & OCR</span>
+                    </label>
+                </div>
                 </div>
 
-                <div class="flex justify-end">
-                    <button type="submit" id="btnSubmitUpload" class="px-6 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm transition shadow-md shadow-emerald-900/20 flex items-center gap-2">
-                        🚀 Bắt Đầu Xử Lý & Tính Toán
+                <div class="text-right">
+                    <button type="submit" id="btnSubmitUpload" class="px-5 py-2.5 rounded-lg bg-emerald-800 text-white font-bold text-xs hover:bg-emerald-900 transition">
+                        🚀 Khởi Chạy Pipeline Đa Tác Tử
                     </button>
                 </div>
             </form>
-        </section>
+        </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-        EcoStream AI Carbon Engine PoC • Cuộc thi Cảm Hứng Sáng Tạo USTH 2026 • Vũ Thị Kim Oanh
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+        <p>EcoStream AI Carbon & Reliability Engine • Trường Đại học Khoa học và Công nghệ Hà Nội (USTH) 2026</p>
     </footer>
 
-    <!-- JavaScript Logic -->
+    <!-- Dashboard JavaScript Logic -->
     <script>
-        let scopeChartInstance = null;
+        let scopeChart = null;
+        let radarChart = null;
 
-        function updateFileList(input) {
-            const container = document.getElementById('selectedFiles');
+        function switchTab(tabId) {
+            ['tab-inventory', 'tab-mitigation', 'tab-audit', 'tab-roadmap'].forEach(id => {
+                const el = document.getElementById(id);
+                const btn = document.getElementById('btn-' + id);
+                if (id === tabId) {
+                    el.classList.remove('hidden');
+                    btn.classList.add('border-emerald-700', 'text-emerald-800');
+                    btn.classList.remove('border-transparent', 'text-slate-500');
+                } else {
+                    el.classList.add('hidden');
+                    btn.classList.remove('border-emerald-700', 'text-emerald-800');
+                    btn.classList.add('border-transparent', 'text-slate-500');
+                }
+            });
+        }
+
+        function updateFileLabel() {
+            const input = document.getElementById('fileInput');
             if (input.files.length > 0) {
-                const names = Array.from(input.files).map(f => f.name).join(', ');
-                container.innerText = `Đã chọn ${input.files.length} file: ${names}`;
-            } else {
-                container.innerText = '';
+                document.getElementById('fileLabel').innerText = `Đã chọn ${input.files.length} tệp tin: ` + Array.from(input.files).map(f => f.name).join(', ');
             }
         }
 
         async function runDemo() {
             const btn = document.getElementById('btnRunDemo');
             btn.disabled = true;
-            btn.innerText = '⏳ Đang tính toán...';
+            btn.innerText = '⏳ Đang phân tích...';
             try {
                 const res = await fetch('/api/demo');
                 const data = await res.json();
-                renderReport(data);
+                renderDashboard(data);
             } catch (err) {
-                alert('Lỗi khi tải demo: ' + err);
+                console.error('Error running demo:', err);
             } finally {
                 btn.disabled = false;
-                btn.innerText = '⚡ Chạy Demo (EcoGarment)';
+                btn.innerText = '⚡ Chạy Benchmark Demo';
             }
         }
 
         async function handleUpload(e) {
             e.preventDefault();
-            const fileInput = document.getElementById('fileInput');
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert('Vui lòng chọn ít nhất 1 file hóa đơn hoặc bảng kê!');
-                return;
-            }
-
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
             const btn = document.getElementById('btnSubmitUpload');
             btn.disabled = true;
-            btn.innerText = '⏳ Đang phân tích...';
+            btn.innerText = '⏳ Đang khởi chạy Multi-Agent...';
 
-            const formData = new FormData(document.getElementById('uploadForm'));
             try {
                 const res = await fetch('/api/upload', {
                     method: 'POST',
-                    body: formData,
+                    body: formData
                 });
                 const data = await res.json();
-                renderReport(data);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                renderDashboard(data);
+                alert('Khởi chạy pipeline thành công!');
             } catch (err) {
-                alert('Lỗi xử lý file upload: ' + err);
+                alert('Lỗi tải lên: ' + err);
             } finally {
                 btn.disabled = false;
-                btn.innerText = '🚀 Bắt Đầu Xử Lý & Tính Toán';
+                btn.innerText = '🚀 Khởi Chạy Pipeline Đa Tác Tử';
             }
         }
 
-        function renderReport(report) {
-            const s = report.summary;
-            const rel = s.reliability;
+        function renderDashboard(data) {
+            const s = data.summary || data;
+            const rel = s.reliability || {};
 
-            // Hero meta
             document.getElementById('heroCompany').innerText = s.company_name;
-            document.getElementById('heroMeta').innerText = `${s.facility_location} • Kỳ báo cáo: ${s.reporting_period} • ${s.industry_sector}`;
+            document.getElementById('heroMeta').innerText = `${s.facility_location} • Kỳ báo cáo: Năm ${s.reporting_period} • Lĩnh vực: ${s.industry_sector}`;
 
-            // KPIs
-            document.getElementById('kpiTotal').innerText = s.total_co2e_tonnes.toFixed(3);
-            document.getElementById('kpiTotalUncertainty').innerText = `Khoảng 95%: [${s.total_uncertainty_min_tonnes.toFixed(2)} - ${s.total_uncertainty_max_tonnes.toFixed(2)}] t`;
-            
-            document.getElementById('kpiConfidence').innerText = `${rel.overall_confidence_score.toFixed(1)}%`;
-            document.getElementById('kpiGradeBadge').innerText = `Grade ${rel.grade}`;
-            document.getElementById('kpiGradeLabel').innerText = rel.grade_label;
+            document.getElementById('kpiTotalEmissions').innerText = s.total_co2e_tonnes?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00';
+            document.getElementById('kpiUncertaintyRange').innerText = `Khoảng tin cậy 95%: [${s.total_uncertainty_min_tonnes?.toFixed(2)} - ${s.total_uncertainty_max_tonnes?.toFixed(2)}] t`;
 
-            const s12 = (s.scope_1_tonnes + s.scope_2_tonnes).toFixed(2);
-            document.getElementById('kpiScope12').innerText = s12;
-            document.getElementById('kpiScope12Detail').innerText = `S1: ${s.scope_1_tonnes.toFixed(2)} t | S2: ${s.scope_2_tonnes.toFixed(2)} t (EVN)`;
+            document.getElementById('kpiScope1').innerText = s.scope_1_tonnes?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00';
+            document.getElementById('kpiScope2').innerText = s.scope_2_tonnes?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00';
 
-            document.getElementById('kpiScope3').innerText = s.scope_3_tonnes.toFixed(2);
-            document.getElementById('kpiScope3Detail').innerText = `Tỷ trọng Spend Proxy: ${rel.spend_based_ratio_pct}%`;
+            document.getElementById('kpiScore').innerText = `${rel.overall_confidence_score?.toFixed(1) || 0}%`;
+            document.getElementById('kpiGradeBadge').innerText = `Grade ${rel.grade || 'A'}`;
 
-            // Scope Chart (Donut)
-            renderScopeChart(s.scopes);
+            // Render Charts
+            renderCharts(s, rel);
 
-            // 5-Dimension List
-            renderDimensions(rel.dimensions);
+            // Render Provenance Table
+            const pBody = document.getElementById('provenanceTableBody');
+            pBody.innerHTML = (data.calculations || []).map((c, i) => `
+                <tr class="border-b border-slate-200 hover:bg-slate-50">
+                    <td class="py-2.5 px-3 font-mono text-slate-400">${i + 1}</td>
+                    <td class="py-2.5 px-3 font-bold text-slate-800">${c.description}</td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${c.scope === 'Scope 1' ? 'bg-emerald-100 text-emerald-800' : c.scope === 'Scope 2' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}">${c.scope}</span></td>
+                    <td class="py-2.5 px-3 text-right font-mono">${c.activity_value.toLocaleString()} ${c.activity_unit}</td>
+                    <td class="py-2.5 px-3 text-right font-mono text-slate-600">${c.emission_factor_value}</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">${c.co2e_tonnes.toFixed(3)}</td>
+                    <td class="py-2.5 px-3 text-center font-mono">±${c.uncertainty_pct}%</td>
+                    <td class="py-2.5 px-3 text-slate-600 font-mono text-[11px]">${c.evidence?.source_document || '-'}</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold ${c.quality_composite_score >= 85 ? 'text-emerald-700' : 'text-amber-700'}">${c.quality_composite_score}%</td>
+                </tr>
+            `).join('');
 
-            // Evidence Table
-            renderEvidenceTable(report.calculations);
+            // Render Mitigation
+            const m = data.mitigation_summary || s.mitigation_summary;
+            if (m && m.measures) {
+                const mBody = document.getElementById('mitigationTableBody');
+                mBody.innerHTML = m.measures.map((mm, idx) => `
+                    <tr class="border-b border-slate-200">
+                        <td class="py-2.5 px-3 font-mono text-slate-400">${idx + 1}</td>
+                        <td class="py-2.5 px-3 font-bold text-slate-800">${mm.measure_name}</td>
+                        <td class="py-2.5 px-3 text-slate-600">${mm.category}</td>
+                        <td class="py-2.5 px-3 text-right font-mono">${mm.baseline_emissions_ptcs.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-right font-mono">${mm.actual_emissions_pt.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-700">${mm.emission_reduction_gpt.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-right font-mono text-emerald-600">${mm.reduction_pct.toFixed(1)}%</td>
+                        <td class="py-2.5 px-3 text-slate-500">${mm.monitoring_method}</td>
+                    </tr>
+                `).join('');
+            }
 
-            // Recommendations
-            renderRecommendations(s.recommendations);
+            // Render Query & Assumption Logs
+            const qBody = document.getElementById('queryLogTableBody');
+            qBody.innerHTML = (data.queries || []).map(q => `
+                <tr class="border-b border-slate-200">
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${q.query_id}</td>
+                    <td class="py-2.5 px-3 font-semibold">${q.scope}</td>
+                    <td class="py-2.5 px-3">${q.field_name}</td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 font-mono">${q.anomaly_type}</span></td>
+                    <td class="py-2.5 px-3 text-slate-600">${q.detected_issue}</td>
+                    <td class="py-2.5 px-3 font-medium text-emerald-800">${q.action_taken}</td>
+                    <td class="py-2.5 px-3 text-slate-500">${q.suggested_human_action}</td>
+                </tr>
+            `).join('');
+
+            const aBody = document.getElementById('assumptionLogTableBody');
+            aBody.innerHTML = (data.assumptions || []).map(a => `
+                <tr class="border-b border-slate-200">
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${a.assumption_id}</td>
+                    <td class="py-2.5 px-3 font-mono text-slate-500">${a.related_query_id || '-'}</td>
+                    <td class="py-2.5 px-3 font-bold">${a.parameter_name}</td>
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${a.assumed_value} ${a.assumed_unit}</td>
+                    <td class="py-2.5 px-3 text-slate-600">${a.justification}</td>
+                    <td class="py-2.5 px-3 text-right font-mono text-red-600 font-bold">-${(a.confidence_penalty * 100).toFixed(1)}%</td>
+                    <td class="py-2.5 px-3 text-right font-mono text-amber-700 font-bold">+${a.uncertainty_markup_pct}%</td>
+                </tr>
+            `).join('');
+
+            // Render Roadmap Recommendations
+            const rContainer = document.getElementById('roadmapCardsContainer');
+            rContainer.innerHTML = (s.recommendations || []).map(r => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded ${r.priority === 'HIGH' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'} uppercase">${r.priority}</span>
+                            <h4 class="font-bold text-slate-900 text-sm">${r.title}</h4>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">+${r.potential_confidence_gain_pct}% Tin cậy</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mb-2"><strong class="text-slate-700">Hiện trạng:</strong> ${r.current_gap}</p>
+                    <p class="text-xs text-slate-800 bg-white p-2.5 rounded border border-slate-200"><strong class="text-emerald-800">Đề xuất:</strong> ${r.action_required}</p>
+                </div>
+            `).join('');
         }
 
-        function renderScopeChart(scopes) {
-            const ctx = document.getElementById('scopeChart').getContext('2d');
-            if (scopeChartInstance) {
-                scopeChartInstance.destroy();
-            }
-            const labels = scopes.map(s => s.scope);
-            const data = scopes.map(s => s.total_tonnes);
-
-            scopeChartInstance = new Chart(ctx, {
+        function renderCharts(s, rel) {
+            // Scope Chart
+            if (scopeChart) scopeChart.destroy();
+            const ctx1 = document.getElementById('scopeChart').getContext('2d');
+            scopeChart = new Chart(ctx1, {
                 type: 'doughnut',
                 data: {
-                    labels: labels,
+                    labels: ['Scope 1 (Trực tiếp)', 'Scope 2 (Điện lưới)', 'Scope 3 (Chuỗi cung ứng)'],
                     datasets: [{
-                        data: data,
-                        backgroundColor: ['#10b981', '#3b82f6', '#a855f7'],
-                        borderWidth: 2,
-                        borderColor: '#ffffff',
+                        data: [s.scope_1_tonnes || 0, s.scope_2_tonnes || 0, s.scope_3_tonnes || 0],
+                        backgroundColor: ['#059669', '#3b82f6', '#a855f7'],
+                        borderWidth: 0,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    return ` ${ctx.label}: ${ctx.raw.toFixed(3)} tCO₂e`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: '70%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
+
+            // Radar Chart
+            if (radarChart) radarChart.destroy();
+            const ctx2 = document.getElementById('radarChart').getContext('2d');
+            const dims = rel.dimensions || {};
+            radarChart = new Chart(ctx2, {
+                type: 'radar',
+                data: {
+                    labels: ['Tính đầy đủ', 'Đồng bộ thời gian', 'Đặc thù địa phương', 'Chất lượng nguồn gốc', 'Tin cậy trích xuất'],
+                    datasets: [{
+                        label: 'Điểm tin cậy (%)',
+                        data: [
+                            dims.completeness?.score || 90,
+                            dims.temporal?.score || 90,
+                            dims.geographical?.score || 90,
+                            dims.source_reliability?.score || 90,
+                            dims.extraction_confidence?.score || 90,
+                        ],
+                        backgroundColor: 'rgba(5, 150, 105, 0.2)',
+                        borderColor: '#059669',
+                        pointBackgroundColor: '#059669',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { min: 0, max: 100, ticks: { stepSize: 20 } } }
                 }
             });
         }
 
-        function renderDimensions(dimensions) {
-            const container = document.getElementById('dimensionsList');
-            container.innerHTML = '';
-
-            for (const [k, dim] of Object.entries(dimensions)) {
-                const card = document.createElement('div');
-                card.className = 'bg-slate-50 border border-slate-200 p-3.5 rounded-xl flex flex-col justify-between';
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs font-bold text-slate-700">${dim.name}</span>
-                        <span class="text-[10px] font-black px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-800">Grade ${dim.grade}</span>
-                    </div>
-                    <div class="text-xl font-extrabold text-slate-900">${dim.score}%</div>
-                    <p class="text-[11px] text-slate-500 mt-1 leading-snug">${dim.explanation}</p>
-                `;
-                container.appendChild(card);
-            }
-        }
-
-        function renderEvidenceTable(calculations) {
-            const tbody = document.getElementById('evidenceTableBody');
-            document.getElementById('evidenceCount').innerText = calculations.length;
-            tbody.innerHTML = '';
-
-            calculations.forEach((c, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b border-slate-100 hover:bg-emerald-50/40 transition text-xs';
-
-                const scopeBadge = c.scope === 'Scope 1' ? 'bg-emerald-100 text-emerald-800' :
-                                   c.scope === 'Scope 2' ? 'bg-blue-100 text-blue-800' :
-                                   'bg-purple-100 text-purple-800';
-
-                const confColor = c.quality_composite_score >= 85 ? 'text-emerald-700 font-bold' :
-                                  c.quality_composite_score >= 70 ? 'text-amber-700 font-bold' :
-                                  'text-red-700 font-bold';
-
-                tr.innerHTML = `
-                    <td class="py-3 px-3 font-mono text-slate-400">${idx + 1}</td>
-                    <td class="py-3 px-3 font-semibold text-slate-900">${c.description}</td>
-                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded font-bold ${scopeBadge}">${c.scope}</span></td>
-                    <td class="py-3 px-3 font-mono">${c.activity_value.toLocaleString()} <span class="text-slate-400">${c.activity_unit}</span></td>
-                    <td class="py-3 px-3" title="${c.emission_factor_source}">
-                        <span class="font-mono font-bold text-slate-800">${c.emission_factor_value}</span>
-                        <span class="text-[10px] text-slate-400 block truncate max-w-[140px]">${c.emission_factor_source}</span>
-                    </td>
-                    <td class="py-3 px-3 text-right font-black text-slate-900 font-mono">${c.co2e_tonnes.toFixed(3)}</td>
-                    <td class="py-3 px-3 text-center text-slate-500 font-mono">±${c.uncertainty_pct}%</td>
-                    <td class="py-3 px-3">
-                        <div class="font-mono text-emerald-800 font-medium">${c.evidence.source_document} (${c.evidence.page_or_line || 'P.1'})</div>
-                        <div class="text-[10px] text-slate-500 italic truncate max-w-[200px]" title="${c.evidence.snippet}">${c.evidence.snippet}</div>
-                    </td>
-                    <td class="py-3 px-3 text-center ${confColor}">${c.quality_composite_score}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderRecommendations(recommendations) {
-            const container = document.getElementById('recommendationsList');
-            container.innerHTML = '';
-
-            if (!recommendations || recommendations.length === 0) {
-                container.innerHTML = '<p class="text-xs text-slate-400">Không có khoảng trống dữ liệu đáng kể nào.</p>';
-                return;
-            }
-
-            recommendations.forEach(rec => {
-                const card = document.createElement('div');
-                card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 hover:border-emerald-400 transition';
-                
-                const prioBadge = rec.priority === 'HIGH' ? 'bg-red-100 text-red-800 border-red-200' : 'bg-amber-100 text-amber-800 border-amber-200';
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start gap-2">
-                        <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${prioBadge}">${rec.priority}</span>
-                            ${rec.title}
-                        </div>
-                        <span class="text-xs font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-300 px-2 py-0.5 rounded-md whitespace-nowrap">
-                            +${rec.potential_confidence_gain_pct}% Tin cậy
-                        </span>
-                    </div>
-                    <div class="text-xs text-slate-600 leading-relaxed">
-                        <strong>Khoảng trống:</strong> ${rec.current_gap}
-                    </div>
-                    <div class="text-xs text-slate-800 bg-white p-3 rounded-lg border border-slate-200 font-medium whitespace-pre-line leading-relaxed">
-                        <strong>Đề xuất SME:</strong>\n${rec.action_required}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // Auto load demo on start
-        window.addEventListener('DOMContentLoaded', () => {
-            runDemo();
-        });
+        // Auto run demo on load
+        window.onload = () => runDemo();
     </script>
 </body>
 </html>

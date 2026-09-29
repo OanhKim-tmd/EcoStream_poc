@@ -100,3 +100,7 @@ class DocumentIngestionLoader:
                 except Exception as e:
                     print(f"Warning: Failed to load {fpath}: {e}")
         return documents
+
+
+# Alias for concise import
+DocumentLoader = DocumentIngestionLoader

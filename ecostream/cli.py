@@ -1,4 +1,4 @@
-"""Command-line interface for EcoStream Carbon Data Engine."""
+"""Command-line interface for EcoStream Multi-Agent Carbon Data Engine."""
 
 import argparse
 import os
@@ -17,158 +17,174 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from ecostream.ingestion.loaders import DocumentIngestionLoader
-from ecostream.extraction.extractor import ExtractionEngine
+from ecostream.orchestrator.pipeline import WorkflowOrchestrator
 from ecostream.factors.database import get_factor_database
-from ecostream.engine.calculator import CarbonCalculator
-from ecostream.engine.reliability import ReliabilityEngine
-from ecostream.engine.advisor import CarbonAdvisor
-from ecostream.models.results import AuditReport
-from ecostream.reporting.export import ReportExporter
 
 console = Console(force_terminal=True, legacy_windows=False)
 
 
-def run_pipeline(
-    data_dir: str,
+def run_multiagent_pipeline(
+    input_paths: list[str],
     company_name: str = "EcoGarment Vietnam JSC",
-    facility_location: str = "Nam Thang Long IP, Hanoi, Vietnam",
-    reporting_period: str = "Tháng 03/2026",
-    industry: str = "Garment & Textile Manufacturing",
-    export_dir: str = ".",
-) -> AuditReport:
+    facility_name: str = "Nhà máy May & Năng lượng Hà Nam",
+    reporting_year: int = 2026,
+    run_id: str = None,
+) -> dict:
     console.print(
         Panel.fit(
-            f"[bold green]EcoStream AI Carbon Engine[/bold green]\n"
+            f"[bold green]EcoStream Multi-Agent AI Carbon Engine[/bold green]\n"
             f"[cyan]Target Enterprise:[/cyan] {company_name}\n"
-            f"[cyan]Period:[/cyan] {reporting_period} | [cyan]Location:[/cyan] {facility_location}",
-            title="EcoStream PoC Pipeline",
+            f"[cyan]Facility / Location:[/cyan] {facility_name}\n"
+            f"[cyan]Reporting Year:[/cyan] {reporting_year} | [cyan]Input Files:[/cyan] {len(input_paths)} files",
+            title="EcoStream Orchestrator Workflow",
             border_style="green",
         )
     )
 
-    # 1. Ingestion
-    console.print("\n[bold yellow]Step 1: Document Ingestion[/bold yellow]")
-    docs = DocumentIngestionLoader.load_directory(data_dir)
-    console.print(f"Loaded [bold cyan]{len(docs)}[/bold cyan] business files from [italic]{data_dir}[/italic]")
-    for d in docs:
-        console.print(f"  • [blue]{d.filename}[/blue] ({d.file_type}) - {len(d.content)} chars")
+    orchestrator = WorkflowOrchestrator(run_id=run_id)
+    console.print(f"[bold yellow]Executing multi-agent pipeline (Run ID: {orchestrator.run_id})...[/bold yellow]\n")
 
-    # 2. Extraction & Evidence Layer
-    console.print("\n[bold yellow]Step 2: AI & Rule-Based Extraction (Evidence Layer)[/bold yellow]")
-    extractor = ExtractionEngine()
-    records = extractor.extract_batch(docs)
-    console.print(f"Extracted [bold cyan]{len(records)}[/bold cyan] structured activity records with source provenance.")
-
-    # 3. Calculation & Scope Categorization
-    console.print("\n[bold yellow]Step 3: GHG Calculation & Uncertainty Propagation[/bold yellow]")
-    calc_engine = CarbonCalculator(get_factor_database())
-    calculations = calc_engine.calculate_all(records)
-    scopes, total_tonnes, total_min, total_max = calc_engine.aggregate_scopes(calculations)
-
-    # 4. Reliability & Confidence Scoring
-    console.print("\n[bold yellow]Step 4: 5-Dimensional Reliability Assessment[/bold yellow]")
-    reliability = ReliabilityEngine.evaluate(records)
-
-    # 5. Advisor & Roadmap
-    console.print("\n[bold yellow]Step 5: Decision Support & Hotspot Analysis[/bold yellow]")
-    summary = CarbonAdvisor.compile_summary(
+    result = orchestrator.run_pipeline(
+        input_files=input_paths,
         company_name=company_name,
-        facility_location=facility_location,
-        reporting_period=reporting_period,
-        industry_sector=industry,
-        records=records,
-        calculations=calculations,
-        scopes=scopes,
-        total_tonnes=total_tonnes,
-        total_min=total_min,
-        total_max=total_max,
-        reliability=reliability,
+        facility_name=facility_name,
+        reporting_year=reporting_year,
     )
 
-    report = AuditReport(
-        report_id=f"ECO-RPT-{datetime.now().strftime('%Y%m%d-%H%M')}",
-        generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        summary=summary,
-        calculations=calculations,
-    )
+    summary = result["summary"]
+    rel = summary["reliability"]
 
-    # Display Scope Summary Table
-    table = Table(title="GHG Emissions by Scope (GHG Protocol)")
-    table.add_column("Scope", style="cyan", justify="left")
-    table.add_column("Emissions (tCO2e)", justify="right", style="bold")
-    table.add_column("Share (%)", justify="right")
-    table.add_column("95% Uncertainty Interval", justify="center")
-    table.add_column("Avg Confidence", justify="center", style="green")
+    # 1. Scope Breakdown Table
+    table = Table(title="Tổng Hợp Phát Thải Khí Nhà Kính (Corporate GHG Inventory)")
+    table.add_column("Phạm vi (Scope)", style="cyan", justify="left")
+    table.add_column("Phát thải (tCO₂e)", justify="right", style="bold")
+    table.add_column("Tỷ trọng (%)", justify="right")
+    table.add_column("Khoảng tin cậy 95%", justify="center")
+    table.add_column("Độ tin cậy", justify="center", style="green")
 
-    for s in scopes:
+    for s in summary["scopes"]:
         table.add_row(
-            s.scope.value,
-            f"{s.total_tonnes:.3f}",
-            f"{s.percentage:.1f}%",
-            f"[{s.uncertainty_lower_tonnes:.2f} - {s.uncertainty_upper_tonnes:.2f}] t",
-            f"{s.avg_confidence_pct:.1f}%",
+            s["scope"],
+            f"{s['total_tonnes']:,.3f}",
+            f"{s['percentage']:.1f}%",
+            f"[{s['uncertainty_lower_tonnes']:.2f} - {s['uncertainty_upper_tonnes']:.2f}] t",
+            f"{s['avg_confidence_pct']:.1f}%",
         )
     table.add_section()
     table.add_row(
-        "[bold]Grand Total[/bold]",
-        f"[bold]{total_tonnes:.3f}[/bold]",
+        "[bold]Tổng Phát Thải Ròng[/bold]",
+        f"[bold]{summary['total_co2e_tonnes']:,.3f}[/bold]",
         "100.0%",
-        f"[bold][{total_min:.2f} - {total_max:.2f}] t[/bold]",
-        f"[bold]{reliability.overall_confidence_score:.1f}% (Grade {reliability.grade})[/bold]",
+        f"[bold][{summary['total_uncertainty_min_tonnes']:.2f} - {summary['total_uncertainty_max_tonnes']:.2f}] t[/bold]",
+        f"[bold]{rel['overall_confidence_score']:.1f}% (Grade {rel['grade']})[/bold]",
     )
     console.print(table)
 
-    # Reliability Dimensions Table
-    dim_table = Table(title="EcoStream 5-Dimension Confidence Radar")
-    dim_table.add_column("Dimension", style="cyan")
-    dim_table.add_column("Score", justify="right", style="bold")
-    dim_table.add_column("Grade", justify="center")
-    dim_table.add_column("Notes", style="dim")
+    # 2. Mitigation Table (Mau 02 ND 06/2022)
+    if result.get("mitigation_summary"):
+        m = result["mitigation_summary"]
+        qp = m["quota_profile"]
+        m_table = Table(title="Kế Hoạch & Kết Quả Giảm Nhẹ Phát Thải KNK (Mẫu số 02 NĐ 06/2022/NĐ-CP)")
+        m_table.add_column("STT", justify="center")
+        m_table.add_column("Biện pháp giảm nhẹ", style="cyan")
+        m_table.add_column("PT Cơ sở (tCO₂e)", justify="right")
+        m_table.add_column("PT Thực tế (tCO₂e)", justify="right")
+        m_table.add_column("Mức giảm GPT (tCO₂e)", justify="right", style="bold green")
+        m_table.add_column("Tỷ lệ (%)", justify="right")
 
-    for k, d in reliability.dimensions.items():
-        dim_table.add_row(d.name, f"{d.score:.1f}%", f"Grade {d.grade}", d.explanation)
-    console.print(dim_table)
+        for idx, mm in enumerate(m["measures"], 1):
+            m_table.add_row(
+                str(idx),
+                mm["measure_name"],
+                f"{mm['baseline_emissions_ptcs']:,.1f}",
+                f"{mm['actual_emissions_pt']:,.1f}",
+                f"{mm['emission_reduction_gpt']:,.1f}",
+                f"{mm['reduction_pct']:.1f}%",
+            )
+        m_table.add_section()
+        m_table.add_row(
+            "Σ",
+            "[bold]Tổng cộng toàn cơ sở[/bold]",
+            f"{m['total_baseline_ptcs']:,.1f}",
+            f"{m['total_actual_pt']:,.1f}",
+            f"[bold]{m['total_reduction_gpt']:,.1f}[/bold]",
+            f"{m['overall_reduction_pct']:.1f}%",
+        )
+        console.print(m_table)
+        console.print(f"[cyan]Hạn ngạch phân bổ:[/cyan] {qp['allocated_quota_tonnes']:,.1f} tCO₂e | [cyan]Phát thải sau giảm nhẹ:[/cyan] {qp['net_compliance_emissions_tonnes']:,.1f} tCO₂e | [bold yellow]{qp['compliance_status']}[/bold yellow]\n")
 
-    # Export Reports
-    md_path = os.path.join(export_dir, "report_audit.md")
-    html_path = os.path.join(export_dir, "report_audit.html")
+    # 3. Query & Assumption Logs Table
+    if result.get("queries") or result.get("assumptions"):
+        q_table = Table(title="Dấu Vết Kiểm Toán (Audit Trail: Query Log & Assumption Log)")
+        q_table.add_column("Mã Log", style="cyan", justify="left")
+        q_table.add_column("Loại bất thường / Tham số", justify="left")
+        q_table.add_column("Hành động xử lý tự động / Giả định áp dụng", justify="left")
+        q_table.add_column("Phạt tin cậy", justify="right", style="red")
 
-    with open(md_path, "w", encoding="utf-8") as f:
-        f.write(ReportExporter.to_markdown(report))
+        for q in result.get("queries", []):
+            q_table.add_row(
+                f"[bold]{q['query_id']}[/bold]",
+                f"{q['field_name']} ({q['anomaly_type']})",
+                q["action_taken"][:65] + "...",
+                "-",
+            )
+        for a in result.get("assumptions", []):
+            q_table.add_row(
+                f"[bold]{a['assumption_id']}[/bold]",
+                f"{a['parameter_name']} = {a['assumed_value']} {a['assumed_unit']}",
+                a["justification"][:65] + "...",
+                f"-{a['confidence_penalty']*100:.1f}%",
+            )
+        console.print(q_table)
 
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(ReportExporter.to_html(report))
-
-    console.print(f"\n[bold green]✔ Audit Reports successfully exported:[/bold green]")
-    console.print(f"  • Markdown: [cyan]{os.path.abspath(md_path)}[/cyan]")
-    console.print(f"  • HTML:     [cyan]{os.path.abspath(html_path)}[/cyan]")
-
-    return report
+    # Deliverables Panel
+    deliv = result.get("deliverables", {})
+    deliv_msg = (
+        f"[green]✔ Deliverables saved in blackboard workspace:[/green]\n"
+        f"  • JSON Summary: [cyan]{deliv.get('json')}[/cyan]\n"
+        f"  • Markdown Report: [cyan]{deliv.get('markdown')}[/cyan]\n"
+        f"  • Standalone HTML: [cyan]{deliv.get('html')}[/cyan]\n"
+        f"  • Word Document: [cyan]{deliv.get('docx')}[/cyan]\n"
+        f"  • PDF Report: [cyan]{deliv.get('pdf')}[/cyan]\n"
+        f"  • Run Workspace: [italic]{deliv.get('run_dir')}[/italic]"
+    )
+    console.print(Panel.fit(deliv_msg, title="Export Complete", border_style="cyan"))
+    return result
 
 
 def main():
-    parser = argparse.ArgumentParser(description="EcoStream AI Carbon Engine CLI")
-    parser.add_argument("--demo", action="store_true", help="Run benchmark demo with sample SME dataset")
-    parser.add_argument("--data-dir", default=None, help="Directory containing invoices, receipts, and spreadsheets")
+    parser = argparse.ArgumentParser(description="EcoStream Multi-Agent Carbon Engine CLI")
+    parser.add_argument("--input", nargs="+", help="Input file(s) or folder (e.g. data/samples/input.xlsx)")
+    parser.add_argument("--demo", action="store_true", help="Run with default benchmark input dataset")
     parser.add_argument("--company", default="EcoGarment Vietnam JSC", help="Company Name")
-    parser.add_argument("--output", default=".", help="Output directory for reports")
+    parser.add_argument("--facility", default="Nhà máy May & Năng lượng Hà Nam", help="Facility Name")
+    parser.add_argument("--year", type=int, default=2026, help="Reporting Year")
+    parser.add_argument("--run-id", default=None, help="Custom Run ID")
 
     args = parser.parse_args()
 
-    data_dir = args.data_dir
-    if args.demo or not data_dir:
+    input_files = []
+    if args.input:
+        for p in args.input:
+            if os.path.isdir(p):
+                for f in sorted(os.listdir(p)):
+                    input_files.append(os.path.join(p, f))
+            elif os.path.isfile(p):
+                input_files.append(p)
+    elif args.demo or not args.input:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        data_dir = os.path.join(base_dir, "data", "samples")
+        sample_xlsx = os.path.join(base_dir, "data", "samples", "input.xlsx")
+        if not os.path.exists(sample_xlsx):
+            from scripts.generate_mock_excel import generate_benchmark_excel
+            generate_benchmark_excel(sample_xlsx)
+        input_files = [sample_xlsx]
 
-    if not os.path.exists(data_dir):
-        console.print(f"[red]Error: Data directory '{data_dir}' not found.[/red]")
-        sys.exit(1)
-
-    run_pipeline(
-        data_dir=data_dir,
+    run_multiagent_pipeline(
+        input_paths=input_files,
         company_name=args.company,
-        export_dir=args.output,
+        facility_name=args.facility,
+        reporting_year=args.year,
+        run_id=args.run_id,
     )
 
 

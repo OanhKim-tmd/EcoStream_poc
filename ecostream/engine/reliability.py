@@ -9,7 +9,7 @@ class ReliabilityEngine:
     """Evaluates data quality, traceability, and confidence indices for SME carbon disclosures."""
 
     @classmethod
-    def evaluate(cls, records: List[ActivityRecord]) -> ReliabilityAssessment:
+    def evaluate(cls, records: List[ActivityRecord], assumption_penalty: float = 0.0) -> ReliabilityAssessment:
         if not records:
             return cls._empty_assessment()
 
@@ -28,11 +28,9 @@ class ReliabilityEngine:
         spend_ratio = round((spend_count / n) * 100.0, 1)
         primary_ratio = round((primary_count / n) * 100.0, 1)
 
-        # Composite overall index (0 - 100)
-        overall_score = round(
-            (0.25 * avg_comp + 0.15 * avg_temp + 0.20 * avg_geo + 0.25 * avg_src + 0.15 * avg_extr) * 100.0,
-            1,
-        )
+        # Composite overall index (0 - 100) with optional penalty
+        base_score = (0.25 * avg_comp + 0.15 * avg_temp + 0.20 * avg_geo + 0.25 * avg_src + 0.15 * avg_extr) * 100.0
+        overall_score = round(max(0.0, base_score - assumption_penalty), 1)
 
         if overall_score >= 85.0:
             grade = "A"

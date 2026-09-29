@@ -169,3 +169,6 @@ class CarbonAdvisor:
             hotspots=hotspots,
             recommendations=recommendations,
         )
+
+    # Backward compatibility alias
+    generate_inventory_summary = compile_summary

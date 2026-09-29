@@ -86,9 +86,17 @@ class SMEInventorySummary(BaseModel):
     recommendations: List[ReductionRecommendation]
 
 
+from ecostream.models.mitigation import MitigationSummary
+from ecostream.models.state import QueryLogEntry, AssumptionLogEntry
+
+
 class AuditReport(BaseModel):
     """Comprehensive exportable audit payload."""
     report_id: str
     generated_at: str
     summary: SMEInventorySummary
     calculations: List[CarbonCalculation]
+    mitigation_summary: Optional[MitigationSummary] = None
+    queries: List[QueryLogEntry] = Field(default_factory=list)
+    assumptions: List[AssumptionLogEntry] = Field(default_factory=list)
+
