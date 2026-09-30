@@ -41,6 +41,18 @@ class TestMonitorApi(unittest.TestCase):
         self.assertIn("LIVE WORKFLOW MONITOR", res.text)
         self.assertIn("monitor.js", res.text)
 
+    def test_monitor_js_served(self):
+        """Test GET /static/monitor.js and GET /monitor.js return javascript content."""
+        res1 = self.client.get("/static/monitor.js")
+        self.assertEqual(res1.status_code, 200)
+        self.assertIn("loadRunsList", res1.text)
+        self.assertIn("fetchRunData", res1.text)
+
+        res2 = self.client.get("/monitor.js")
+        self.assertEqual(res2.status_code, 200)
+        self.assertIn("loadRunsList", res2.text)
+
+
     def test_list_runs_endpoint(self):
         """Test GET /api/orchestrator/runs returns structured list of runs."""
         res = self.client.get("/api/orchestrator/runs")

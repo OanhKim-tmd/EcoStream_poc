@@ -52,6 +52,10 @@ RUNS_DIR = os.path.join(PROJECT_ROOT, "runs")
 # Cache latest generated report
 _latest_report: Optional[AuditReport] = None
 
+# Mount static files directory if present
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 
 @app.get("/", response_class=HTMLResponse)
 def serve_index():
@@ -69,6 +73,15 @@ def serve_monitor():
         with open(monitor_path, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     return HTMLResponse("<h2>EcoStream Live Workflow Monitor is being loaded...</h2>")
+
+
+@app.get("/monitor.js")
+def serve_monitor_js():
+    js_path = os.path.join(STATIC_DIR, "monitor.js")
+    if os.path.exists(js_path):
+        return FileResponse(js_path, media_type="application/javascript")
+    raise HTTPException(status_code=404, detail="monitor.js not found")
+
 
 
 
