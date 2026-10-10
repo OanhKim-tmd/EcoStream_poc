@@ -35,25 +35,111 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 sm:gap-3">
-                <a href="/monitor" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-emerald-900 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 transition flex items-center gap-1.5 shadow-xs">
-                    📡 Live Monitor
-                </a>
-                <button id="btnRunDemo" onclick="runDemo()" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition flex items-center gap-1.5 shadow-sm">
-                    ⚡ Chạy Benchmark Demo
-                </button>
-                <a href="/api/export/markdown" target="_blank" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center gap-1.5">
-                    📝 Báo Cáo Markdown
-                </a>
-                <a href="/api/export/html" target="_blank" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-white bg-emerald-800 hover:bg-emerald-900 transition flex items-center gap-1.5 shadow-sm shadow-emerald-800/20">
-                    📑 Xem Báo Cáo Đầy Đủ
-                </a>
-            </div>
+            
         </div>
     </nav>
 
     <!-- Main Content Area -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col md:flex-row gap-8 py-6">
+    <aside class="w-full md:w-64 shrink-0">
+        <div class="sticky top-24 space-y-8">
+            <div>
+                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-3">Tài liệu tham khảo</h3>
+                <nav class="space-y-1">
+                    <button onclick="showPage('page-guidelines')" id="nav-guidelines" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                        <span class="text-lg">📚</span>
+                        Nội quy kiểm kê
+                    </button>
+                    <button class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                        <span class="text-lg">⚖️</span>
+                        Hệ số phát thải
+                    </button>
+                    <button onclick="runDemo()" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                        <span class="text-lg">⚡</span>
+                        Kiểm thử tự động
+                    </button>
+                </nav>
+            </div>
+            <div>
+                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-3">Làm việc</h3>
+                <nav class="space-y-1">
+                    <button onclick="showPage('page-calculator')" id="nav-calculator" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl bg-emerald-100 text-emerald-900 transition border border-emerald-200 shadow-sm">
+                        <span class="text-lg">🧮</span>
+                        Kiểm kê & Tính toán
+                    </button>
+                    <a href="/monitor" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                        <span class="text-lg">📡</span>
+                        Live Monitor
+                    </a>
+                </nav>
+            </div>
+            <div class="p-4 bg-emerald-900 rounded-xl text-white shadow-lg mx-2 mt-8">
+                <h4 class="text-xs font-bold mb-1">✨ Mẹo</h4>
+                <p class="text-[10px] text-emerald-100/80">Nạp nhiều hóa đơn PDF, Excel cùng lúc để chạy AI.</p>
+            </div>
+        </div>
+    </aside>
+
+    <div class="flex-1 w-full overflow-hidden">
+        <div id="page-guidelines" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+                <h2 class="text-2xl font-black text-slate-900 mb-4 items-center flex gap-2">
+                    Nội Quy & Tiêu Chuẩn Kiểm Kê (EcoStream)
+                </h2>
+
+                <div class="mb-8">
+                    <p class="text-sm text-slate-700 leading-relaxed">
+                        EcoStream là hệ thống tư vấn và phân tích phát thải carbon, hỗ trợ các cơ sở thuộc diện phải kiểm kê KNK (theo Quyết định 42/2026/QĐ-TTg) tập hợp dữ liệu và tính lượng CO₂ từ nhiên liệu tiêu thụ và điện mua vào. 
+                        Dịch vụ ứng dụng AI để hỗ trợ trích xuất, kiểm tra dữ liệu và tạo hồ sơ tính toán có thể đối chiếu chéo minh bạch với chứng từ gốc.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="p-5 bg-emerald-50/50 border border-emerald-100 rounded-xl">
+                            <h3 class="font-bold text-emerald-900 mb-3 flex items-center gap-2">
+                                <span class="text-xl">✅</span> 1. Phạm vi tính toán hiện tại
+                            </h3>
+                            <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700">
+                                <li><strong>Phạm vi 1 (Scope 1):</strong> Phát thải trực tiếp từ đốt nhiên liệu tự có hoặc đồng phát (Xăng, Dầu DO, Gas, Than). Được tính bằng: <code>Lượng tiêu thụ thực tế × Nhiệt trị × EF</code>.</li>
+                                <li><strong>Phạm vi 2 (Scope 2):</strong> Phát thải gián tiếp từ điện tiêu thụ hoặc năng lượng mua ngoài (Điện lưới EVN). Tính bằng: <code>Số kWh × Hệ số lưới điện (theo QĐ 2626/BTNMT)</code>.</li>
+                                <li class="text-red-600"><em>Lưu ý: EcoStream không tính toán Scope 3, Rò rỉ môi chất lạnh (F-gasses) trong phiên bản này. Báo cáo sẽ ghi chú rõ hệ thống ranh giới theo yêu cầu xác nhận cơ sở.</em></li>
+                            </ul>
+                        </div>
+
+                        <div class="p-5 bg-blue-50/50 border border-blue-100 rounded-xl">
+                            <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                                <span class="text-xl">🛡️</span> 2. Bảo mật dữ liệu & PII Masking
+                            </h3>
+                            <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700">
+                                <li>Để đảm bảo tính tuyệt mật cho các SME và nhà máy, <strong>tất cả dữ liệu PII, tên cơ sở, pháp nhân sẽ được "Masking" (Mã hóa thực thể tên giả) tại môi trường Local CPU</strong> trước khi đưa qua hệ thống API LLM/OCR.</li>
+                                <li>Điều này giúp an toàn thông tin nội bộ không bị rò rỉ hoặc train cho AI công cộng.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="p-5 bg-amber-50/50 border border-amber-100 rounded-xl h-full">
+                            <h3 class="font-bold text-amber-900 mb-3 flex items-center gap-2">
+                                <span class="text-xl">⚙️</span> 3. Quy trình tính toán kiểm chứng
+                            </h3>
+                            <div class="space-y-3 text-sm text-slate-700">
+                                <p>Giải pháp AI của EcoStream nhằm giảm thiểu "điểm nghẽn" thu thập số liệu hoạt động (AD) bằng các bước tiêu chuẩn hóa:</p>
+                                <ol class="list-decimal pl-5 space-y-2 font-medium">
+                                    <li>Tự động thu thập dữ liệu (OCR) hóa đơn điện, phiếu cấp phát, biên bản nhập - xuất nhiên liệu từ các phòng ban bằng Microsoft MarkItDown.</li>
+                                    <li>Nhận diện dấu hiệu bất thường (kiểm tra chéo giữa hóa đơn mua sắm và nhật ký vận hành sử dụng thực tế).</li>
+                                    <li>Tra cứu hệ số phát thải đặc trưng quốc gia cho Việt Nam, gắn từng EF cụ thể xuống từng dòng chứng từ.</li>
+                                    <li>Tạo hồ sơ tính toán, Audit Trail Log đầy đủ, xuất ra định dạng báo cáo Mẫu 02 NĐ06.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <main id="page-calculator" class="space-y-6">
+
 
         <!-- Hero Context Banner -->
         <div class="gradient-brand text-white rounded-2xl p-6 sm:p-8 shadow-xl shadow-emerald-950/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -61,10 +147,8 @@
                 <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/10 text-emerald-200 text-xs font-medium mb-2 backdrop-blur-sm">
                     🏢 Cơ Sở Kiểm Kê & Giảm Nhẹ Trọng Điểm
                 </div>
-                <h1 id="heroCompany" class="text-2xl sm:text-3xl font-black tracking-tight">EcoGarment Vietnam JSC</h1>
-                <p id="heroMeta" class="text-sm text-emerald-100/90 mt-1 max-w-2xl">
-                    Nhà máy May & Năng lượng Hà Nam • Kỳ báo cáo: Năm 2026 • Lĩnh vực: May mặc & Công nghiệp phụ trợ
-                </p>
+                <h1 id="heroCompany" class="text-2xl sm:text-3xl font-black tracking-tight"> [Tên Doanh Nghiệp] </h1>
+                <p id="heroMeta" class="text-sm text-emerald-100/90 mt-1 max-w-2xl"> Cơ sở: --- • Kỳ báo cáo: --- • Lĩnh vực: --- </p>
             </div>
             <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                 <button onclick="document.getElementById('uploadSection').scrollIntoView({behavior: 'smooth'})" class="px-4 py-2.5 rounded-xl bg-white text-emerald-900 font-bold text-xs sm:text-sm hover:bg-emerald-50 transition shadow text-center">
@@ -95,7 +179,7 @@
                     4. Deterministic Math
                 </div>
                 <div id="step-synthesizing" class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold">
-                    5. Synthesis & Mau 02
+                    5. Report Synthesis
                 </div>
                 <div id="step-completed" class="p-2.5 rounded-lg bg-emerald-600 text-white font-bold shadow-xs">
                     6. Hoàn Tất (Deliverables)
@@ -112,7 +196,7 @@
                     <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold">GHG Total</span>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <span id="kpiTotalEmissions" class="text-3xl font-black tracking-tight text-slate-900 font-mono">4,945.05</span>
+                    <span id="kpiTotalEmissions" class="text-3xl font-black tracking-tight text-slate-900 font-mono"> --- </span>
                     <span class="text-sm font-semibold text-slate-500">tCO₂e</span>
                 </div>
                 <div id="kpiUncertaintyRange" class="mt-2 text-xs font-medium text-slate-600">
@@ -127,12 +211,10 @@
                     <span class="p-1.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">Fuel Combustion</span>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <span id="kpiScope1" class="text-3xl font-black tracking-tight text-emerald-950 font-mono">4,914.82</span>
+                    <span id="kpiScope1" class="text-3xl font-black tracking-tight text-emerald-950 font-mono"> --- </span>
                     <span class="text-sm font-semibold text-slate-500">tCO₂e</span>
                 </div>
-                <div id="kpiScope1Share" class="mt-2 text-xs font-medium text-emerald-700">
-                    99.4% tổng lượng phát thải (Than lò hơi, Dầu, LPG)
-                </div>
+                <div id="kpiScope1Share" class="mt-2 text-xs font-medium text-emerald-700"> --% </div>
             </div>
 
             <!-- Scope 2 -->
@@ -142,22 +224,20 @@
                     <span class="p-1.5 rounded-lg bg-blue-100 text-blue-800 text-xs font-bold">EVN Grid</span>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <span id="kpiScope2" class="text-3xl font-black tracking-tight text-blue-950 font-mono">18.98</span>
+                    <span id="kpiScope2" class="text-3xl font-black tracking-tight text-blue-950 font-mono"> --- </span>
                     <span class="text-sm font-semibold text-slate-500">tCO₂e</span>
                 </div>
-                <div id="kpiScope2Share" class="mt-2 text-xs font-medium text-blue-700">
-                    12 tháng hóa đơn EVN (Đã nội suy T7 thiếu)
-                </div>
+                <div id="kpiScope2Share" class="mt-2 text-xs font-medium text-blue-700"> --% </div>
             </div>
 
             <!-- Reliability Score -->
             <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div class="flex justify-between items-start">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Chỉ Số Tin Cậy Dữ Liệu</span>
-                    <span id="kpiGradeBadge" class="px-2 py-0.5 rounded text-xs font-black bg-amber-100 text-amber-900 border border-amber-300">Grade C</span>
+                    <span id="kpiGradeBadge" class="px-2 py-1 bg-slate-100 text-slate-800 text-xs font-black rounded border border-slate-200">Trống</span>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <span id="kpiScore" class="text-3xl font-black tracking-tight text-slate-900 font-mono">69.7%</span>
+                    <span id="kpiScore" class="text-3xl font-black tracking-tight text-slate-900 font-mono"> --% </span>
                     <span class="text-sm font-semibold text-slate-500">Score</span>
                 </div>
                 <div id="kpiScoreText" class="mt-2 text-xs font-medium text-amber-700">
@@ -172,15 +252,11 @@
                 <button onclick="switchTab('tab-inventory')" id="btn-tab-inventory" class="pb-3 border-b-2 border-emerald-700 text-emerald-800">
                     📊 Kiểm Kê Khí Nhà Kính & Bằng Chứng
                 </button>
-                <button onclick="switchTab('tab-mitigation')" id="btn-tab-mitigation" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
-                    🌿 Kế Hoạch & Giảm Nhẹ (Mẫu 02 NĐ 06/2022)
-                </button>
+                
                 <button onclick="switchTab('tab-audit')" id="btn-tab-audit" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
                     🔍 Dấu Vết Kiểm Toán (Query & Assumption Logs)
                 </button>
-                <button onclick="switchTab('tab-roadmap')" id="btn-tab-roadmap" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
-                    📍 Lộ Trình Nâng Cấp Dữ Liệu
-                </button>
+                
             </nav>
         </div>
 
@@ -227,61 +303,6 @@
                         </thead>
                         <tbody id="provenanceTableBody"></tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab 2: Mitigation & Quotas (Mau 02 ND 06/2022) -->
-        <div id="tab-mitigation" class="space-y-6 hidden">
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                <div class="flex items-center justify-between pb-4 border-b border-slate-200">
-                    <div>
-                        <h2 class="text-lg font-black text-slate-900 uppercase">Kế Hoạch & Kết Quả Giảm Nhẹ Phát Thải KNK</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Biểu mẫu Mẫu số 02 Phụ lục III Nghị định 06/2022/NĐ-CP & Nghị định 119/2025/NĐ-CP</p>
-                    </div>
-                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full border border-emerald-300">Nghị định 06/2022/NĐ-CP</span>
-                </div>
-
-                <!-- Measures Table -->
-                <div class="overflow-x-auto rounded-xl border border-slate-200 my-5">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase text-[11px]">
-                                <th class="py-3 px-3">Mã</th>
-                                <th class="py-3 px-3">Tên biện pháp giảm nhẹ</th>
-                                <th class="py-3 px-3">Lĩnh vực</th>
-                                <th class="py-3 px-3 text-right">PT Cơ sở PTCS (tCO₂e)</th>
-                                <th class="py-3 px-3 text-right">PT Thực tế PT (tCO₂e)</th>
-                                <th class="py-3 px-3 text-right">Mức giảm GPT (tCO₂e)</th>
-                                <th class="py-3 px-3 text-right">Tỷ lệ (%)</th>
-                                <th class="py-3 px-3">Phương pháp giám sát</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mitigationTableBody"></tbody>
-                    </table>
-                </div>
-
-                <!-- Quota Profile Card -->
-                <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Đánh Giá Tuân Thủ Hạn Ngạch Phát Thải (Emission Quota Balance)</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
-                        <div>
-                            <span class="text-slate-500 block">Hạn ngạch phân bổ 2026</span>
-                            <strong class="text-base text-slate-900 font-mono">4,000.0 tCO₂e</strong>
-                        </div>
-                        <div>
-                            <span class="text-slate-500 block">Phát thải ròng sau giảm nhẹ</span>
-                            <strong class="text-base text-emerald-800 font-mono">3,415.0 tCO₂e</strong>
-                        </div>
-                        <div>
-                            <span class="text-slate-500 block">Tổng mức giảm GPT</span>
-                            <strong class="text-base text-emerald-600 font-mono">1,530.0 tCO₂e</strong>
-                        </div>
-                        <div>
-                            <span class="text-slate-500 block">Trạng thái hạn ngạch</span>
-                            <span class="inline-block px-2.5 py-1 bg-amber-100 text-amber-900 font-bold rounded border border-amber-300">THIẾU HỤT HẠN NGẠCH (-945.0 t)</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -343,52 +364,46 @@
             </div>
         </div>
 
-        <!-- Tab 4: Roadmap -->
-        <div id="tab-roadmap" class="space-y-6 hidden">
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-4">'What Should I Improve?' — Lộ Trình Nâng Cấp Dữ Liệu</h3>
-                <div id="roadmapCardsContainer" class="space-y-4"></div>
-            </div>
-        </div>
-
-        <!-- Upload Custom Files Section -->
         <div id="uploadSection" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
             <h3 class="text-sm font-bold uppercase tracking-wider text-slate-800 mb-3">Tải Lên Chứng Từ & Hồ Sơ Kiểm Kê Mới</h3>
             <form id="uploadForm" onsubmit="handleUpload(event)" class="space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Tên Doanh Nghiệp</label>
-                        <input type="text" name="company" value="EcoGarment Vietnam JSC" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tên Doanh Nghiệp <span class="text-red-500">*</span></label>
+                        <input type="text" name="company" placeholder="VD: EcoGarment Vietnam JSC" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Cơ Sở / Nhà Máy</label>
-                        <input type="text" name="location" value="Nhà máy May & Năng lượng Hà Nam" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Cơ Sở / Nhà Máy <span class="text-red-500">*</span></label>
+                        <input type="text" name="location" placeholder="VD: Nhà máy May & Năng lượng Hà Nam" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Kỳ Báo Cáo</label>
-                        <input type="text" name="period" value="2026" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Kỳ Báo Cáo <span class="text-red-500">*</span></label>
+                        <input type="text" name="period" placeholder="VD: 2026" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg" required>
                     </div>
                 </div>
 
-                <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-emerald-500 transition cursor-pointer bg-slate-50/50" onclick="document.getElementById('fileInput').click()">
+                <div class="border-2 border-dashed border-emerald-300 rounded-xl p-8 text-center hover:border-emerald-500 transition cursor-pointer bg-emerald-50/50 flex flex-col items-center min-h-[160px]" onclick="document.getElementById('fileInput').click()">
                     <input type="file" id="fileInput" name="files" multiple class="hidden" onchange="updateFileLabel()">
-                    <label for="fileInput" class="cursor-pointer flex flex-col items-center">
-                        <span class="text-3xl mb-2">📁</span>
-                        <span class="text-sm font-semibold text-slate-700" id="fileLabel">Kéo thả file hoặc click để chọn tệp (.xlsx, .pdf, .docx, .csv, .txt)</span>
-                        <span class="text-xs text-slate-400 mt-1">Hỗ trợ đa định dạng với công nghệ Microsoft MarkItDown & OCR</span>
-                    </label>
+                    <div class="pointer-events-none text-center">
+                        <span class="text-4xl mb-3 block">📤</span>
+                        <span class="text-base font-bold text-slate-800" id="fileLabel">Nhấp chọn nhiều chứng từ tải lên</span>
+                    </div>
+                </div>
+                <div id="fileListContainer" class="hidden mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <h4 class="text-[11px] font-bold text-slate-600 mb-3 uppercase tracking-wider">Danh sách chuẩn bị tải lên:</h4>
+                    <div id="fileListPills" class="flex flex-wrap gap-2"></div>
                 </div>
                 </div>
 
                 <div class="text-right">
                     <button type="submit" id="btnSubmitUpload" class="px-5 py-2.5 rounded-lg bg-emerald-800 text-white font-bold text-xs hover:bg-emerald-900 transition">
-                        🚀 Khởi Chạy Pipeline Đa Tác Tử
+                        Tính toán lượng phát thải
                     </button>
                 </div>
             </form>
         </div>
 
-    </main>
+    </main></div></div>
 
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
@@ -397,11 +412,69 @@
 
     <!-- Dashboard JavaScript Logic -->
     <script>
+        
+        let selectedFiles = [];
+
+        function showPage(pageId) {
+            document.getElementById('page-guidelines').classList.add('hidden');
+            document.getElementById('page-calculator').classList.add('hidden');
+            document.getElementById('nav-guidelines').className = 'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition';
+            document.getElementById('nav-calculator').className = 'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition';
+            
+            document.getElementById(pageId).classList.remove('hidden');
+            document.getElementById(pageId === 'page-guidelines' ? 'nav-guidelines' : 'nav-calculator').className = 'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl bg-emerald-100 text-emerald-900 transition border border-emerald-200 shadow-sm';
+        }
+
+        function updateFileLabel() {
+            const input = document.getElementById('fileInput');
+            if (input.files.length > 0) {
+                Array.from(input.files).forEach(newFile => {
+                    if (!selectedFiles.find(f => f.name === newFile.name && f.size === newFile.size)) {
+                        selectedFiles.push(newFile);
+                    }
+                });
+                renderSelectedFiles();
+            }
+        }
+
+        function renderSelectedFiles() {
+            const fileLabel = document.getElementById('fileLabel');
+            const container = document.getElementById('fileListContainer');
+            const pillsBox = document.getElementById('fileListPills');
+            const input = document.getElementById('fileInput');
+            
+            if (selectedFiles.length > 0) {
+                fileLabel.innerText = `Đã chốt ${selectedFiles.length} tệp tin sẵn sàng nộp`;
+                fileLabel.className = "text-base font-bold text-emerald-700";
+                container.classList.remove('hidden');
+                pillsBox.innerHTML = '';
+                
+                selectedFiles.forEach((file, index) => {
+                    const pill = document.createElement('div');
+                    pill.className = "group flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 shadow-sm";
+                    pill.innerHTML = `<span>📄</span> <span class="truncate max-w-[200px]" title="${file.name}">${file.name}</span>
+                    <button type="button" class="ml-1 text-red-500 font-bold hover:text-red-700" onclick="removeFile(${index}, event)">✕</button>`;
+                    pillsBox.appendChild(pill);
+                });
+            } else {
+                fileLabel.innerText = "Nhấp chọn nhiều chứng từ tải lên";
+                fileLabel.className = "text-base font-bold text-slate-800";
+                container.classList.add('hidden');
+                input.value = "";
+            }
+        }
+
+        function removeFile(index, event) {
+            event.stopPropagation();
+            selectedFiles.splice(index, 1);
+            renderSelectedFiles();
+        }
+
         let scopeChart = null;
         let radarChart = null;
 
         function switchTab(tabId) {
-            ['tab-inventory', 'tab-mitigation', 'tab-audit', 'tab-roadmap'].forEach(id => {
+            ['tab-inventory', 'tab-audit'].forEach(id => {
                 const el = document.getElementById(id);
                 const btn = document.getElementById('btn-' + id);
                 if (id === tabId) {
@@ -416,12 +489,7 @@
             });
         }
 
-        function updateFileLabel() {
-            const input = document.getElementById('fileInput');
-            if (input.files.length > 0) {
-                document.getElementById('fileLabel').innerText = `Đã chọn ${input.files.length} tệp tin: ` + Array.from(input.files).map(f => f.name).join(', ');
-            }
-        }
+        
 
         async function runDemo() {
             const btn = document.getElementById('btnRunDemo');
@@ -444,6 +512,16 @@
             const form = document.getElementById('uploadForm');
             const formData = new FormData(form);
             const btn = document.getElementById('btnSubmitUpload');
+            
+            const company = formData.get('company');
+            const location = formData.get('location');
+            const period = formData.get('period');
+            
+            if (!company || !company.trim() || !location || !location.trim() || !period || !period.trim()) {
+                alert('Tải Lên Chứng Từ & Hồ Sơ Kiểm Kê Mới: Vui lòng điền đủ Tên Doanh Nghiệp, Cơ Sở / Nhà Máy, và Kỳ Báo Cáo.');
+                return;
+            }
+            
             btn.disabled = true;
             btn.innerText = '⏳ Đang khởi chạy Multi-Agent...';
 
@@ -459,7 +537,7 @@
                 alert('Lỗi tải lên: ' + err);
             } finally {
                 btn.disabled = false;
-                btn.innerText = '🚀 Khởi Chạy Pipeline Đa Tác Tử';
+                btn.innerText = 'Tính toán lượng phát thải';
             }
         }
 
@@ -502,7 +580,7 @@
             const m = data.mitigation_summary || s.mitigation_summary;
             if (m && m.measures) {
                 const mBody = document.getElementById('mitigationTableBody');
-                mBody.innerHTML = m.measures.map((mm, idx) => `
+                if(mBody) mBody.innerHTML = m.measures.map((mm, idx) => `
                     <tr class="border-b border-slate-200">
                         <td class="py-2.5 px-3 font-mono text-slate-400">${idx + 1}</td>
                         <td class="py-2.5 px-3 font-bold text-slate-800">${mm.measure_name}</td>
@@ -545,7 +623,7 @@
 
             // Render Roadmap Recommendations
             const rContainer = document.getElementById('roadmapCardsContainer');
-            rContainer.innerHTML = (s.recommendations || []).map(r => `
+            if(rContainer) rContainer.innerHTML = (s.recommendations || []).map(r => `
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
                     <div class="flex justify-between items-center mb-2">
                         <div class="flex items-center gap-2">
@@ -612,7 +690,7 @@
         }
 
         // Auto run demo on load
-        window.onload = () => runDemo();
+        window.onload = () => {};
     </script>
 </body>
 </html>
