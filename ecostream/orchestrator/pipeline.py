@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 
 from ecostream.ingestion.markitdown_loader import MarkItDownLoader
 from ecostream.orchestrator.state import BlackboardWorkspace
+from ecostream.privacy.pii_masker import PIIMasker, MaskMapping
+import json
 from ecostream.models.state import (
     RunState,
     PipelinePhase,
@@ -66,7 +68,14 @@ class WorkflowOrchestrator:
         state.progress_pct = 10.0
         self.workspace.save_state(state)
 
-        # 2. Ingest & Convert Inputs to Markdown
+        # 2. Ingest & Convert Inputs to Markdown & PII Masking
+        masker = PIIMasker()
+        mapping = MaskMapping()
+        
+        # Mask provided corporate metadata
+        masked_company = mapping.mask(company_name, "COMPANY")
+        masked_facility = mapping.mask(facility_name, "FACILITY")
+
         raw_markdowns: Dict[str, str] = {}
         for fpath in input_files:
             if os.path.exists(fpath):
@@ -77,16 +86,16 @@ class WorkflowOrchestrator:
                     for sname, scontent in converted.sheet_markdowns.items():
                         md_fname = f"{os.path.splitext(converted.filename)[0]}_{sname}.md"
                         self.workspace.store_markdown_input(md_fname, scontent)
-                        raw_markdowns[md_fname] = scontent
+                        raw_markdowns[md_fname], mapping = masker.mask_text(scontent, mapping)
                 else:
                     md_fname = f"{os.path.splitext(converted.filename)[0]}.md"
                     self.workspace.store_markdown_input(md_fname, converted.full_markdown)
-                    raw_markdowns[md_fname] = converted.full_markdown
+                    raw_markdowns[md_fname], mapping = masker.mask_text(converted.full_markdown, mapping)
 
         context = AgentContext(
             run_id=self.run_id,
-            company_name=company_name,
-            facility_name=facility_name,
+            company_name=masked_company,
+            facility_name=masked_facility,
             reporting_year=reporting_year,
             raw_markdown_sources=raw_markdowns,
             offline_mode=self.offline_mode,
@@ -101,7 +110,10 @@ class WorkflowOrchestrator:
         discovery_agent = SchemaDiscoveryAgent(llm_client=self.llm_client)
         discovery_out = discovery_agent.run(context)
         from ecostream.models.state import RunIndex
-        run_index = RunIndex(**discovery_out.extra_data["index"])
+        
+        idx_json = mapping.unmask_text(json.dumps(discovery_out.extra_data["index"]))
+        run_index = RunIndex(**json.loads(idx_json))
+
         self.workspace.save_index(run_index)
         context.index = run_index
 
@@ -137,9 +149,29 @@ class WorkflowOrchestrator:
             self.workspace.save_state(state)
 
             out = agent_instance.run(context)
-            all_records.extend(out.records)
-            all_queries.extend(out.queries)
-            all_assumptions.extend(out.assumptions)
+            
+            # Unmask outputs
+            from ecostream.models.activity import ActivityRecord
+            from ecostream.models.state import QueryLogEntry, AssumptionLogEntry
+            
+            if out.records:
+                records_json = mapping.unmask_text(json.dumps([r.model_dump() for r in out.records]))
+                unmasked_records = [ActivityRecord(**r) for r in json.loads(records_json)]
+                out.records = unmasked_records
+                all_records.extend(unmasked_records)
+            
+            if out.queries:
+                queries_json = mapping.unmask_text(json.dumps([q.model_dump() for q in out.queries]))
+                unmasked_queries = [QueryLogEntry(**q) for q in json.loads(queries_json)]
+                out.queries = unmasked_queries
+                all_queries.extend(unmasked_queries)
+                
+            if out.assumptions:
+                assump_json = mapping.unmask_text(json.dumps([a.model_dump() for a in out.assumptions]))
+                unmasked_assump = [AssumptionLogEntry(**a) for a in json.loads(assump_json)]
+                out.assumptions = unmasked_assump
+                all_assumptions.extend(unmasked_assump)
+
 
             if "mitigation_summary" in out.extra_data:
                 mitigation_data = out.extra_data["mitigation_summary"]
@@ -169,6 +201,10 @@ class WorkflowOrchestrator:
             state.completed_tasks.append(agent_name)
 
         # Save query log and assumption log
+        
+        # Save mapping
+        with open(os.path.join(self.workspace.run_dir, "pii_mapping.json"), "w", encoding="utf-8") as f:
+            f.write(mapping.to_json())
         self.workspace.save_intermediate_json("query_log.json", all_queries)
         self.workspace.save_intermediate_json("assumption_log.json", all_assumptions)
 
