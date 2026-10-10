@@ -94,13 +94,7 @@ def run_demo():
         from scripts.generate_mock_excel import generate_benchmark_excel
         generate_benchmark_excel(sample_xlsx)
 
-    import re
-        safe_c = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', company).strip('-')
-        safe_l = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', location).strip('-')
-        from datetime import datetime
-        ts_suffix = datetime.now().strftime("%H%M%S")
-        run_name = f"{safe_c}_{safe_l}_{period}_{ts_suffix}"
-        orch = WorkflowOrchestrator(run_id=run_name, offline_mode=True)
+    orch = WorkflowOrchestrator(offline_mode=True)
     res = orch.run_pipeline(
         input_files=[sample_xlsx],
         company_name="EcoGarment Vietnam JSC",
