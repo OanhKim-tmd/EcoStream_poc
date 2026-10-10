@@ -223,3 +223,6 @@ runs/*
 data/samples/test_input.xlsx
 
 
+
+# Trash
+.trash/

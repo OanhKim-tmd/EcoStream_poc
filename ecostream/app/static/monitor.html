@@ -401,12 +401,8 @@
                 <button onclick="switchTab('tabScope2')" id="btnTab-tabScope2" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
                     ⚡ Scope 2 (Điện EVN) <span id="tabCount-scope2" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700">0</span>
                 </button>
-                <button onclick="switchTab('tabScope3')" id="btnTab-tabScope3" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
-                    🚚 Scope 3 (Logistics/Spend) <span id="tabCount-scope3" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700">0</span>
-                </button>
-                <button onclick="switchTab('tabMitigation')" id="btnTab-tabMitigation" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
-                    🌱 Giảm Nhẹ Mẫu 02 <span id="tabCount-mitigation" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700">0</span>
-                </button>
+                
+                
                 <button onclick="switchTab('tabLogs')" id="btnTab-tabLogs" class="tab-btn px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100 flex items-center gap-1.5">
                     ⚠️ Nhật Ký & Giả Định <span id="tabCount-logs" class="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800">0</span>
                 </button>
@@ -493,33 +489,6 @@
                         <tbody id="tableScope2Body" class="divide-y divide-slate-100 font-mono">
                             <tr>
                                 <td colspan="6" class="p-4 text-center text-slate-400 font-sans italic">Chưa có dữ liệu trích xuất Scope 2...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tab Content: 4. Scope 3 -->
-            <div id="tabContent-tabScope3" class="tab-panel hidden space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-700">Dữ liệu vận tải chuỗi cung ứng & Chi tiêu EXIOBASE (scope3_extracted.json)</span>
-                    <button onclick="downloadJsonArtifact('scope3_extracted.json')" class="text-xs text-emerald-700 font-semibold hover:underline">⬇ Tải scope3_extracted.json</button>
-                </div>
-                <div class="overflow-x-auto rounded-xl border border-slate-200">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
-                            <tr>
-                                <th class="p-3">Hạng Mục</th>
-                                <th class="p-3">Phương Thức</th>
-                                <th class="p-3">Tấn·Km (t.km) / Chi Phí (VND)</th>
-                                <th class="p-3">Hệ Số Phát Thải Proxy</th>
-                                <th class="p-3">Độ Không Đảm Bảo</th>
-                                <th class="p-3">Nguồn Dữ Liệu</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableScope3Body" class="divide-y divide-slate-100 font-mono">
-                            <tr>
-                                <td colspan="6" class="p-4 text-center text-slate-400 font-sans italic">Chưa có dữ liệu trích xuất Scope 3...</td>
                             </tr>
                         </tbody>
                     </table>

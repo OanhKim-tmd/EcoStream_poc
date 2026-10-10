@@ -111,8 +111,17 @@ class WorkflowOrchestrator:
         discovery_out = discovery_agent.run(context)
         from ecostream.models.state import RunIndex
         
-        idx_json = mapping.unmask_text(json.dumps(discovery_out.extra_data["index"]))
-        run_index = RunIndex(**json.loads(idx_json))
+        def deep_unmask_index(obj):
+            if isinstance(obj, str):
+                return mapping.unmask_text(obj)
+            elif isinstance(obj, dict):
+                return {k: deep_unmask_index(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [deep_unmask_index(item) for item in obj]
+            return obj
+            
+        unmasked_idx = deep_unmask_index(discovery_out.extra_data["index"])
+        run_index = RunIndex(**unmasked_idx)
 
         self.workspace.save_index(run_index)
         context.index = run_index
@@ -154,21 +163,30 @@ class WorkflowOrchestrator:
             from ecostream.models.activity import ActivityRecord
             from ecostream.models.state import QueryLogEntry, AssumptionLogEntry
             
+            def deep_unmask(obj):
+                if isinstance(obj, str):
+                    return mapping.unmask_text(obj)
+                elif isinstance(obj, dict):
+                    return {k: deep_unmask(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [deep_unmask(item) for item in obj]
+                return obj
+
             if out.records:
-                records_json = mapping.unmask_text(json.dumps([r.model_dump() for r in out.records]))
-                unmasked_records = [ActivityRecord(**r) for r in json.loads(records_json)]
+                records_dict = deep_unmask([r.model_dump() for r in out.records])
+                unmasked_records = [ActivityRecord(**r) for r in records_dict]
                 out.records = unmasked_records
                 all_records.extend(unmasked_records)
             
             if out.queries:
-                queries_json = mapping.unmask_text(json.dumps([q.model_dump() for q in out.queries]))
-                unmasked_queries = [QueryLogEntry(**q) for q in json.loads(queries_json)]
+                queries_dict = deep_unmask([q.model_dump() for q in out.queries])
+                unmasked_queries = [QueryLogEntry(**q) for q in queries_dict]
                 out.queries = unmasked_queries
                 all_queries.extend(unmasked_queries)
                 
             if out.assumptions:
-                assump_json = mapping.unmask_text(json.dumps([a.model_dump() for a in out.assumptions]))
-                unmasked_assump = [AssumptionLogEntry(**a) for a in json.loads(assump_json)]
+                assump_dict = deep_unmask([a.model_dump() for a in out.assumptions])
+                unmasked_assump = [AssumptionLogEntry(**a) for a in assump_dict]
                 out.assumptions = unmasked_assump
                 all_assumptions.extend(unmasked_assump)
 

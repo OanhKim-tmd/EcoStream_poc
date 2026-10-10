@@ -411,11 +411,11 @@ class ReportExporter:
 
     @classmethod
     def to_docx(cls, report: AuditReport) -> bytes:
-        """Generates an official Microsoft Word document (.docx) conforming to Vietnamese regulatory standards."""
         from docx import Document
         from docx.shared import Inches, Pt, RGBColor
         from docx.enum.text import WD_ALIGN_PARAGRAPH
         from docx.enum.table import WD_TABLE_ALIGNMENT
+        import io
 
         doc = Document()
         s = report.summary
@@ -428,91 +428,131 @@ class ReportExporter:
             section.left_margin = Inches(0.8)
             section.right_margin = Inches(0.8)
 
+        # Style defaults
+        style = doc.styles['Normal']
+        style.font.name = 'Times New Roman'
+        style.font.size = Pt(12)
+
+        # Top Center
+        p1 = doc.add_paragraph()
+        p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p1.add_run(f"CÔNG TY {s.company_name.upper()}")
+        run.bold = True
+        p1.add_run("\n--------------***--------------")
+
         # Title
-        title_p = doc.add_paragraph()
-        title_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        title_run = title_p.add_run("BÁO CÁO KIỂM KÊ VÀ GIẢM NHẸ PHÁT THẢI KHÍ NHÀ KÍNH")
-        title_run.bold = True
-        title_run.font.size = Pt(14)
-        title_run.font.color.rgb = RGBColor(31, 78, 121)
-
-        sub_p = doc.add_paragraph()
-        sub_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        sub_run = sub_p.add_run("EcoStream AI Carbon & Reliability Engine — Báo Cáo Thẩm Định & Tuân Thủ")
-        sub_run.italic = True
-        sub_run.font.size = Pt(10)
-
-        doc.add_paragraph()  # Spacer
-
-        # Metadata Table
-        meta_table = doc.add_table(rows=4, cols=2)
-        meta_table.alignment = WD_TABLE_ALIGNMENT.CENTER
-        meta_data = [
-            ("Doanh nghiệp / Cơ sở:", f"{s.company_name} - {s.facility_location}"),
-            ("Lĩnh vực hoạt động:", s.industry_sector),
-            ("Kỳ báo cáo kiểm kê:", f"Năm {s.reporting_period}"),
-            ("Mã báo cáo & Ngày xuất:", f"{report.report_id} ({report.generated_at})"),
-        ]
-        for idx, (label, val) in enumerate(meta_data):
-            row = meta_table.rows[idx]
-            row.cells[0].paragraphs[0].add_run(label).bold = True
-            row.cells[1].paragraphs[0].add_run(val)
-
+        p2 = doc.add_paragraph()
+        p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r2 = p2.add_run(f"\nBÁO CÁO\nKẾT QUẢ KIỂM KÊ KHÍ NHÀ KÍNH CHO NĂM {s.reporting_period}")
+        r2.bold = True
+        r2.font.size = Pt(14)
+        
+        p3 = doc.add_paragraph()
+        p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r3 = p3.add_run(f"của cơ sở “{s.facility_location}”")
+        r3.italic = True
         doc.add_paragraph()
 
-        # Part 1 Heading
-        h1 = doc.add_heading("PHẦN I: KIỂM KÊ KHÍ NHÀ KÍNH DOANH NGHIỆP (SCOPE 1, 2, 3)", level=1)
-        h1.style.font.color.rgb = RGBColor(31, 78, 121)
+        # Acronyms
+        doc.add_heading("DANH MỤC CÁC CHỮ VIẾT TẮT", level=2)
+        tbl_acr = doc.add_table(rows=5, cols=2)
+        acronyms = [
+            ("BĐKH", "Biến đổi khí hậu"),
+            ("EF", "Hệ số phát thải (Emission Factor)"),
+            ("GHG", "Khí nhà kính"),
+            ("GWP", "Tiềm năng nóng lên toàn cầu"),
+            ("IPCC", "Ban liên Chính phủ về biến đổi khí hậu"),
+        ]
+        for i, (k, v) in enumerate(acronyms):
+            tbl_acr.cell(i, 0).text = k
+            tbl_acr.cell(i, 1).text = v
+        doc.add_paragraph()
 
-        summary_p = doc.add_paragraph()
-        summary_p.add_run(f"Tổng phát thải ròng toàn cơ sở: ").bold = True
-        summary_p.add_run(f"{s.total_co2e_tonnes:,.3f} tCO₂e (Khoảng tin cậy 95%: [{s.total_uncertainty_min_tonnes:.1f} - {s.total_uncertainty_max_tonnes:.1f}] tCO₂e)\n")
-        summary_p.add_run(f"• Scope 1 (Phát thải trực tiếp): {s.scope_1_tonnes:,.3f} tCO₂e\n")
-        summary_p.add_run(f"• Scope 2 (Gián tiếp từ điện EVN): {s.scope_2_tonnes:,.3f} tCO₂e\n")
-        summary_p.add_run(f"• Scope 3 (Chuỗi cung ứng & logistics): {s.scope_3_tonnes:,.3f} tCO₂e\n")
-        summary_p.add_run(f"• Chỉ số tin cậy dữ liệu: {rel.overall_confidence_score}% (Grade {rel.grade})\n")
+        # TOC (Static mock)
+        doc.add_heading("MỤC LỤC", level=2)
+        doc.add_paragraph("I. Thông tin của cơ sở phải thực hiện kiểm kê khí nhà kính")
+        doc.add_paragraph("II. Thông tin về hoạt động sản xuất kinh doanh và số liệu hoạt động")
+        doc.add_paragraph("III. Kết quả thực hiện kiểm kê phát thải khí nhà kính")
+        doc.add_paragraph("IV. Kết luận và kiến nghị\n")
 
-        # Provenance Table in Word
-        doc.add_heading("Bảng Tổng Hợp Chi Tiết Hoạt Động & Hệ Số Phát Thải", level=2)
-        p_table = doc.add_table(rows=1, cols=6)
-        p_table.alignment = WD_TABLE_ALIGNMENT.CENTER
-        headers = ["STT", "Hạng mục phát thải", "Scope", "Lượng hoạt động", "Hệ số EF", "Phát thải (tCO₂e)"]
-        hdr_cells = p_table.rows[0].cells
-        for idx, h_text in enumerate(headers):
-            p = hdr_cells[idx].paragraphs[0]
-            run = p.add_run(h_text)
-            run.bold = True
-            run.font.size = Pt(9)
+        # I
+        p4 = doc.add_paragraph()
+        r4 = p4.add_run("I. Thông tin của cơ sở phải thực hiện kiểm kê khí nhà kính")
+        r4.bold = True
 
-        for idx, c in enumerate(report.calculations, 1):
-            row = p_table.add_row()
-            row_data = [str(idx), c.description[:35], c.scope.value, f"{c.activity_value:,.1f} {c.activity_unit}", str(c.emission_factor_value), f"{c.co2e_tonnes:.3f}"]
-            for col_idx, cell_value in enumerate(row_data):
-                p = row.cells[col_idx].paragraphs[0]
-                run = p.add_run(cell_value)
-                run.font.size = Pt(8.5)
+        doc.add_paragraph("1. Tên cơ sở, địa chỉ\n"
+                         f"- Tên doanh nghiệp: {s.company_name}\n"
+                         f"- Cơ sở: {s.facility_location}\n"
+                         f"- Năm kiểm kê: {s.reporting_period}")
+        
+        doc.add_paragraph("2. Lĩnh vực hoạt động\n"
+                         f"Lĩnh vực: {s.industry_sector}")
 
-        # Part 2: Mitigation in Word
-        if report.mitigation_summary:
-            m = report.mitigation_summary
-            qp = m.quota_profile
-            doc.add_paragraph()
-            h2 = doc.add_heading("PHẦN II: KẾ HOẠCH & KẾT QUẢ GIẢM NHẸ PHÁT THẢI (MẪU SỐ 02 NĐ 06/2022)", level=1)
-            h2.style.font.color.rgb = RGBColor(31, 78, 121)
+        # II
+        p5 = doc.add_paragraph()
+        r5 = p5.add_run("II. Thông tin về hoạt động sản xuất kinh doanh và số liệu hoạt động của cơ sở")
+        r5.bold = True
 
-            m_p = doc.add_paragraph()
-            m_p.add_run(f"Tổng phát thải cơ sở (PT_CS): {m.total_baseline_ptcs:,.1f} tCO₂e\n")
-            m_p.add_run(f"Tổng phát thải thực tế (PT): {m.total_actual_pt:,.1f} tCO₂e\n")
-            m_p.add_run(f"Tổng mức giảm phát thải (GPT): ").bold = True
-            m_p.add_run(f"{m.total_reduction_gpt:,.1f} tCO₂e ({m.overall_reduction_pct:.1f}%)\n")
-            m_p.add_run(f"Hạn ngạch phân bổ: {qp.allocated_quota_tonnes:,.1f} tCO₂e | Phát thải ròng: {qp.net_compliance_emissions_tonnes:,.1f} tCO₂e\n")
-            m_p.add_run(f"Trạng thái tuân thủ: {qp.compliance_status}\n")
+        doc.add_paragraph(f"1. Ranh giới và phạm vi hoạt động\nRanh giới kiểm kê bao gồm toàn bộ hoạt động bên trong ranh giới cơ sở {s.facility_location}. Các nguồn phát thải được kiểm kê trong kỳ này bao gồm Phạm vi 1 (Phát thải trực tiếp từ đốt nhiên liệu) và Phạm vi 2 (Phát thải gián tiếp từ điện tiêu thụ).")
+        
+        doc.add_paragraph("Lưu ý: Các nguồn sau chưa được đưa vào phạm vi tính toán (loại trừ theo giới hạn hệ thống):\n"
+                         "- Khí rò rỉ môi chất lạnh (F-gases) từ hệ thống điều hòa/làm mát\n"
+                         "- Nước thải công nghiệp và sinh hoạt chưa được xử lý\n"
+                         "- Chất thải rắn chôn lấp (Scope 1/3 tùy ranh giới)\n"
+                         "- Lượng nhiên liệu sử dụng cho phương tiện vận tải bên thứ ba (Scope 3 - không đưa vào tính toán giới hạn đợt 1)\n"
+                         "- Phát thải từ chuỗi cung ứng nguyên vật liệu (Scope 3)")
 
-        # Save to buffer
+        # III
+        p6 = doc.add_paragraph()
+        r6 = p6.add_run("III. Kết quả thực hiện kiểm kê phát thải khí nhà kính")
+        r6.bold = True
+
+        doc.add_paragraph("1. Phương pháp luận\nKiểm kê được thực hiện dựa trên hướng dẫn của IPCC và các quy định của Bộ TN&MT (NĐ 06/2022/NĐ-CP). Phương pháp chung: PT = AD x EF")
+
+        doc.add_paragraph("2. Số liệu hoạt động và hệ số phát thải")
+        
+        # Table of AD and EF
+        tbl_calcs = doc.add_table(rows=1, cols=4, style="Table Grid")
+        hdr_cells = tbl_calcs.rows[0].cells
+        hdr_cells[0].text = "STT"
+        hdr_cells[1].text = "Hoạt động / Nguồn"
+        hdr_cells[2].text = "Lượng (AD)"
+        hdr_cells[3].text = "Hệ số phát thải (EF)"
+        for cell in hdr_cells:
+            cell.paragraphs[0].runs[0].bold = True
+
+        for i, c in enumerate(report.calculations):
+            row = tbl_calcs.add_row().cells
+            row[0].text = str(i + 1)
+            row[1].text = f"[{c.scope}] {c.description}"
+            row[2].text = f"{c.activity_value:,.2f} {c.activity_unit}"
+            row[3].text = str(c.emission_factor_value)
+        doc.add_paragraph()
+
+        doc.add_paragraph("3. Tổng hợp Kết quả phát thải KNK")
+        doc.add_paragraph(f"Tổng phát thải ròng toàn cơ sở: {s.total_co2e_tonnes:.3f} tCO2e\n- Scope 1 (Trực tiếp): {s.scope_1_tonnes:.3f} tCO2e\n- Scope 2 (Gián tiếp): {s.scope_2_tonnes:.3f} tCO2e\n- Khoảng tin cậy: [{s.total_uncertainty_min_tonnes:.3f} - {s.total_uncertainty_max_tonnes:.3f}] tCO2e")
+
+        # IV
+        p7 = doc.add_paragraph()
+        r7 = p7.add_run("IV. Kết luận và kiến nghị")
+        r7.bold = True
+
+        doc.add_paragraph(f"Hệ thống đạt điểm tin cậy là {rel.overall_confidence_score:.1f}%. Dữ liệu đã được kiểm soát bởi EcoStream AI.")
+        
+        for idx, rec in enumerate(s.recommendations):
+            doc.add_paragraph(f"Kiến nghị {rec.priority}: {rec.title} - {rec.action_required}")
+
+        doc.add_paragraph("\n\n")
+        sig_p = doc.add_paragraph()
+        sig_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        sig_r = sig_p.add_run("ĐẠI DIỆN CƠ SỞ\n\n(Ký và đóng dấu)")
+        sig_r.bold = True
+
+        # Save
         buffer = io.BytesIO()
         doc.save(buffer)
-        return buffer.getvalue()
-
+        buffer.seek(0)
+        return buffer.read()
     @classmethod
     def to_pdf(cls, report: AuditReport) -> bytes:
         """Generates an audit-ready vector PDF using ReportLab with clean Vietnamese TrueType fonts."""

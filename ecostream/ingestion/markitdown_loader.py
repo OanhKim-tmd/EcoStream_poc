@@ -149,16 +149,30 @@ class MarkItDownLoader:
     def _convert_csv(self, file_path: str) -> str:
         """Convert CSV into markdown table."""
         import csv
-
-        lines: List[str] = [f"# File: {os.path.basename(file_path)}\n"]
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            reader = csv.reader(f)
-            rows = [r for r in reader if any(cell.strip() != "" for cell in r)]
-            if rows:
-                lines.append("| " + " | ".join(rows[0]) + " |")
-                lines.append("| " + " | ".join(["---"] * len(rows[0])) + " |")
-                for r in rows[1:]:
-                    lines.append("| " + " | ".join(r) + " |")
+        import io
+        import os
+        
+        encodings = ["utf-8-sig", "utf-8", "cp1258", "latin1"]
+        doc_content = None
+        for enc in encodings:
+            try:
+                with open(file_path, "r", encoding=enc) as f:
+                    doc_content = f.read()
+                break
+            except Exception:
+                pass
+                
+        if not doc_content:
+            return "Empty or unreadable CSV"
+            
+        lines = [f"# File: {os.path.basename(file_path)}\n"]
+        reader = csv.reader(io.StringIO(doc_content))
+        rows = [r for r in reader if any(cell.strip() != "" for cell in r)]
+        if rows:
+            lines.append("| " + " | ".join(rows[0]) + " |")
+            lines.append("| " + " | ".join(["---"] * len(rows[0])) + " |")
+            for r in rows[1:]:
+                lines.append("| " + " | ".join(r) + " |")
         return "\n".join(lines)
 
     @staticmethod

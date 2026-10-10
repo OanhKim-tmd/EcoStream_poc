@@ -160,6 +160,10 @@ async def upload_documents(
                 return report_data
 
         return res
+    except Exception as e:
+        import traceback
+        err_msg = traceback.format_exc()
+        return {"error": "Pipeline Crashed", "details": err_msg}
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -326,7 +330,7 @@ def export_pdf():
     return Response(content=pdf_bytes, media_type="application/pdf")
 
 
-def find_available_port(start_port: int = 8080, host: str = "127.0.0.1", max_attempts: int = 20) -> int:
+def find_available_port(start_port: int = 8000, host: str = "127.0.0.1", max_attempts: int = 20) -> int:
     """Find the first available TCP port."""
     for port in range(start_port, start_port + max_attempts):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -345,7 +349,7 @@ def find_available_port(start_port: int = 8080, host: str = "127.0.0.1", max_att
     return port
 
 
-def run_server(host: str = "127.0.0.1", port: int = 8080):
+def run_server(host: str = "127.0.0.1", port: int = 8000):
     actual_port = find_available_port(port, host)
     print(f"\n[EcoStream] Multi-Agent Web Server is live at: http://{host}:{actual_port}\n")
     uvicorn.run(app, host=host, port=actual_port)
