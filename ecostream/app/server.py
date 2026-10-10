@@ -123,6 +123,16 @@ async def upload_documents(
 ):
     """Upload custom business files (Excel, PDF, Word, CSV) and run multi-agent pipeline."""
     global _latest_report
+    
+    # --- AUTO-CLEAN PREVIOUS RUNS ---
+    import shutil
+    try:
+        shutil.rmtree(RUNS_DIR)
+        os.makedirs(RUNS_DIR, exist_ok=True)
+    except:
+        pass
+    # --------------------------------
+    
     temp_dir = tempfile.mkdtemp()
     saved_paths = []
     try:
