@@ -323,9 +323,7 @@ function renderDeliverables(data) {
         }
     }
 
-    setupDeliverable('delivStatus-md', 'delivLink-md', 'delivBtn-md-preview', 'Bao_cao_kiem_ke_va_giam_nhe_KNK.md');
-    setupDeliverable('delivStatus-html', 'delivLink-html', null, 'Bao_cao_kiem_ke_va_giam_nhe_KNK.html');
-    setupDeliverable('delivStatus-docx', 'delivLink-docx', null, 'Bao_cao_Mau02_ND06.docx');
+            setupDeliverable('delivStatus-docx', 'delivLink-docx', null, 'Bao_cao_Mau02_ND06.docx');
     setupDeliverable('delivStatus-pdf', 'delivLink-pdf', null, 'Bao_cao_kiem_ke_va_giam_nhe_KNK.pdf');
 }
 
