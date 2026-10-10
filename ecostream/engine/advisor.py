@@ -153,6 +153,14 @@ class CarbonAdvisor:
         hotspots = cls.identify_hotspots(calculations)
         recommendations = cls.generate_recommendations(records, calculations, total_tonnes)
 
+        uncalculated = [
+            "Khí rò rỉ môi chất lạnh (F-gases) từ hệ thống điều hòa/làm mát",
+            "Nước thải công nghiệp và sinh hoạt chưa được xử lý",
+            "Chất thải rắn chôn lấp (Scope 1/3 tùy ranh giới)",
+            "Lượng nhiên liệu sử dụng cho phương tiện vận tải bên thứ ba (Scope 3 - không đưa vào tính toán giới hạn đợt 1)",
+            "Phát thải từ chuỗi cung ứng nguyên vật liệu (Scope 3)"
+        ]
+
         return SMEInventorySummary(
             company_name=company_name,
             facility_location=facility_location,
@@ -168,6 +176,7 @@ class CarbonAdvisor:
             reliability=reliability,
             hotspots=hotspots,
             recommendations=recommendations,
+            uncalculated_sources=uncalculated,
         )
 
     # Backward compatibility alias

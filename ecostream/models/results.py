@@ -84,6 +84,8 @@ class SMEInventorySummary(BaseModel):
     reliability: ReliabilityAssessment
     hotspots: List[CarbonCalculation]
     recommendations: List[ReductionRecommendation]
+    uncalculated_sources: List[str] = Field(default_factory=list)
+
 
 
 from ecostream.models.mitigation import MitigationSummary

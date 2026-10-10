@@ -80,38 +80,10 @@ def run_multiagent_pipeline(
     )
     console.print(table)
 
-    # 2. Mitigation Table (Mau 02 ND 06/2022)
-    if result.get("mitigation_summary"):
-        m = result["mitigation_summary"]
-        qp = m["quota_profile"]
-        m_table = Table(title="Kế Hoạch & Kết Quả Giảm Nhẹ Phát Thải KNK (Mẫu số 02 NĐ 06/2022/NĐ-CP)")
-        m_table.add_column("STT", justify="center")
-        m_table.add_column("Biện pháp giảm nhẹ", style="cyan")
-        m_table.add_column("PT Cơ sở (tCO₂e)", justify="right")
-        m_table.add_column("PT Thực tế (tCO₂e)", justify="right")
-        m_table.add_column("Mức giảm GPT (tCO₂e)", justify="right", style="bold green")
-        m_table.add_column("Tỷ lệ (%)", justify="right")
-
-        for idx, mm in enumerate(m["measures"], 1):
-            m_table.add_row(
-                str(idx),
-                mm["measure_name"],
-                f"{mm['baseline_emissions_ptcs']:,.1f}",
-                f"{mm['actual_emissions_pt']:,.1f}",
-                f"{mm['emission_reduction_gpt']:,.1f}",
-                f"{mm['reduction_pct']:.1f}%",
-            )
-        m_table.add_section()
-        m_table.add_row(
-            "Σ",
-            "[bold]Tổng cộng toàn cơ sở[/bold]",
-            f"{m['total_baseline_ptcs']:,.1f}",
-            f"{m['total_actual_pt']:,.1f}",
-            f"[bold]{m['total_reduction_gpt']:,.1f}[/bold]",
-            f"{m['overall_reduction_pct']:.1f}%",
-        )
-        console.print(m_table)
-        console.print(f"[cyan]Hạn ngạch phân bổ:[/cyan] {qp['allocated_quota_tonnes']:,.1f} tCO₂e | [cyan]Phát thải sau giảm nhẹ:[/cyan] {qp['net_compliance_emissions_tonnes']:,.1f} tCO₂e | [bold yellow]{qp['compliance_status']}[/bold yellow]\n")
+    # 2. Mitigation Table (Mau 02 ND 06/2022) - HIDDEN for EcoStream POC Stage 1
+    # if result.get("mitigation_summary"):
+    #     ...
+    #         console.print(f"[cyan]Hạn ngạch phân bổ:[/cyan] {qp['allocated_quota_tonnes']:,.1f} tCO₂e | [cyan]Phát thải sau giảm nhẹ:[/cyan] {qp['net_compliance_emissions_tonnes']:,.1f} tCO₂e | [bold yellow]{qp['compliance_status']}[/bold yellow]\n")
 
     # 3. Query & Assumption Logs Table
     if result.get("queries") or result.get("assumptions"):
@@ -142,6 +114,7 @@ def run_multiagent_pipeline(
     deliv_msg = (
         f"[green]✔ Deliverables saved in blackboard workspace:[/green]\n"
         f"  • JSON Summary: [cyan]{deliv.get('json')}[/cyan]\n"
+        f"  • Excel Workbook (QA & Hồ sơ CO2): [cyan]{deliv.get('excel')}[/cyan]\n"
         f"  • Markdown Report: [cyan]{deliv.get('markdown')}[/cyan]\n"
         f"  • Standalone HTML: [cyan]{deliv.get('html')}[/cyan]\n"
         f"  • Word Document: [cyan]{deliv.get('docx')}[/cyan]\n"

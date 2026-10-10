@@ -125,9 +125,12 @@ class WorkflowOrchestrator:
         domain_agents = [
             ("Scope1FuelAgent", Scope1FuelAgent(self.llm_client)),
             ("Scope2PowerAgent", Scope2PowerAgent(self.llm_client)),
-            ("Scope3SupplyAgent", Scope3SupplyAgent(self.llm_client)),
-            ("MitigationQuotaAgent", MitigationQuotaAgent(self.llm_client)),
         ]
+
+        # In this PoC (per USTH_Inn 2026_EcoStream docx constraints):
+        # "Phiên bản đầu chỉ tính CO₂ từ nhiên liệu tiêu thụ và điện mua vào...
+        #  Phiên bản thử nghiệm không có chức năng dự báo, đề xuất giảm phát thải hoặc tính Scope 3."
+        # So we skip Scope3 and Mitigation agents to strictly adhere to the project scope.
 
         for agent_name, agent_instance in domain_agents:
             state.active_agent = agent_name
@@ -183,18 +186,18 @@ class WorkflowOrchestrator:
         total_penalty = min(25.0, sum(a.confidence_penalty * 100.0 for a in all_assumptions))
         reliability = ReliabilityEngine.evaluate(all_records, assumption_penalty=total_penalty)
 
-        # Re-align Mitigation Summary with actual calculated corporate/facility emissions
+        # Mitigation Summary is skipped in this PoC mode per instructions
         mitigation_summary = None
-        if mitigation_data:
-            measures = [MitigationMeasure(**m) for m in mitigation_data.get("measures", [])]
-            mitigation_summary = MitigationMathEngine.generate_mitigation_summary(
-                facility_name=facility_name,
-                measures=measures,
-                allocated_quota_tonnes=4000.0,
-                actual_inventory_tonnes=total_tonnes,
-                reporting_period=str(reporting_year),
-            )
-            self.workspace.save_intermediate_json("mitigation_summary.json", mitigation_summary)
+        # if mitigation_data:
+        #     measures = [MitigationMeasure(**m) for m in mitigation_data.get("measures", [])]
+        #     mitigation_summary = MitigationMathEngine.generate_mitigation_summary(
+        #         facility_name=facility_name,
+        #         measures=measures,
+        #         allocated_quota_tonnes=4000.0,
+        #         actual_inventory_tonnes=total_tonnes,
+        #         reporting_period=str(reporting_year),
+        #     )
+        #     self.workspace.save_intermediate_json("mitigation_summary.json", mitigation_summary)
 
         inventory_summary = CarbonAdvisor.compile_summary(
             company_name=company_name,
@@ -277,6 +280,13 @@ class WorkflowOrchestrator:
         except Exception as e:
             print(f"Notice: PDF generation skipped ({e})")
 
+        # Excel Report (New EcoStream requirement)
+        excel_path = os.path.join(deliv_dir, "Ho_so_ket_qua_CO2_EcoStream.xlsx")
+        try:
+            ReportExporter.to_excel(audit_report, excel_path)
+        except Exception as e:
+            print(f"Notice: Excel generation failed ({e})")
+
         # 7. Finalize State
         state.phase = PipelinePhase.COMPLETED
         state.progress_pct = 100.0
@@ -297,6 +307,7 @@ class WorkflowOrchestrator:
                 "html": html_path,
                 "docx": docx_path,
                 "pdf": pdf_path,
+                "excel": excel_path,
                 "run_dir": self.workspace.run_dir,
             },
         }

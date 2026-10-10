@@ -382,6 +382,13 @@ class ReportExporter:
             </div>
         </div>
 
+        <!-- Uncalculated Sources -->
+        <div class="my-6">
+            <h3 class="text-xs font-bold uppercase text-slate-700 mb-2">Danh Mục Nguồn Chưa Tính & Bị Loại Trừ (Out of scope)</h3>
+            <ul class="list-disc pl-5 text-sm text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                {"".join(f"<li>{item}</li>" for item in s.uncalculated_sources)}
+            </ul>
+        </div>
         <!-- Actionable Recommendations -->
         <div class="my-6">
             <h3 class="text-xs font-bold uppercase text-slate-700 mb-2">'What Should I Improve?' — Lộ Trình Nâng Cấp Dữ Liệu</h3>
@@ -585,3 +592,8 @@ class ReportExporter:
 
         doc.build(elements)
         return buffer.getvalue()
+
+    @classmethod
+    def to_excel(cls, report: AuditReport, filepath: str):
+        from ecostream.reporting.excel_exporter import ExcelExporter
+        ExcelExporter.export(report, filepath)
