@@ -304,17 +304,7 @@ class WorkflowOrchestrator:
         with open(json_path, "w", encoding="utf-8") as f:
             f.write(audit_report.model_dump_json(indent=2))
 
-        # Markdown Report
-        md_content = ReportExporter.to_markdown(audit_report)
-        md_path = os.path.join(deliv_dir, "Bao_cao_kiem_ke_va_giam_nhe_KNK.md")
-        with open(md_path, "w", encoding="utf-8") as f:
-            f.write(md_content)
-
-        # Standalone HTML Report
-        html_content = ReportExporter.to_html(audit_report)
-        html_path = os.path.join(deliv_dir, "Bao_cao_kiem_ke_va_giam_nhe_KNK.html")
-        with open(html_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
+        
 
         # Word Report (.docx)
         docx_path = os.path.join(deliv_dir, "Bao_cao_Mau02_ND06.docx")
@@ -357,8 +347,8 @@ class WorkflowOrchestrator:
             "assumptions": [a.model_dump() for a in all_assumptions],
             "deliverables": {
                 "json": json_path,
-                "markdown": md_path,
-                "html": html_path,
+                
+                
                 "docx": docx_path,
                 "pdf": pdf_path,
                 "excel": excel_path,

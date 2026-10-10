@@ -94,7 +94,13 @@ def run_demo():
         from scripts.generate_mock_excel import generate_benchmark_excel
         generate_benchmark_excel(sample_xlsx)
 
-    orch = WorkflowOrchestrator(offline_mode=True)
+    import re
+        safe_c = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', company).strip('-')
+        safe_l = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', location).strip('-')
+        from datetime import datetime
+        ts_suffix = datetime.now().strftime("%H%M%S")
+        run_name = f"{safe_c}_{safe_l}_{period}_{ts_suffix}"
+        orch = WorkflowOrchestrator(run_id=run_name, offline_mode=True)
     res = orch.run_pipeline(
         input_files=[sample_xlsx],
         company_name="EcoGarment Vietnam JSC",
@@ -143,7 +149,13 @@ async def upload_documents(
         except Exception:
             pass
 
-        orch = WorkflowOrchestrator(offline_mode=True)
+        import re
+        safe_c = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', company).strip('-')
+        safe_l = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', location).strip('-')
+        from datetime import datetime
+        ts_suffix = datetime.now().strftime("%H%M%S")
+        run_name = f"{safe_c}_{safe_l}_{period}_{ts_suffix}"
+        orch = WorkflowOrchestrator(run_id=run_name, offline_mode=True)
         res = orch.run_pipeline(
             input_files=saved_paths,
             company_name=company,
@@ -300,24 +312,10 @@ def list_factors():
     return [f.model_dump() for f in db.get_all_factors()]
 
 
-@app.get("/api/export/markdown", response_class=PlainTextResponse)
-@app.get("/api/report/markdown", response_class=PlainTextResponse)
-def export_markdown():
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    md_content = ReportExporter.to_markdown(_latest_report)
-    return PlainTextResponse(content=md_content, media_type="text/markdown; charset=utf-8")
 
 
-@app.get("/api/export/html", response_class=HTMLResponse)
-@app.get("/api/report/html", response_class=HTMLResponse)
-def export_html():
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    html_content = ReportExporter.to_html(_latest_report)
-    return HTMLResponse(content=html_content)
+
+
 
 
 @app.get("/api/export/pdf")
