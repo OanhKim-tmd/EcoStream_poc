@@ -107,7 +107,7 @@ Truy cập tại **`http://localhost:8080/monitor`**:
 - **Bộ chọn Run tương tác**: Danh sách dropdown hiển thị đầy đủ các lần chạy với ID, thời gian, trạng thái, tiến độ %.
 - **5-Phase Lifecycle Stepper**: Hiển thị trực quan từng giai đoạn (Ingestion $\to$ Discovery $\to$ Extraction $\to$ Math & Mitigation $\to$ Synthesis).
 - **Tabbed Intermediate JSON Inspector**: Khám phá trực tiếp dữ liệu trích xuất Scope 1, Scope 2, Scope 3, Mẫu 02, Query Log, Assumption Log, Index và State thô.
-- **Quản lý & Tải về Deliverables**: Xem trước và tải ngay các file báo cáo Markdown, HTML, Word DOCX, PDF, JSON.
+- **Quản lý & Tải về Deliverables**: Xem trước và tải ngay các file , HTML, Word DOCX, PDF, JSON.
 
 ---
 
