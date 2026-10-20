@@ -22,10 +22,10 @@ class TestPipelineIntegration(unittest.TestCase):
         self.assertIn("summary", data)
         self.assertIn("calculations", data)
         summary = data["summary"]
-        self.assertAlmostEqual(summary["total_co2e_tonnes"], 4945.05, places=1)
+        self.assertAlmostEqual(summary["total_co2e_tonnes"], 4933.80, places=1)
         self.assertAlmostEqual(summary["scope_1_tonnes"], 4914.82, places=1)
         self.assertAlmostEqual(summary["scope_2_tonnes"], 18.98, places=1)
-        self.assertAlmostEqual(summary["scope_3_tonnes"], 11.25, places=1)
+        self.assertAlmostEqual(summary["scope_3_tonnes"], 0.0, places=1)
         self.assertIn(summary["reliability"]["grade"], ["A", "B", "C"])
 
     def test_report_export_endpoints(self):

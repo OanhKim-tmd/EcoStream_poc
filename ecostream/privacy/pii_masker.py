@@ -72,6 +72,15 @@ class MaskMapping:
             result = result.replace(token, original)
         return result
 
+    def clear(self) -> None:
+        """Purge all mapping dictionaries from memory immediately."""
+        self._forward.clear()
+        self._reverse.clear()
+        self._counters.clear()
+
+    def __del__(self):
+        self.clear()
+
     @property
     def summary(self) -> Dict[str, int]:
         """Count of masked items per category."""
@@ -136,10 +145,40 @@ class PIIMasker:
     RE_PO_CODE = re.compile(r'\b(PO[-\d]{2,15})\b', re.IGNORECASE)
 
     # ── Bank Account Number ─────────────────────────────────────────
-    # Vietnamese bank accounts: 10-19 digit sequences near banking keywords
+    # Vietnamese bank accounts: 8-24 digit sequences near banking keywords
     RE_BANK_ACCOUNT = re.compile(
-        r'(?:Tài khoản|TK|Số TK|STK)[:\s]*(\d{10,19})',
+        r'(?:Tài khoản|TK|Số TK|STK|Số tài khoản|Account No|IBAN)[:\s]*([0-9\s-]{8,24})',
         re.IGNORECASE,
+    )
+
+    # ── Email Address ──────────────────────────────────────────────
+    RE_EMAIL = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b')
+
+    # ── Phone Number ───────────────────────────────────────────────
+    # Vietnamese mobile and landline phones (+84 or 0 prefix)
+    RE_PHONE = re.compile(r'(?:\+84|0)(?:3[2-9]|5[25689]|7[06-9]|8[1-9]|9[0-9]|2\d{2})[-.\s]?\d{3}[-.\s]?\d{4}\b')
+
+    # ── Citizen Identification (CCCD / CMND) ───────────────────────
+    RE_CITIZEN_ID = re.compile(
+        r'(?:CCCD|CMND|Số CCCD|Số CMND|Số định danh cá nhân|Căn cước công dân)[:\s]*(\d{9}|\d{12})\b',
+        re.IGNORECASE,
+    )
+
+    # ── FDI and Multinational Company Suffixes ──────────────────────
+    FDI_SUFFIXES = [
+        r'Co\.,?\s*Ltd\.?',
+        r'LLC',
+        r'Inc\.?',
+        r'Corp\.?',
+        r'Corporation',
+        r'Holdings?',
+        r'Pte\.?\s*Ltd\.?',
+        r'GmbH',
+        r'B\.V\.',
+        r'JSC',
+    ]
+    RE_FDI_COMPANY = re.compile(
+        r'\b([A-Z][A-Za-z0-9\s&.,()-]{2,40}\s+(?:' + '|'.join(FDI_SUFFIXES) + r'))\b'
     )
 
     # ── Invoice Lookup Code ─────────────────────────────────────────
@@ -245,6 +284,13 @@ class PIIMasker:
         # 3. Bank accounts (before generic digit patterns)
         result = self._mask_pattern(result, self.RE_BANK_ACCOUNT, "BANK", mapping, group=1)
 
+        # 3b. Citizen Identification (CCCD / CMND)
+        result = self._mask_pattern(result, self.RE_CITIZEN_ID, "CITIZEN_ID", mapping, group=1)
+
+        # 3c. Email and Phone Contacts
+        result = self._mask_pattern(result, self.RE_EMAIL, "EMAIL", mapping)
+        result = self._mask_pattern(result, self.RE_PHONE, "PHONE", mapping)
+
         # 4. EVN customer codes
         result = self._mask_pattern(result, self.RE_EVN_CUSTOMER, "CUST", mapping)
 
@@ -272,6 +318,9 @@ class PIIMasker:
 
         # 12. Company names (uppercase, prominent)
         result = self._mask_pattern(result, self.RE_COMPANY, "COMPANY", mapping)
+
+        # 12b. FDI & Multinational Company Suffixes
+        result = self._mask_pattern(result, self.RE_FDI_COMPANY, "COMPANY", mapping, group=1)
 
         # 13. Supplier / carrier names (mixed case)
         result = self._mask_pattern(result, self.RE_SUPPLIER, "SUPPLIER", mapping)
@@ -356,3 +405,109 @@ class PIIMasker:
                     f"PII LEAK: '{original}' (mapped to {token}) still found in masked text"
                 )
         return warnings
+
+
+class DataSanitizer:
+    """Pre-pipeline data sanitizer that strips non-emission commercial secrets.
+
+    Filters out unit prices, total monetary amounts, discounts, bank accounts,
+    and personal identification from business documents before processing,
+    preserving strictly the physical activity metrics required for carbon accounting:
+    1. Timestamps and Reporting Periods (Thời gian: Ngày, Tháng, Năm)
+    2. Activity Quantities (Số lượng đo đếm: kWh, Lít, Kg, Tấn, m³, MJ)
+    3. Units of Measurement (Đơn vị)
+    4. Activity / Fuel Categories (Loại hoạt động / Nhiên liệu)
+    """
+
+    COMMERCIAL_COLUMN_KEYWORDS = [
+        "đơn giá", "thành tiền", "tiền hàng", "chiết khấu", "thuế vat", "tiền thuế",
+        "tổng tiền", "cộng tiền", "thanh toán", "số tài khoản", "stk", "ngân hàng",
+        "unit price", "total amount", "amount", "price", "discount", "vat", "subtotal",
+        "payment", "giá bán", "tiền điện", "thuế suất", "tiền thanh toán",
+    ]
+
+    EMISSION_COLUMN_KEYWORDS = [
+        "kỳ", "thời gian", "tháng", "năm", "ngày", "date", "month", "year", "period",
+        "nhiên liệu", "loại", "mục", "hàng hóa", "dịch vụ", "fuel", "item", "description",
+        "số lượng", "khối lượng", "chỉ số", "tiêu thụ", "quantity", "consumption", "volume",
+        "đơn vị", "đvt", "unit", "công tơ", "meter", "bộ phận", "phân xưởng", "ghi chú",
+    ]
+
+    @classmethod
+    def sanitize_table(cls, table_lines: List[str]) -> List[str]:
+        """Strip commercial secret columns from a Markdown table."""
+        if len(table_lines) < 2:
+            return table_lines
+
+        header_line = table_lines[0]
+        headers = [c.strip() for c in header_line.split("|")]
+        if len(headers) < 3:
+            return table_lines
+
+        keep_indices = []
+        for idx, col_name in enumerate(headers):
+            if idx == 0 and col_name == "":
+                keep_indices.append(idx)
+                continue
+            if idx == len(headers) - 1 and col_name == "":
+                keep_indices.append(idx)
+                continue
+
+            col_lower = col_name.lower()
+            is_commercial = any(kw in col_lower for kw in cls.COMMERCIAL_COLUMN_KEYWORDS)
+            is_emission = any(kw in col_lower for kw in cls.EMISSION_COLUMN_KEYWORDS)
+            if is_commercial and not is_emission:
+                continue
+            keep_indices.append(idx)
+
+        if len(keep_indices) == len(headers) or len(keep_indices) <= 2:
+            return table_lines
+
+        sanitized_lines = []
+        for line in table_lines:
+            cells = [c.strip() for c in line.split("|")]
+            if len(cells) == len(headers):
+                filtered_cells = [cells[i] for i in keep_indices]
+                sanitized_lines.append("| " + " | ".join(c for c in filtered_cells[1:-1]) + " |")
+            else:
+                sanitized_lines.append(line)
+
+        return sanitized_lines
+
+    @classmethod
+    def sanitize_text(cls, text: str) -> str:
+        """Sanitize text by filtering commercial secret lines and markdown table columns."""
+        lines = text.split("\n")
+        output_lines = []
+        in_table = False
+        current_table: List[str] = []
+
+        COMMERCIAL_LINE_PATTERNS = [
+            re.compile(r'^\s*(?:Đơn giá|Thành tiền|Tổng cộng tiền thanh toán|Cộng tiền hàng|Tiền thuế GTGT|Thuế suất GTGT|Chiết khấu|Số tài khoản|Tài khoản ngân hàng|Ngân hàng)[:\s]', re.IGNORECASE),
+            re.compile(r'^\s*(?:Tổng số tiền viết bằng chữ|Số tiền viết bằng chữ)[:\s]', re.IGNORECASE),
+        ]
+
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("|") and stripped.endswith("|"):
+                in_table = True
+                current_table.append(line)
+                continue
+            else:
+                if in_table:
+                    sanitized_table = cls.sanitize_table(current_table)
+                    output_lines.extend(sanitized_table)
+                    current_table = []
+                    in_table = False
+
+            if any(p.search(stripped) for p in COMMERCIAL_LINE_PATTERNS):
+                continue
+
+            output_lines.append(line)
+
+        if in_table and current_table:
+            sanitized_table = cls.sanitize_table(current_table)
+            output_lines.extend(sanitized_table)
+
+        return "\n".join(output_lines)
+

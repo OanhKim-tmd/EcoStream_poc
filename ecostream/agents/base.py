@@ -22,7 +22,7 @@ class AgentContext(BaseModel):
     raw_markdown_sources: Dict[str, str] = Field(default_factory=dict)
     reference_markdowns: Dict[str, str] = Field(default_factory=dict)
     index: Optional[RunIndex] = None
-    offline_mode: bool = False
+    offline_mode: bool = True
 
 
 class AgentExecutionOutput(BaseModel):
@@ -42,11 +42,12 @@ class LLMClient:
         self,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
-        model: str = "agy/gemini-3.7-flash-low",
+        model: str = "qwen2.5:7b",
         timeout: float = 30.0,
     ):
-        self.base_url = base_url or os.environ.get("OPENAI_BASE_URL", "http://localhost:20128/v1")
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", os.environ.get("GEMINI_API_KEY", "dummy-key"))
+        # Default to local-first Ollama / vLLM on-premise endpoint
+        self.base_url = base_url or os.environ.get("OPENAI_BASE_URL", os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1"))
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", os.environ.get("OLLAMA_API_KEY", "local-token"))
         self.model = os.environ.get("LLM_MODEL", model)
         self.timeout = timeout
 

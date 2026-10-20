@@ -51,8 +51,9 @@ class TestOrchestratorE2E(unittest.TestCase):
         self.assertIn("SchemaDiscoveryAgent", state.agent_results)
         self.assertIn("Scope1FuelAgent", state.agent_results)
         self.assertIn("Scope2PowerAgent", state.agent_results)
-        self.assertIn("Scope3SupplyAgent", state.agent_results)
-        self.assertIn("MitigationQuotaAgent", state.agent_results)
+        # Scope3 and Mitigation are excluded in PoC v0.2 scope
+        self.assertNotIn("Scope3SupplyAgent", state.agent_results)
+        self.assertNotIn("MitigationQuotaAgent", state.agent_results)
 
         run_index = orchestrator.workspace.load_index()
         self.assertIsNotNone(run_index)
@@ -69,11 +70,11 @@ class TestOrchestratorE2E(unittest.TestCase):
 
         query_log = orchestrator.workspace.load_intermediate_json("query_log.json")
         self.assertIsNotNone(query_log)
-        self.assertGreaterEqual(len(query_log), 3)  # LPG unit, EVN July missing, Spend proxy
+        self.assertGreaterEqual(len(query_log), 2)  # LPG unit, EVN July missing
 
         assumption_log = orchestrator.workspace.load_intermediate_json("assumption_log.json")
         self.assertIsNotNone(assumption_log)
-        self.assertGreaterEqual(len(assumption_log), 3)
+        self.assertGreaterEqual(len(assumption_log), 2)
 
         math_results = orchestrator.workspace.load_intermediate_json("math_results.json")
         self.assertIsNotNone(math_results)
@@ -81,26 +82,29 @@ class TestOrchestratorE2E(unittest.TestCase):
         self.assertLess(math_results["uncertainty_min"], math_results["total_co2e_tonnes"])
         self.assertGreater(math_results["uncertainty_max"], math_results["total_co2e_tonnes"])
 
-        # 4. Mitigation Summary (Mau 02 ND 06/2022)
+        # 4. Mitigation Summary excluded in PoC v0.2 — not generated
         mitigation_summary = orchestrator.workspace.load_intermediate_json("mitigation_summary.json")
-        self.assertIsNotNone(mitigation_summary)
-        self.assertGreater(mitigation_summary["total_baseline_ptcs"], 0.0)
-        self.assertGreater(mitigation_summary["total_actual_pt"], 0.0)
-        self.assertGreater(mitigation_summary["total_reduction_gpt"], 0.0)
-        self.assertIn("quota_profile", mitigation_summary)
+        self.assertIsNone(mitigation_summary)
 
         # 5. Deliverables generated
         deliv_files = os.listdir(orchestrator.workspace.deliverables_dir)
         self.assertIn("final_inventory_summary.json", deliv_files)
         self.assertIn("Bao_cao_kiem_ke_va_giam_nhe_KNK.md", deliv_files)
         self.assertIn("Bao_cao_kiem_ke_va_giam_nhe_KNK.html", deliv_files)
+        self.assertIn("Bao_cao_Mau02_ND06.docx", deliv_files)
 
-        # Verify Markdown content
-        md_file = os.path.join(orchestrator.workspace.deliverables_dir, "Bao_cao_kiem_ke_va_giam_nhe_KNK.md")
-        with open(md_file, "r", encoding="utf-8") as f:
-            md_text = f.read()
-            self.assertIn("BÁO CÁO KIỂM KÊ", md_text)
-            self.assertIn("EcoGarment Vietnam JSC", md_text)
+        # Verify JSON summary content
+        summary_json = orchestrator.workspace.load_intermediate_json(
+            os.path.join(orchestrator.workspace.deliverables_dir, "final_inventory_summary.json").replace(
+                orchestrator.workspace.intermediate_dir, ""
+            )
+        )
+        json_path = os.path.join(orchestrator.workspace.deliverables_dir, "final_inventory_summary.json")
+        import json
+        with open(json_path, "r", encoding="utf-8") as f:
+            audit_data = json.load(f)
+        self.assertIn("summary", audit_data)
+        self.assertIn("EcoGarment Vietnam JSC", audit_data["summary"]["company_name"])
 
 
 if __name__ == "__main__":
