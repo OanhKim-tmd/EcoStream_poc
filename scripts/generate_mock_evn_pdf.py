@@ -11,8 +11,18 @@ Used for EcoStream AI GHG Accounting, Decree 06/2022 Mẫu 02, and Scope 2 Autom
 """
 
 import os
+import sys
 import math
 import argparse
+
+# Configure UTF-8 on Windows
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from typing import List, Dict, Optional, Tuple
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -33,6 +43,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 def register_vietnamese_fonts():
     """Register TrueType fonts with full Vietnamese Unicode support."""
     font_paths = [
+        ("DejaVuSans", "C:/Windows/Fonts/arial.ttf"),
+        ("DejaVuSans-Bold", "C:/Windows/Fonts/arialbd.ttf"),
+        ("DejaVuSans-Oblique", "C:/Windows/Fonts/ariali.ttf"),
         ("DejaVuSans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
         ("DejaVuSans-Bold", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
         ("DejaVuSans-Oblique", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
@@ -41,7 +54,7 @@ def register_vietnamese_fonts():
     ]
 
     for name, path in font_paths:
-        if os.path.exists(path):
+        if os.path.exists(path) and name not in pdfmetrics.getRegisteredFontNames():
             try:
                 pdfmetrics.registerFont(TTFont(name, path))
             except Exception:

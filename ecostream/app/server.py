@@ -124,14 +124,7 @@ async def upload_documents(
     """Upload custom business files (Excel, PDF, Word, CSV) and run multi-agent pipeline."""
     global _latest_report
     
-    # --- AUTO-CLEAN PREVIOUS RUNS ---
-    import shutil
-    try:
-        shutil.rmtree(RUNS_DIR)
-        os.makedirs(RUNS_DIR, exist_ok=True)
-    except:
-        pass
-    # --------------------------------
+    os.makedirs(RUNS_DIR, exist_ok=True)
     
     temp_dir = tempfile.mkdtemp()
     saved_paths = []
@@ -274,8 +267,9 @@ def get_run_files(run_id: str):
 def get_intermediate_file(run_id: str, filename: str):
     """Fetch raw intermediate JSON/text file."""
     workspace = BlackboardWorkspace(run_id, RUNS_DIR)
-    fpath = os.path.join(workspace.intermediate_dir, filename)
-    if not os.path.exists(fpath):
+    base_dir = os.path.abspath(workspace.intermediate_dir)
+    fpath = os.path.abspath(os.path.join(base_dir, filename))
+    if not fpath.startswith(base_dir) or not os.path.exists(fpath):
         raise HTTPException(status_code=404, detail=f"Intermediate file {filename} not found in run {run_id}.")
 
     if filename.endswith(".json"):
@@ -290,8 +284,9 @@ def get_intermediate_file(run_id: str, filename: str):
 def download_deliverable(run_id: str, filename: str):
     """Download a generated deliverable file (.md, .html, .docx, .pdf, .json)."""
     workspace = BlackboardWorkspace(run_id, RUNS_DIR)
-    fpath = os.path.join(workspace.deliverables_dir, filename)
-    if not os.path.exists(fpath):
+    base_dir = os.path.abspath(workspace.deliverables_dir)
+    fpath = os.path.abspath(os.path.join(base_dir, filename))
+    if not fpath.startswith(base_dir) or not os.path.exists(fpath):
         raise HTTPException(status_code=404, detail=f"Deliverable {filename} not found for run {run_id}.")
 
     media_type = "application/octet-stream"
@@ -316,11 +311,24 @@ def list_factors():
     return [f.model_dump() for f in db.get_all_factors()]
 
 
+@app.get("/api/export/html")
+@app.get("/api/report/html")
+def export_html():
+    global _latest_report
+    if not _latest_report:
+        run_demo()
+    html_content = ReportExporter.to_html(_latest_report)
+    return HTMLResponse(content=html_content)
 
 
-
-
-
+@app.get("/api/export/markdown")
+@app.get("/api/report/markdown")
+def export_markdown():
+    global _latest_report
+    if not _latest_report:
+        run_demo()
+    md_content = ReportExporter.to_markdown(_latest_report)
+    return Response(content=md_content, media_type="text/markdown; charset=utf-8")
 
 @app.get("/api/export/pdf")
 @app.get("/api/report/pdf")

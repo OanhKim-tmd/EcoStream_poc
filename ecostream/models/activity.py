@@ -2,7 +2,7 @@
 
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 class EmissionScope(str, Enum):
@@ -45,6 +45,7 @@ class DataQualityIndicator(BaseModel):
     source_reliability_score: float = Field(ge=0.0, le=1.0, description="Reliability tier of the measurement method")
     extraction_confidence_score: float = Field(ge=0.0, le=1.0, description="Extraction certainty from raw document")
 
+    @computed_field
     @property
     def composite_score(self) -> float:
         """Weighted EcoStream reliability score (0.0 - 1.0)."""

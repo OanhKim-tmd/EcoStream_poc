@@ -323,7 +323,9 @@ function renderDeliverables(data) {
         }
     }
 
-            setupDeliverable('delivStatus-docx', 'delivLink-docx', null, 'Bao_cao_Mau02_ND06.docx');
+    setupDeliverable('delivStatus-md', 'delivLink-md', 'delivBtn-md-preview', 'Bao_cao_kiem_ke_va_giam_nhe_KNK.md');
+    setupDeliverable('delivStatus-html', 'delivLink-html', null, 'Bao_cao_kiem_ke_va_giam_nhe_KNK.html');
+    setupDeliverable('delivStatus-docx', 'delivLink-docx', null, 'Bao_cao_Mau02_ND06.docx');
     setupDeliverable('delivStatus-pdf', 'delivLink-pdf', null, 'Bao_cao_kiem_ke_va_giam_nhe_KNK.pdf');
 }
 
@@ -366,17 +368,23 @@ function renderIntermediateTabs(data) {
     document.getElementById('stateProgressPct').innerText = `${Math.round(state.progress_pct || 0)}%`;
 
     const routingList = document.getElementById('sheetRoutingList');
-    if (index.tasks && index.tasks.length > 0) {
-        document.getElementById('sheetCountBadge').innerText = `${index.tasks.length} mục`;
-        routingList.innerHTML = index.tasks.map(t => `
+    const tasks = index.tasks || index.routing_tasks || [];
+    if (tasks.length > 0) {
+        document.getElementById('sheetCountBadge').innerText = `${tasks.length} mục`;
+        routingList.innerHTML = tasks.map(t => {
+            const sheetLabel = t.sheet_name ? `Sheet: ${t.sheet_name}` : (t.source_file || t.description || 'Mục dữ liệu');
+            const agentLabel = t.target_agent || t.assigned_subagent || '--';
+            const desc = t.description ? `<div class="text-[10px] text-slate-500">${t.description}</div>` : '';
+            return `
             <div class="p-2 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
                 <div>
-                    <span class="font-bold text-slate-800">${t.sheet_or_section}</span>
-                    <span class="text-slate-400 text-[10px] ml-1">(${t.estimated_records || 0} dòng)</span>
+                    <span class="font-bold text-slate-800 text-xs">${sheetLabel}</span>
+                    ${desc}
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">${t.assigned_subagent}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap ml-2">${agentLabel}</span>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // 2. Scope 1 Table
@@ -384,16 +392,19 @@ function renderIntermediateTabs(data) {
     document.getElementById('tabCount-scope1').innerText = scope1.length;
     const s1Body = document.getElementById('tableScope1Body');
     if (scope1.length > 0) {
-        s1Body.innerHTML = scope1.map(r => `
+        s1Body.innerHTML = scope1.map(r => {
+            const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : (r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '95%');
+            return `
             <tr class="hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${r.fuel_type || r.activity_type || '--'}</td>
-                <td class="p-3 text-slate-600 font-sans">${r.equipment_category || r.category || 'Lò hơi / Máy phát'}</td>
-                <td class="p-3 text-slate-900 font-bold">${Number(r.original_quantity || r.quantity || 0).toLocaleString()}</td>
-                <td class="p-3 text-slate-500">${r.original_unit || r.unit || '--'}</td>
-                <td class="p-3 text-emerald-700 font-bold">${Number(r.standard_quantity || r.quantity || 0).toLocaleString()} ${r.standard_unit || 'kg'}</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">${r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '95%'}</span></td>
+                <td class="p-3 font-bold text-slate-800">${r.description || r.fuel_type || r.activity_type || '--'}</td>
+                <td class="p-3 text-slate-600 font-sans">${r.category || r.equipment_category || 'Lò hơi / Máy phát'}</td>
+                <td class="p-3 text-slate-900 font-bold font-mono">${Number(r.quantity || r.original_quantity || 0).toLocaleString()}</td>
+                <td class="p-3 text-slate-500 font-mono">${r.unit || r.original_unit || '--'}</td>
+                <td class="p-3 text-emerald-700 font-bold font-mono">${Number(r.quantity || r.standard_quantity || 0).toLocaleString()} ${r.unit || r.standard_unit || 'kg'}</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">${conf}</span></td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // 3. Scope 2 Table
@@ -402,17 +413,22 @@ function renderIntermediateTabs(data) {
     const s2Body = document.getElementById('tableScope2Body');
     if (scope2.length > 0) {
         s2Body.innerHTML = scope2.map(r => {
-            const isInterpolated = r.is_interpolated || r.interpolated || false;
+            const isInterpolated = r.is_interpolated || r.interpolated || (r.measurement_type && r.measurement_type.includes('Estimated')) || (r.evidence?.extraction_method === 'INTERPOLATED');
+            const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : (r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '90%');
+            const periodOrMonth = r.date || r.billing_month || r.period || r.description || '--';
+            const kwhVal = r.quantity || r.active_energy_kwh || r.kwh || 0;
+            const meterOrDoc = r.supplier || r.meter_id || r.customer_code || r.evidence?.source_document || 'EVN';
             return `
             <tr class="hover:bg-slate-50 transition ${isInterpolated ? 'bg-amber-50/40' : ''}">
-                <td class="p-3 font-bold text-slate-800">${r.billing_month || r.period || '--'}</td>
-                <td class="p-3 font-bold ${isInterpolated ? 'text-amber-800' : 'text-slate-900'}">${Number(r.active_energy_kwh || r.kwh || 0).toLocaleString()}</td>
-                <td class="p-3 text-slate-500 text-[11px]">${Number(r.normal_kwh || 0).toLocaleString()} / ${Number(r.peak_kwh || 0).toLocaleString()} / ${Number(r.off_peak_kwh || 0).toLocaleString()}</td>
-                <td class="p-3 text-slate-600">${r.customer_code || r.meter_id || 'EVN-HN-01'}</td>
+                <td class="p-3 font-bold text-slate-800">${periodOrMonth}</td>
+                <td class="p-3 font-bold font-mono ${isInterpolated ? 'text-amber-800' : 'text-slate-900'}">${Number(kwhVal).toLocaleString()}</td>
+                <td class="p-3 text-slate-500 text-[11px] font-mono">${r.unit || 'kWh'}</td>
+                <td class="p-3 text-slate-600">${meterOrDoc}</td>
                 <td class="p-3">${isInterpolated ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">⚠️ Nội suy (Interpolated)</span>' : '<span class="text-slate-500 font-sans">Hóa đơn EVN gốc</span>'}</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${isInterpolated ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">${r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '90%'}</span></td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${isInterpolated ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">${conf}</span></td>
             </tr>
-        `}).join('');
+            `;
+        }).join('');
     }
 
     // 4. Scope 3 Table
@@ -420,38 +436,52 @@ function renderIntermediateTabs(data) {
     document.getElementById('tabCount-scope3').innerText = scope3.length;
     const s3Body = document.getElementById('tableScope3Body');
     if (scope3.length > 0) {
-        s3Body.innerHTML = scope3.map(r => `
+        s3Body.innerHTML = scope3.map(r => {
+            const isSpend = r.cost_vnd != null || r.is_spend_based || (r.measurement_type && r.measurement_type.includes('Spend'));
+            const qtyDisplay = r.cost_vnd ? `${Number(r.cost_vnd).toLocaleString()} VND` : `${Number(r.quantity || 0).toLocaleString()} ${r.unit || ''}`;
+            const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : '65%';
+            return `
             <tr class="hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${r.category || r.material_type || '--'}</td>
-                <td class="p-3 text-slate-600 font-sans">${r.transport_mode || 'Vận tải đường bộ'}</td>
-                <td class="p-3 font-bold text-slate-900">${r.tonne_km ? Number(r.tonne_km).toLocaleString() + ' t.km' : Number(r.spend_amount_vnd || 0).toLocaleString() + ' VND'}</td>
-                <td class="p-3 text-slate-600 font-sans">${r.emission_factor_proxy || 'EXIOBASE Proxy'}</td>
-                <td class="p-3 text-amber-700 font-bold font-mono">±${r.uncertainty_pct || 40}%</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 font-sans">${r.is_spend_based ? 'Ước tính chi tiêu' : 'Dữ liệu vận tải'}</span></td>
+                <td class="p-3 font-bold text-slate-800">${r.description || r.category || '--'}</td>
+                <td class="p-3 text-slate-600 font-sans">${r.category || r.transport_mode || 'Chuỗi cung ứng'}</td>
+                <td class="p-3 font-bold text-slate-900 font-mono">${qtyDisplay}</td>
+                <td class="p-3 text-slate-600 font-sans">${r.supplier || r.evidence?.source_document || 'EXIOBASE Proxy'}</td>
+                <td class="p-3 text-amber-700 font-bold font-mono">±${isSpend ? '40%' : '15%'}</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 font-sans">${isSpend ? 'Ước tính chi tiêu' : 'Dữ liệu sơ cấp'}</span></td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // 5. Mitigation Table
-    const mitigation = intermediate.mitigation || [];
-    document.getElementById('tabCount-mitigation').innerText = mitigation.length;
+    const mitSummary = intermediate.mitigation_summary || data.mitigation_summary || {};
+    const measures = mitSummary.measures || (Array.isArray(intermediate.mitigation) ? intermediate.mitigation : []);
+    document.getElementById('tabCount-mitigation').innerText = measures.length;
     const mitBody = document.getElementById('tableMitigationBody');
-    if (mitigation.length > 0) {
-        mitBody.innerHTML = mitigation.map(r => `
+    if (measures.length > 0) {
+        mitBody.innerHTML = measures.map((r, idx) => {
+            const mId = r.measure_id || `M-${idx + 1}`;
+            const mName = r.measure_name || r.name || '--';
+            const ptcs = r.baseline_emissions_ptcs || r.baseline_emissions_tco2e || r.pt_cs || 0;
+            const pt = r.actual_emissions_pt || r.actual_emissions_tco2e || r.pt || 0;
+            const gpt = r.emission_reduction_gpt || r.reduction_tco2e || r.gpt || 0;
+            const status = r.monitoring_method || r.status || 'Đang vận hành';
+            return `
             <tr class="hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${r.measure_id || '--'}</td>
-                <td class="p-3 font-sans text-slate-700 font-medium">${r.name || r.measure_name || '--'}</td>
-                <td class="p-3 text-slate-600 font-bold">${Number(r.baseline_emissions_tco2e || r.pt_cs || 0).toLocaleString()} tCO₂e</td>
-                <td class="p-3 text-slate-900 font-bold">${Number(r.actual_emissions_tco2e || r.pt || 0).toLocaleString()} tCO₂e</td>
-                <td class="p-3 text-emerald-700 font-bold text-sm">-${Number(r.reduction_tco2e || r.gpt || 0).toLocaleString()} tCO₂e</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">${r.status || 'Đang vận hành'}</span></td>
+                <td class="p-3 font-bold text-slate-800 font-mono">${mId}</td>
+                <td class="p-3 font-sans text-slate-700 font-medium">${mName}</td>
+                <td class="p-3 text-slate-600 font-bold font-mono">${Number(ptcs).toLocaleString()} tCO₂e</td>
+                <td class="p-3 text-slate-900 font-bold font-mono">${Number(pt).toLocaleString()} tCO₂e</td>
+                <td class="p-3 text-emerald-700 font-bold text-sm font-mono">-${Number(gpt).toLocaleString()} tCO₂e</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">${status}</span></td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // 6. Logs Table
-    const queries = intermediate.queries || [];
-    const assumptions = intermediate.assumptions || [];
+    const queries = intermediate.queries || data.queries || [];
+    const assumptions = intermediate.assumptions || data.assumptions || [];
     document.getElementById('tabCount-logs').innerText = queries.length + assumptions.length;
     document.getElementById('queryLogCount').innerText = `${queries.length} mục`;
     document.getElementById('assumptionLogCount').innerText = `${assumptions.length} mục`;
@@ -461,10 +491,10 @@ function renderIntermediateTabs(data) {
         qBody.innerHTML = queries.map(q => `
             <tr class="hover:bg-amber-100/40 transition">
                 <td class="p-3 font-mono font-bold text-amber-900">${q.query_id || '--'}</td>
-                <td class="p-3 text-slate-700 font-medium">${q.domain_agent || q.scope || '--'}</td>
-                <td class="p-3 text-slate-800">${q.description || q.issue || '--'}</td>
-                <td class="p-3 text-slate-600">${q.provisional_action || '--'}</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">${q.status || 'Chờ xác nhận'}</span></td>
+                <td class="p-3 text-slate-700 font-medium">${q.scope || '--'}</td>
+                <td class="p-3 text-slate-800">${q.detected_issue || q.description || q.issue || '--'}</td>
+                <td class="p-3 text-slate-600">${q.action_taken || q.provisional_action || '--'}</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">${q.status || 'Tự động giả định'}</span></td>
             </tr>
         `).join('');
     }
@@ -474,9 +504,9 @@ function renderIntermediateTabs(data) {
         aBody.innerHTML = assumptions.map(a => `
             <tr class="hover:bg-slate-50 transition">
                 <td class="p-3 font-mono font-bold text-slate-800">${a.assumption_id || '--'}</td>
-                <td class="p-3 text-slate-700 font-medium">${a.scope || a.domain || '--'}</td>
-                <td class="p-3 text-slate-800">${a.rule_applied || a.formula || '--'}</td>
-                <td class="p-3 font-mono font-bold text-rose-700">-${(a.confidence_penalty * 100).toFixed(0)}%</td>
+                <td class="p-3 text-slate-700 font-medium">${a.parameter_name || a.scope || '--'}</td>
+                <td class="p-3 text-slate-800">${a.justification || a.rule_applied || `${a.assumed_value} ${a.assumed_unit}`}</td>
+                <td class="p-3 font-mono font-bold text-rose-700">-${((a.confidence_penalty || 0.1) * 100).toFixed(0)}%</td>
                 <td class="p-3 font-mono font-bold text-amber-700">+${a.uncertainty_markup_pct || 15}%</td>
             </tr>
         `).join('');

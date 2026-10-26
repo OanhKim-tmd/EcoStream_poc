@@ -53,7 +53,7 @@
                     <button class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition">
                         <span class="text-sm">⚖️</span> Hệ Số Phát Thải (Emission Factors)
                     </button>
-                    <button onclick="runDemo()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition">
+                    <button id="btnRunDemo" onclick="runDemo()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition">
                         <span class="text-sm">⚡</span> Kiểm Thử Tự Động (Auto-benchmark)
                     </button>
                 </nav>
@@ -489,8 +489,10 @@
 
         async function runDemo() {
             const btn = document.getElementById('btnRunDemo');
-            btn.disabled = true;
-            btn.innerText = '⏳ Đang phân tích...';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '⏳ Đang phân tích...';
+            }
             try {
                 const res = await fetch('/api/demo');
                 const data = await res.json();
@@ -498,8 +500,10 @@
             } catch (err) {
                 console.error('Error running demo:', err);
             } finally {
-                btn.disabled = false;
-                btn.innerText = '⚡ Chạy Benchmark Demo';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = '⚡ Kiểm Thử Tự Động (Auto-benchmark)';
+                }
             }
         }
 
@@ -686,7 +690,9 @@
         }
 
         // Auto run demo on load
-        window.onload = () => {};
+        window.addEventListener('DOMContentLoaded', () => {
+            runDemo();
+        });
     </script>
 </body>
 </html>
