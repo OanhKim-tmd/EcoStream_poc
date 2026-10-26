@@ -80,12 +80,24 @@ class BlackboardWorkspace:
                 return json.load(f)
         return None
 
-    def store_raw_input(self, src_path: str) -> str:
-        """Copy uploaded raw file to raw_inputs/."""
-        fname = os.path.basename(src_path)
+    def store_raw_input(self, src_path: str, encryption_key: Optional[bytes] = None) -> str:
+        """Store uploaded raw file in raw_inputs/ encrypted at rest with AES-256."""
+        os.makedirs(self.raw_inputs_dir, exist_ok=True)
+        fname = os.path.basename(src_path) + ".enc"
         dest = os.path.join(self.raw_inputs_dir, fname)
-        shutil.copy2(src_path, dest)
+        from ecostream.privacy.encryption import StorageEncryption
+        key = encryption_key or StorageEncryption.get_or_create_key(self.run_id)
+        StorageEncryption.encrypt_file(src_path, dest, key=key)
         return dest
+
+    def read_raw_input(self, fname: str, encryption_key: Optional[bytes] = None) -> bytes:
+        """Decrypt an encrypted raw file from raw_inputs/ directly into memory."""
+        from ecostream.privacy.encryption import StorageEncryption
+        if not fname.endswith(".enc"):
+            fname = fname + ".enc"
+        enc_path = os.path.join(self.raw_inputs_dir, fname)
+        key = encryption_key or StorageEncryption.get_or_create_key(self.run_id)
+        return StorageEncryption.decrypt_file_to_memory(enc_path, key=key)
 
     def store_markdown_input(self, name: str, content: str) -> str:
         """Store converted markdown file in markdown_inputs/."""

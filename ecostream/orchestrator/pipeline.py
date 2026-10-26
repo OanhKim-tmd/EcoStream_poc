@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 from ecostream.ingestion.markitdown_loader import MarkItDownLoader
 from ecostream.orchestrator.state import BlackboardWorkspace
-from ecostream.privacy.pii_masker import PIIMasker, MaskMapping
+from ecostream.privacy.pii_masker import PIIMasker, MaskMapping, DataSanitizer
 import json
 from ecostream.models.state import (
     RunState,
@@ -43,7 +43,7 @@ class WorkflowOrchestrator:
         run_id: Optional[str] = None,
         base_runs_dir: Optional[str] = None,
         llm_client: Optional[LLMClient] = None,
-        offline_mode: bool = False,
+        offline_mode: bool = True,
     ):
         if run_id is None:
             ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -51,7 +51,7 @@ class WorkflowOrchestrator:
         self.run_id = run_id
         self.workspace = BlackboardWorkspace(run_id, base_runs_dir)
         self.llm_client = llm_client or LLMClient()
-        self.offline_mode = offline_mode or (os.environ.get("ECOSTREAM_OFFLINE_MODE") == "1")
+        self.offline_mode = offline_mode
         self.loader = MarkItDownLoader()
 
     def run_pipeline(
@@ -60,8 +60,8 @@ class WorkflowOrchestrator:
         company_name: str = "EcoGarment Vietnam JSC",
         facility_name: str = "Nhà máy May & Năng lượng Hà Nam",
         reporting_year: int = 2026,
-        enable_scope3: bool = True,
-        enable_mitigation: bool = True,
+        enable_scope3: bool = False,
+        enable_mitigation: bool = False,
     ) -> Dict[str, Any]:
         """Execute the complete end-to-end multi-agent pipeline."""
         # 1. Initialize
@@ -87,12 +87,16 @@ class WorkflowOrchestrator:
                 if converted.sheet_markdowns:
                     for sname, scontent in converted.sheet_markdowns.items():
                         md_fname = f"{os.path.splitext(converted.filename)[0]}_{sname}.md"
-                        self.workspace.store_markdown_input(md_fname, scontent)
-                        raw_markdowns[md_fname], mapping = masker.mask_text(scontent, mapping)
+                        sanitized_content = DataSanitizer.sanitize_text(scontent)
+                        masked_content, mapping = masker.mask_text(sanitized_content, mapping)
+                        self.workspace.store_markdown_input(md_fname, masked_content)
+                        raw_markdowns[md_fname] = masked_content
                 else:
                     md_fname = f"{os.path.splitext(converted.filename)[0]}.md"
-                    self.workspace.store_markdown_input(md_fname, converted.full_markdown)
-                    raw_markdowns[md_fname], mapping = masker.mask_text(converted.full_markdown, mapping)
+                    sanitized_content = DataSanitizer.sanitize_text(converted.full_markdown)
+                    masked_content, mapping = masker.mask_text(sanitized_content, mapping)
+                    self.workspace.store_markdown_input(md_fname, masked_content)
+                    raw_markdowns[md_fname] = masked_content
 
         context = AgentContext(
             run_id=self.run_id,
@@ -220,10 +224,7 @@ class WorkflowOrchestrator:
             state.completed_tasks.append(agent_name)
 
         # Save query log and assumption log
-        
-        # Save mapping
-        with open(os.path.join(self.workspace.run_dir, "pii_mapping.json"), "w", encoding="utf-8") as f:
-            f.write(mapping.to_json())
+        # (In-Memory Mapping: pii_mapping is maintained strictly in RAM and never written to disk)
         self.workspace.save_intermediate_json("query_log.json", all_queries)
         self.workspace.save_intermediate_json("assumption_log.json", all_assumptions)
 
@@ -354,6 +355,12 @@ class WorkflowOrchestrator:
         state.end_time = datetime.now(timezone.utc).isoformat()
         self.workspace.save_state(state)
 
+        # In-Memory Mapping: Purge reversible mapping from RAM upon report synthesis completion
+        mapping.clear()
+        del mapping
+        import gc
+        gc.collect()
+
         return {
             "run_id": self.run_id,
             "status": "COMPLETED",
@@ -364,6 +371,7 @@ class WorkflowOrchestrator:
             "deliverables": {
                 "json": json_path,
                 "md": md_path,
+                "markdown": md_path,
                 "html": html_path,
                 "docx": docx_path,
                 "pdf": pdf_path,

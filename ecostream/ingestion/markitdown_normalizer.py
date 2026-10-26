@@ -1,4 +1,10 @@
-"""MarkItDown-powered document normalization with OCR and evidence tracking."""
+"""MarkItDown-powered document normalization with OCR and evidence tracking.
+
+OCR scope: PDF documents only (digital text extraction via MarkItDown, with
+pytesseract fallback for scanned/image-embedded PDFs). Image files (PNG, JPG)
+are not processed — Vietnamese e-invoices are issued as XML-backed digital PDFs
+and do not require image OCR.
+"""
 
 import os
 import sys
@@ -23,11 +29,10 @@ try:
 except Exception:
     _MARKITDOWN_AVAILABLE = False
 
-# Check OCR availability
+# Check OCR availability (PDF-only path via pytesseract + pdf2image)
 try:
     import pytesseract
     from pdf2image import convert_from_path
-    from PIL import Image
     _OCR_LIBS_AVAILABLE = True
 except Exception:
     _OCR_LIBS_AVAILABLE = False
@@ -43,7 +48,17 @@ class NormalizedDocumentContent(BaseModel):
 
 
 class MarkItDownNormalizer:
-    """Converts multi-format business documents into structured Markdown for EcoStream."""
+    """Converts multi-format business documents into structured Markdown for EcoStream.
+
+    Supported formats:
+     - .txt / .csv / .json / .log  → direct text read
+     - .xlsx / .xls / .docx / .pptx / .html → Microsoft MarkItDown
+     - .pdf (digital)  → Microsoft MarkItDown
+     - .pdf (scanned)  → pytesseract OCR fallback (vie+eng)
+
+    Image files (.png, .jpg, etc.) are intentionally NOT processed:
+    Vietnamese e-invoices arrive as XML-backed digital PDFs, not image scans.
+    """
 
     def __init__(self, enable_ocr: bool = True, tesseract_lang: str = "vie+eng"):
         self.enable_ocr = enable_ocr
@@ -52,14 +67,14 @@ class MarkItDownNormalizer:
         if _MARKITDOWN_AVAILABLE:
             try:
                 self.md_engine = MarkItDown()
-            except Exception as e:
+            except Exception:
                 self.md_engine = None
 
     def normalize_file(self, filepath: str) -> NormalizedDocumentContent:
         filename = os.path.basename(filepath)
         ext = os.path.splitext(filepath)[1].lower()
 
-        # 1. Plain text and CSV Fast-Path
+        # 1. Plain text / CSV / JSON fast-path
         if ext in [".txt", ".log", ".ocr", ".csv", ".json"]:
             with open(filepath, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
@@ -71,13 +86,13 @@ class MarkItDownNormalizer:
                 raw_metadata={"source_path": filepath, "original_filename": filename},
             )
 
-        # 2. MarkItDown for Digital PDF, Excel (.xlsx, .xls), Word (.docx)
+        # 2. MarkItDown for digital PDF, Excel, Word, PowerPoint, HTML
         if self.md_engine and ext in [".pdf", ".xlsx", ".xls", ".docx", ".pptx", ".html"]:
             try:
                 result = self.md_engine.convert(filepath)
                 text = (result.text_content or "").strip()
 
-                # If PDF produced near-empty text, it is likely a scanned PDF -> attempt OCR
+                # If PDF returned near-empty text it is likely a scanned PDF → OCR
                 if ext == ".pdf" and len(text) < 50 and self.enable_ocr and _OCR_LIBS_AVAILABLE:
                     ocr_text, pages = self._perform_pdf_ocr(filepath)
                     if ocr_text:
@@ -102,36 +117,10 @@ class MarkItDownNormalizer:
                             "title": getattr(result, "title", None),
                         },
                     )
-            except Exception as e:
-                # Fall through to OCR or fallback reader
+            except Exception:
                 pass
 
-        # 3. Direct Image OCR (PNG, JPG, JPEG, TIFF)
-        if ext in [".png", ".jpg", ".jpeg", ".tiff", ".bmp"] and self.enable_ocr and _OCR_LIBS_AVAILABLE:
-            try:
-                img = Image.open(filepath)
-                ocr_text = pytesseract.image_to_string(img, lang=self.tesseract_lang).strip()
-                if ocr_text:
-                    return NormalizedDocumentContent(
-                        markdown_content=ocr_text,
-                        converter_used="LOCAL_TESSERACT_IMAGE_OCR",
-                        ocr_applied=True,
-                        page_count=1,
-                        raw_metadata={"source_path": filepath, "original_filename": filename},
-                    )
-            except Exception as e:
-                # Check for Gemini Vision fallback if API key available
-                vision_text = self._try_gemini_vision(filepath)
-                if vision_text:
-                    return NormalizedDocumentContent(
-                        markdown_content=vision_text,
-                        converter_used="GEMINI_VISION_OCR",
-                        ocr_applied=True,
-                        page_count=1,
-                        raw_metadata={"source_path": filepath, "original_filename": filename},
-                    )
-
-        # 4. Scanned PDF fallback
+        # 3. Scanned PDF fallback (when MarkItDown is unavailable or produced nothing)
         if ext == ".pdf" and self.enable_ocr and _OCR_LIBS_AVAILABLE:
             ocr_text, pages = self._perform_pdf_ocr(filepath)
             if ocr_text:
@@ -143,7 +132,7 @@ class MarkItDownNormalizer:
                     raw_metadata={"source_path": filepath, "original_filename": filename},
                 )
 
-        # 5. Multi-tier Graceful Fallback
+        # 4. Last-resort text read
         try:
             with open(filepath, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
@@ -172,6 +161,7 @@ class MarkItDownNormalizer:
         if not _OCR_LIBS_AVAILABLE:
             return "", 0
         try:
+            from PIL import Image
             images = convert_from_path(filepath, dpi=200)
             annotated_pages = []
             for idx, img in enumerate(images, 1):
@@ -185,38 +175,3 @@ class MarkItDownNormalizer:
         except Exception:
             return "", 0
 
-    def _try_gemini_vision(self, filepath: str) -> Optional[str]:
-        """Vision LLM fallback if local OCR is unavailable and GEMINI_API_KEY is configured."""
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            return None
-        try:
-            import urllib.request
-            import base64
-            import json
-
-            with open(filepath, "rb") as f:
-                b64_data = base64.b64encode(f.read()).decode("utf-8")
-
-            ext = os.path.splitext(filepath)[1].lower().replace(".", "")
-            mime = f"image/{'jpeg' if ext in ['jpg', 'jpeg'] else ext}"
-
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-            payload = {
-                "contents": [{
-                    "parts": [
-                        {"text": "Transcribe this business invoice or receipt into clean Markdown. Preserve all numbers, quantities, units, and headers exactly."},
-                        {"inline_data": {"mime_type": mime, "data": b64_data}}
-                    ]
-                }]
-            }
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return data["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception:
-            return None

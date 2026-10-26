@@ -19,8 +19,8 @@ class ReportExporter:
         rel = s.reliability
 
         md = []
-        md.append(f"# BÁO CÁO KIỂM KÊ PHÁT THẢI KHÍ NHÀ KÍNH & ĐỘ TIN CẬY DỮ LIỆU")
-        md.append(f"### EcoStream AI Carbon Engine — Audit & Reliability Disclosure\n")
+        md.append("# BÁO CÁO KIỂM KÊ PHÁT THẢI KHÍ NHÀ KÍNH & ĐỘ TIN CẬY DỮ LIỆU")
+        md.append("### EcoStream AI Carbon Engine — Audit & Reliability Disclosure\n")
         md.append(f"- **Doanh nghiệp**: {s.company_name}")
         md.append(f"- **Địa điểm / Cơ sở**: {s.facility_location}")
         md.append(f"- **Lĩnh vực hoạt động**: {s.industry_sector}")
@@ -31,12 +31,13 @@ class ReportExporter:
         md.append("---\n")
         md.append("## PHẦN I: KIỂM KÊ KHÍ NHÀ KÍNH DOANH NGHIỆP (SCOPE 1, 2, 3)")
         md.append("### 1. Tổng quan phát thải (Executive Summary)\n")
-        md.append(f"| Chỉ số | Giá trị | Đơn vị | Ghi chú / Biên độ tin cậy |")
-        md.append(f"| :--- | :---: | :---: | :--- |")
+        md.append("| Chỉ số | Giá trị | Đơn vị | Ghi chú / Biên độ tin cậy |")
+        md.append("| :--- | :---: | :---: | :--- |")
         md.append(f"| **Tổng phát thải ròng** | **{s.total_co2e_tonnes:.3f}** | **tCO₂e** | Khoảng tin cậy 95%: [{s.total_uncertainty_min_tonnes:.3f} - {s.total_uncertainty_max_tonnes:.3f}] tCO₂e |")
         md.append(f"| • **Scope 1 (Trực tiếp)** | {s.scope_1_tonnes:.3f} | tCO₂e | Nhiên liệu đốt lò hơi & máy phát dự phòng |")
         md.append(f"| • **Scope 2 (Gián tiếp điện)** | {s.scope_2_tonnes:.3f} | tCO₂e | Điện lưới quốc gia EVN (Hệ số MONRE) |")
-        md.append(f"| • **Scope 3 (Chuỗi giá trị)** | {s.scope_3_tonnes:.3f} | tCO₂e | Vận tải, nguyên vật liệu & bao bì |")
+        if s.scope_3_tonnes > 0:
+            md.append(f"| • **Scope 3 (Chuỗi giá trị)** | {s.scope_3_tonnes:.3f} | tCO₂e | Vận tải, nguyên vật liệu & bao bì |")
         md.append(f"| **Chỉ số tin cậy EcoStream** | **{rel.overall_confidence_score}%** | **Grade {rel.grade}** | **{rel.grade_label}** |\n")
 
         md.append("### Nhận định độ tin cậy dữ liệu:")
@@ -80,7 +81,7 @@ class ReportExporter:
             md.append(RegulatoryTemplates.render_audit_trail_markdown(report.queries, report.assumptions, report.calculations))
 
         md.append("---\n")
-        md.append(f"*Báo cáo được tổng hợp tự động bởi EcoStream Engine v0.1.0 — Phục vụ tuân thủ CBAM & Nghị định 06/2022/NĐ-CP.*")
+        md.append(f"*Báo cáo được tổng hợp tự động bởi EcoStream Engine v0.2.0 — Phục vụ tuân thủ Nghị định 06/2022/NĐ-CP & CBAM.*")
         return "\n".join(md)
 
     @classmethod
