@@ -280,6 +280,42 @@ class ReportExporter:
             else "bg-red-600 text-white"
         )
 
+        scope3_card = ""
+        grid_cols = "sm:grid-cols-3"
+        if s.scope_3_tonnes > 0:
+            grid_cols = "sm:grid-cols-4"
+            scope3_card = f"""
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div class="text-[11px] text-purple-800 uppercase font-bold">Scope 3 (Chuỗi giá trị)</div>
+                    <div class="text-xl font-bold font-mono text-purple-900 mt-1">{s.scope_3_tonnes:,.3f} <span class="text-xs font-normal text-purple-700">tCO₂e</span></div>
+                    <div class="text-[10px] text-purple-600 mt-1">Logistics & vật tư mua sắm</div>
+                </div>
+            """
+
+        cards_html = f"""
+        <div class="my-6">
+            <h2 class="text-sm font-bold uppercase text-slate-800 tracking-wide mb-3">Phần I: Tổng Quan Phát Thải Khí Nhà Kính (Corporate Inventory)</h2>
+            <div class="grid grid-cols-1 {grid_cols} gap-3">
+                <div class="bg-slate-900 text-white rounded-lg p-4">
+                    <div class="text-[11px] text-slate-300 uppercase font-semibold">Tổng phát thải ròng</div>
+                    <div class="text-2xl font-black font-mono mt-1">{s.total_co2e_tonnes:,.3f} <span class="text-xs font-normal text-slate-400">tCO₂e</span></div>
+                    <div class="text-[10px] text-slate-400 mt-1">95% CI: [{s.total_uncertainty_min_tonnes:.1f} - {s.total_uncertainty_max_tonnes:.1f}]</div>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                    <div class="text-[11px] text-emerald-800 uppercase font-bold">Scope 1 (Trực tiếp)</div>
+                    <div class="text-xl font-bold font-mono text-emerald-900 mt-1">{s.scope_1_tonnes:,.3f} <span class="text-xs font-normal text-emerald-700">tCO₂e</span></div>
+                    <div class="text-[10px] text-emerald-600 mt-1">Nhiên liệu đốt lò hơi & xe cộ</div>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="text-[11px] text-blue-800 uppercase font-bold">Scope 2 (Điện EVN)</div>
+                    <div class="text-xl font-bold font-mono text-blue-900 mt-1">{s.scope_2_tonnes:,.3f} <span class="text-xs font-normal text-blue-700">tCO₂e</span></div>
+                    <div class="text-[10px] text-blue-600 mt-1">Lưới điện quốc gia MONRE</div>
+                </div>
+                {scope3_card}
+            </div>
+        </div>
+        """
+
         return f"""<!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -326,32 +362,7 @@ class ReportExporter:
             <div><span class="text-slate-400 block">Kỳ báo cáo:</span><strong class="text-slate-900">Năm {s.reporting_period}</strong></div>
         </div>
 
-        <!-- Part 1: Executive KPI Cards -->
-        <div class="my-6">
-            <h2 class="text-sm font-bold uppercase text-slate-800 tracking-wide mb-3">Phần I: Tổng Quan Phát Thải Khí Nhà Kính (Corporate Inventory)</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div class="bg-slate-900 text-white rounded-lg p-4">
-                    <div class="text-[11px] text-slate-300 uppercase font-semibold">Tổng phát thải ròng</div>
-                    <div class="text-2xl font-black font-mono mt-1">{s.total_co2e_tonnes:,.3f} <span class="text-xs font-normal text-slate-400">tCO₂e</span></div>
-                    <div class="text-[10px] text-slate-400 mt-1">95% CI: [{s.total_uncertainty_min_tonnes:.1f} - {s.total_uncertainty_max_tonnes:.1f}]</div>
-                </div>
-                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                    <div class="text-[11px] text-emerald-800 uppercase font-bold">Scope 1 (Trực tiếp)</div>
-                    <div class="text-xl font-bold font-mono text-emerald-900 mt-1">{s.scope_1_tonnes:,.3f} <span class="text-xs font-normal text-emerald-700">tCO₂e</span></div>
-                    <div class="text-[10px] text-emerald-600 mt-1">Nhiên liệu đốt lò hơi & xe cộ</div>
-                </div>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div class="text-[11px] text-blue-800 uppercase font-bold">Scope 2 (Điện EVN)</div>
-                    <div class="text-xl font-bold font-mono text-blue-900 mt-1">{s.scope_2_tonnes:,.3f} <span class="text-xs font-normal text-blue-700">tCO₂e</span></div>
-                    <div class="text-[10px] text-blue-600 mt-1">Lưới điện quốc gia MONRE</div>
-                </div>
-                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                    <div class="text-[11px] text-purple-800 uppercase font-bold">Scope 3 (Chuỗi giá trị)</div>
-                    <div class="text-xl font-bold font-mono text-purple-900 mt-1">{s.scope_3_tonnes:,.3f} <span class="text-xs font-normal text-purple-700">tCO₂e</span></div>
-                    <div class="text-[10px] text-purple-600 mt-1">Logistics & vật tư mua sắm</div>
-                </div>
-            </div>
-        </div>
+        {cards_html}
 
         <!-- 5-Dimension Radar Cards -->
         <div class="my-6">

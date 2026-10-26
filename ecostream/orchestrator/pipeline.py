@@ -234,6 +234,13 @@ class WorkflowOrchestrator:
         state.active_agent = "PythonMathEngine"
         self.workspace.save_state(state)
 
+        # Enforce Scope 1 and Scope 2 only (Ignore Scope 3 completely per user requirement)
+        if not enable_scope3:
+            all_records = [
+                r for r in all_records
+                if str(getattr(r.scope, "value", r.scope)).strip() in ("Scope 1", "Scope 2")
+            ]
+
         calculator = CarbonCalculator()
         calculations = calculator.calculate_all(all_records)
         scope_breakdowns, total_tonnes, total_min, total_max = calculator.aggregate_scopes(calculations)
