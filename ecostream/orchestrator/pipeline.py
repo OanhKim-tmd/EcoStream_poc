@@ -60,6 +60,8 @@ class WorkflowOrchestrator:
         company_name: str = "EcoGarment Vietnam JSC",
         facility_name: str = "Nhà máy May & Năng lượng Hà Nam",
         reporting_year: int = 2026,
+        enable_scope3: bool = False,
+        enable_mitigation: bool = False,
     ) -> Dict[str, Any]:
         """Execute the complete end-to-end multi-agent pipeline."""
         # 1. Initialize
@@ -151,11 +153,10 @@ class WorkflowOrchestrator:
             ("Scope1FuelAgent", Scope1FuelAgent(self.llm_client)),
             ("Scope2PowerAgent", Scope2PowerAgent(self.llm_client)),
         ]
-
-        # In this PoC (per USTH_Inn 2026_EcoStream docx constraints):
-        # "Phiên bản đầu chỉ tính CO₂ từ nhiên liệu tiêu thụ và điện mua vào...
-        #  Phiên bản thử nghiệm không có chức năng dự báo, đề xuất giảm phát thải hoặc tính Scope 3."
-        # So we skip Scope3 and Mitigation agents to strictly adhere to the project scope.
+        if enable_scope3:
+            domain_agents.append(("Scope3SupplyAgent", Scope3SupplyAgent(self.llm_client)))
+        if enable_mitigation:
+            domain_agents.append(("MitigationQuotaAgent", MitigationQuotaAgent(self.llm_client)))
 
         for agent_name, agent_instance in domain_agents:
             state.active_agent = agent_name
@@ -233,6 +234,13 @@ class WorkflowOrchestrator:
         state.active_agent = "PythonMathEngine"
         self.workspace.save_state(state)
 
+        # Enforce Scope 1 and Scope 2 only (Ignore Scope 3 completely per user requirement)
+        if not enable_scope3:
+            all_records = [
+                r for r in all_records
+                if str(getattr(r.scope, "value", r.scope)).strip() in ("Scope 1", "Scope 2")
+            ]
+
         calculator = CarbonCalculator()
         calculations = calculator.calculate_all(all_records)
         scope_breakdowns, total_tonnes, total_min, total_max = calculator.aggregate_scopes(calculations)
@@ -241,18 +249,17 @@ class WorkflowOrchestrator:
         total_penalty = min(25.0, sum(a.confidence_penalty * 100.0 for a in all_assumptions))
         reliability = ReliabilityEngine.evaluate(all_records, assumption_penalty=total_penalty)
 
-        # Mitigation Summary is skipped in this PoC mode per instructions
         mitigation_summary = None
-        # if mitigation_data:
-        #     measures = [MitigationMeasure(**m) for m in mitigation_data.get("measures", [])]
-        #     mitigation_summary = MitigationMathEngine.generate_mitigation_summary(
-        #         facility_name=facility_name,
-        #         measures=measures,
-        #         allocated_quota_tonnes=4000.0,
-        #         actual_inventory_tonnes=total_tonnes,
-        #         reporting_period=str(reporting_year),
-        #     )
-        #     self.workspace.save_intermediate_json("mitigation_summary.json", mitigation_summary)
+        if enable_mitigation and mitigation_data:
+            measures = [MitigationMeasure(**m) for m in mitigation_data.get("measures", [])]
+            mitigation_summary = MitigationMathEngine.generate_mitigation_summary(
+                facility_name=facility_name,
+                measures=measures,
+                allocated_quota_tonnes=4000.0,
+                actual_inventory_tonnes=total_tonnes,
+                reporting_period=str(reporting_year),
+            )
+            self.workspace.save_intermediate_json("mitigation_summary.json", mitigation_summary)
 
         inventory_summary = CarbonAdvisor.compile_summary(
             company_name=company_name,
@@ -308,18 +315,18 @@ class WorkflowOrchestrator:
         # Markdown Report (.md)
         md_path = os.path.join(deliv_dir, "Bao_cao_kiem_ke_va_giam_nhe_KNK.md")
         try:
-            md_text = ReportExporter.to_markdown(audit_report)
+            md_content = ReportExporter.to_markdown(audit_report)
             with open(md_path, "w", encoding="utf-8") as f:
-                f.write(md_text)
+                f.write(md_content)
         except Exception as e:
             print(f"Notice: Markdown generation skipped ({e})")
 
         # HTML Report (.html)
         html_path = os.path.join(deliv_dir, "Bao_cao_kiem_ke_va_giam_nhe_KNK.html")
         try:
-            html_text = ReportExporter.to_html(audit_report)
+            html_content = ReportExporter.to_html(audit_report)
             with open(html_path, "w", encoding="utf-8") as f:
-                f.write(html_text)
+                f.write(html_content)
         except Exception as e:
             print(f"Notice: HTML generation skipped ({e})")
 
@@ -370,6 +377,7 @@ class WorkflowOrchestrator:
             "assumptions": [a.model_dump() for a in all_assumptions],
             "deliverables": {
                 "json": json_path,
+                "md": md_path,
                 "markdown": md_path,
                 "html": html_path,
                 "docx": docx_path,

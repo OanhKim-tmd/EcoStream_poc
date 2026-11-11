@@ -182,6 +182,7 @@ def run_demo():
         with open(deliv_json, "r", encoding="utf-8") as f:
             import json
             report_data = json.load(f)
+            report_data["run_id"] = orch.run_id
             _latest_report = AuditReport(**report_data)
             return report_data
 
@@ -194,19 +195,13 @@ async def upload_documents(
     company: str = Form("EcoGarment Vietnam JSC"),
     period: str = Form("2026"),
     location: str = Form("Nhà máy May & Năng lượng Hà Nam"),
+    enable_scope3: bool = Form(False),
+    enable_mitigation: bool = Form(False),
 ):
     """Upload custom business files (Excel, PDF, Word, CSV) and run multi-agent pipeline."""
     global _latest_report
 
-    # --- AUTO-CLEAN PREVIOUS RUNS ---
-    import shutil
-    try:
-        shutil.rmtree(RUNS_DIR)
-        os.makedirs(RUNS_DIR, exist_ok=True)
-    except:
-        pass
-    # --------------------------------
-
+    os.makedirs(RUNS_DIR, exist_ok=True)
     temp_dir = tempfile.mkdtemp()
     saved_paths = []
     try:
@@ -241,6 +236,8 @@ async def upload_documents(
             company_name=company,
             facility_name=location,
             reporting_year=year_num,
+            enable_scope3=enable_scope3,
+            enable_mitigation=enable_mitigation,
         )
 
         deliv_json = os.path.join(orch.workspace.deliverables_dir, "final_inventory_summary.json")
@@ -248,6 +245,7 @@ async def upload_documents(
             with open(deliv_json, "r", encoding="utf-8") as f:
                 import json
                 report_data = json.load(f)
+                report_data["run_id"] = orch.run_id
                 _latest_report = AuditReport(**report_data)
                 return report_data
 
@@ -396,6 +394,7 @@ def list_factors():
     return [f.model_dump() for f in db.get_all_factors()]
 
 
+@app.get("/api/export/html", response_class=HTMLResponse, dependencies=[Depends(verify_api_key)])
 @app.get("/api/report/html", response_class=HTMLResponse, dependencies=[Depends(verify_api_key)])
 def export_html():
     global _latest_report
@@ -404,6 +403,7 @@ def export_html():
     return HTMLResponse(content=ReportExporter.to_html(_latest_report))
 
 
+@app.get("/api/export/markdown", response_class=PlainTextResponse, dependencies=[Depends(verify_api_key)])
 @app.get("/api/report/markdown", response_class=PlainTextResponse, dependencies=[Depends(verify_api_key)])
 def export_markdown():
     global _latest_report
@@ -419,7 +419,50 @@ def export_pdf():
     if not _latest_report:
         run_demo()
     pdf_bytes = ReportExporter.to_pdf(_latest_report)
-    return Response(content=pdf_bytes, media_type="application/pdf")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'inline; filename="Bao_cao_kiem_ke_va_giam_nhe_KNK.pdf"'},
+    )
+
+
+@app.get("/api/export/docx", dependencies=[Depends(verify_api_key)])
+@app.get("/api/report/docx", dependencies=[Depends(verify_api_key)])
+def export_docx():
+    global _latest_report
+    if not _latest_report:
+        run_demo()
+    docx_bytes = ReportExporter.to_docx(_latest_report)
+    return Response(
+        content=docx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": 'attachment; filename="Bao_cao_Mau02_ND06.docx"'},
+    )
+
+
+@app.get("/api/export/excel", dependencies=[Depends(verify_api_key)])
+@app.get("/api/report/excel", dependencies=[Depends(verify_api_key)])
+def export_excel():
+    global _latest_report
+    if not _latest_report:
+        run_demo()
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
+        tmp_path = tmp.name
+    try:
+        ReportExporter.to_excel(_latest_report, tmp_path)
+        with open(tmp_path, "rb") as f:
+            excel_bytes = f.read()
+    finally:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="Ho_so_ket_qua_CO2_EcoStream.xlsx"'},
+    )
 
 
 def find_available_port(start_port: int = 8000, host: str = "127.0.0.1", max_attempts: int = 20) -> int:
