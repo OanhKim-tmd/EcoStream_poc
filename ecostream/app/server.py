@@ -29,6 +29,11 @@ from ecostream.orchestrator.state import BlackboardWorkspace
 from ecostream.models.results import AuditReport
 from ecostream.reporting.export import ReportExporter
 from ecostream.factors.database import get_factor_database
+from ecostream.orchestrator.survey_pipeline import (
+    prepare_survey, calculate_survey, get_survey_status,
+    SURVEY_FILE, INVENTORY_FILE, REPORT_FILE,
+)
+from ecostream.ingestion.survey_workbook import SurveyValidationError, SURVEY_NAME, TEMPLATES
 
 app = FastAPI(
     title="EcoStream Multi-Agent AI Carbon Engine",
@@ -187,6 +192,118 @@ def run_demo():
             return report_data
 
     return res
+
+
+# Survey-first workflow. Legacy /api/upload remains available for older clients.
+@app.post("/api/survey/prepare", dependencies=[Depends(verify_api_key)])
+async def prepare_survey_from_documents(
+    files: List[UploadFile] = File(...),
+    company: str = Form(...),
+    location: str = Form(...),
+    period: int = Form(...),
+):
+    if not company.strip() or not location.strip():
+        raise HTTPException(status_code=422, detail="Tên doanh nghiệp và cơ sở không được để trống")
+    if not files or len(files) > 20:
+        raise HTTPException(status_code=422, detail="Chọn 1–20 chứng từ")
+    with tempfile.TemporaryDirectory() as temp_dir:
+        paths = []
+        try:
+            for file in files:
+                name = _validate_safe_identifier(os.path.basename(file.filename or ""), "filename")
+                if os.path.splitext(name)[1].lower() not in (".xlsx", ".csv", ".pdf", ".docx"):
+                    raise HTTPException(status_code=422, detail=f"Không hỗ trợ định dạng tệp: {name}")
+                destination = _verify_safe_path(temp_dir, name)
+                if os.path.exists(destination):
+                    raise HTTPException(status_code=422, detail=f"Tệp trùng tên: {name}")
+                content = await file.read(10 * 1024 * 1024 + 1)
+                if len(content) > 10 * 1024 * 1024:
+                    raise HTTPException(status_code=413, detail=f"Tệp quá 10 MB: {name}")
+                with open(destination, "wb") as stream:
+                    stream.write(content)
+                paths.append(destination)
+            return prepare_survey(paths, company.strip(), location.strip(), period, RUNS_DIR)
+        except SurveyValidationError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/api/survey/template", dependencies=[Depends(verify_api_key)])
+def download_blank_survey():
+    return FileResponse(TEMPLATES / SURVEY_NAME, filename=SURVEY_NAME)
+
+
+@app.get("/api/survey/runs/{run_id}", dependencies=[Depends(verify_api_key)])
+def survey_run_status(run_id: str):
+    try:
+        return get_survey_status(run_id, RUNS_DIR)
+    except SurveyValidationError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/api/survey/runs/{run_id}/survey/preview", dependencies=[Depends(verify_api_key)])
+def preview_survey(run_id: str):
+    """Printable overview without serving arbitrary workbook markup."""
+    from html import escape
+    from ecostream.ingestion.survey_workbook import read_survey
+    _validate_safe_identifier(run_id, "run_id")
+    try:
+        metadata = get_survey_status(run_id, RUNS_DIR)
+    except SurveyValidationError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    workspace = BlackboardWorkspace(run_id, RUNS_DIR)
+    survey = os.path.join(workspace.deliverables_dir, SURVEY_FILE)
+    if not os.path.isfile(survey):
+        raise HTTPException(status_code=404, detail="Chưa có biểu khảo sát")
+    try:
+        data = read_survey(survey)
+        rows = "".join(f"<tr><td>{escape(item.sheet)}!{escape(item.coordinate)}</td><td>{escape(item.kind)}</td><td>{item.month}</td><td>{item.quantity:g}</td><td>{escape(item.unit)}</td></tr>" for item in data.items)
+    except SurveyValidationError as exc:
+        rows = f"<tr><td colspan='5'>{escape(str(exc))}</td></tr>"
+    provenance = "".join(f"<li>{escape(str(entry['filename']))}: {escape(str(entry['status']))} — {entry['records']} dòng</li>" for entry in metadata['files'])
+    warnings = "".join(f"<li>{escape(str(message))}</li>" for message in metadata['warnings'])
+    return HTMLResponse("<!doctype html><html lang='vi'><meta charset='utf-8'><title>Biểu khảo sát</title><style>body{font:16px Arial;margin:2rem}td,th{border:1px solid #aaa;padding:.5rem}table{border-collapse:collapse}button{margin:1rem 0}@media print{button{display:none}}</style><h1>Biểu khảo sát số liệu hoạt động — bản xem để in</h1><p>Kiểm tra lại số liệu và nguồn trước khi tính. Bản xem này chỉ gồm dữ liệu Scope 1/2 được hỗ trợ; tải Excel để xem toàn bộ mẫu.</p><button onclick='window.print()'>In trang</button><table><thead><tr><th>Ô khảo sát</th><th>Nguồn</th><th>Tháng</th><th>Số lượng</th><th>Đơn vị</th></tr></thead><tbody>" + rows + "</tbody></table><h2>Chứng từ</h2><ul>" + provenance + "</ul><h2>Cần rà soát</h2><ul>" + warnings + "</ul></html>")
+
+
+@app.post("/api/survey/runs/{run_id}/calculate", dependencies=[Depends(verify_api_key)])
+async def calculate_survey_run(run_id: str, reviewed: Optional[UploadFile] = File(None)):
+    _validate_safe_identifier(run_id, "run_id")
+    with tempfile.TemporaryDirectory() as temp_dir:
+        path = None
+        if reviewed is not None:
+            if not (reviewed.filename or "").lower().endswith(".xlsx"):
+                raise HTTPException(status_code=422, detail="Bản khảo sát đã sửa phải là tệp .xlsx")
+            content = await reviewed.read(10 * 1024 * 1024 + 1)
+            if len(content) > 10 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="Tệp khảo sát quá 10 MB")
+            path = os.path.join(temp_dir, "reviewed.xlsx")
+            with open(path, "wb") as stream:
+                stream.write(content)
+        try:
+            return calculate_survey(run_id, path, RUNS_DIR)
+        except SurveyValidationError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/api/survey/runs/{run_id}/files/{kind}", dependencies=[Depends(verify_api_key)])
+def download_survey_file(run_id: str, kind: str):
+    _validate_safe_identifier(run_id, "run_id")
+    names = {"survey": SURVEY_FILE, "inventory": INVENTORY_FILE, "report": REPORT_FILE}
+    if kind not in names:
+        raise HTTPException(status_code=404, detail="Loại tệp không tồn tại")
+    try:
+        get_survey_status(run_id, RUNS_DIR)
+    except SurveyValidationError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    workspace = BlackboardWorkspace(run_id, RUNS_DIR)
+    path = os.path.join(workspace.deliverables_dir, names[kind])
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail="Tệp chưa được tạo")
+    return FileResponse(path, filename=names[kind])
+
+
+@app.get("/api/survey/runs/{run_id}/survey", dependencies=[Depends(verify_api_key)])
+def download_generated_survey(run_id: str):
+    return download_survey_file(run_id, "survey")
 
 
 @app.post("/api/upload", dependencies=[Depends(verify_api_key)])

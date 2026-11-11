@@ -12,6 +12,12 @@
 
 ---
 
+## Luồng khảo sát trước khi tính (bản thử nghiệm)
+
+Trên giao diện web, doanh nghiệp tải chứng từ gốc lên → EcoStream điền **bản sao biểu khảo sát** và liệt kê nguồn đã dùng → người dùng xem/in/tải biểu và có thể sửa rồi nộp lại → tính Scope 1/2 từ **biểu khảo sát** → điền bản sao workbook kiểm kê và tạo **một** Word dự thảo. Chạy `python -m ecostream.app` rồi mở `http://127.0.0.1:8000/`. Hướng dẫn thao tác và giới hạn: [HUONG_DAN_SU_DUNG_WEB.md](HUONG_DAN_SU_DUNG_WEB.md).
+
+Chỉ các dòng chứng từ có tháng, số lượng, đơn vị và dạng bảng được hỗ trợ mới tự điền; chứng từ PDF không nhận được số liệu cần điền thủ công. Không tự bù tháng thiếu, không suy đoán lượng giảm nhẹ hoặc hạn ngạch. Hệ số phát thải EcoStream là niên độ 2023; bảng tính mẫu dùng phương pháp riêng và **chưa đối soát về cùng một kết quả**. Không coi báo cáo dự thảo là hồ sơ kiểm kê được thẩm tra. Các tính năng nội suy/Scope 3/Mẫu 02 bên dưới mô tả pipeline cũ, không áp dụng cho luồng khảo sát mới.
+
 ## 📌 Bối Cảnh & Vấn Đề Giải Quyết
 
 Từ **01/01/2026**, Liên minh Châu Âu (EU) chính thức áp dụng cơ chế đánh thuế carbon qua biên giới **CBAM** (*Carbon Border Adjustment Mechanism*). Tại Việt Nam, hơn 3.000 cơ sở phát thải trọng điểm bắt buộc phải thực hiện kiểm kê khí nhà kính (KNK) và lập kế hoạch giảm nhẹ phát thải định kỳ theo **Nghị định 06/2022/NĐ-CP**, **Nghị định 119/2025/NĐ-CP**, và các Quyết định **01/2022/QĐ-TTg**, **13/2024/QĐ-TTg**.
