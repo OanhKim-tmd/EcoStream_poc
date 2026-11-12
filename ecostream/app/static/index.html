@@ -79,7 +79,16 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-2.5">
+                <button type="button" onclick="openAccountModal()" id="btnAccountBadge" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition flex items-center gap-1.5 shadow-2xs" title="Đăng nhập Doanh nghiệp & Kích hoạt License Pro">
+                    <span id="headerTierIcon">🔒</span>
+                    <span id="headerOrgText" class="hidden md:inline font-mono text-[11px]">Khách (Free)</span>
+                    <span id="headerTierBadge" class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950">FREE PREVIEW</span>
+                </button>
+                <a href="/monitor" id="linkMonitor" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition hidden sm:flex items-center gap-1.5">
+                    <span>📡</span>
+                    <span>Live Monitor</span>
+                </a>
                 <button type="button" onclick="runDemoQuick()" id="btnDemoQuick" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center gap-1.5">
                     <span>⚡</span>
                     <span>Thử Dữ Liệu Mẫu</span>
@@ -246,59 +255,64 @@
 
                 <!-- DOWNLOAD HUB: Direct Download Actions -->
                 <div class="pt-4 border-t border-slate-100 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">
-                            📥 Tải Về Trọn Bộ Báo Cáo Quy Chuẩn:
-                        </h3>
-                        <span class="text-[11px] text-slate-400 font-mono">Sẵn sàng để nộp hoặc kiểm toán</span>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                                <span>📥 Tải Về Trọn Bộ Báo Cáo Quy Chuẩn</span>
+                                <span id="resRunIdBadge" class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[10px] font-semibold border border-slate-200">run: benchmark</span>
+                            </h3>
+                        </div>
+                        <button type="button" onclick="openAccountModal()" id="tierNoticeBanner" class="text-left sm:text-right text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-1 rounded-lg border border-amber-200 transition">
+                            ⚠️ Bản Free Preview (Có Watermark) • <span class="underline">Kích hoạt Pro để mở khóa Mẫu 02 & Excel</span>
+                        </button>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         <!-- HTML Report -->
                         <a id="btnDlHtml" href="/api/report/html" target="_blank" class="p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition text-left flex items-start gap-3 group">
                             <span class="text-2xl">🌐</span>
-                            <div class="truncate">
-                                <div class="text-xs font-bold text-emerald-950 group-hover:text-emerald-900 flex items-center gap-1">
+                            <div class="truncate flex-1">
+                                <div class="text-xs font-bold text-emerald-950 group-hover:text-emerald-900 flex items-center justify-between gap-1">
                                     <span>Báo Cáo HTML</span>
                                     <span>↗</span>
                                 </div>
-                                <div class="text-[11px] text-emerald-700">Trực quan, hỗ trợ in ấn</div>
+                                <div id="subDlHtml" class="text-[11px] text-emerald-700 truncate">Xem trước (Watermark)</div>
                             </div>
                         </a>
 
                         <!-- Word DOCX -->
-                        <a id="btnDlDocx" href="/api/report/docx" download="Bao_cao_Mau02_ND06.docx" class="p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 transition text-left flex items-start gap-3 group">
+                        <a id="btnDlDocx" href="/api/report/docx" onclick="return handleProDownload(event, 'docx')" download="Bao_cao_Mau02_ND06.docx" class="p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 transition text-left flex items-start gap-3 group">
                             <span class="text-2xl">📝</span>
-                            <div class="truncate">
-                                <div class="text-xs font-bold text-blue-950 group-hover:text-blue-900 flex items-center gap-1">
+                            <div class="truncate flex-1">
+                                <div class="text-xs font-bold text-blue-950 group-hover:text-blue-900 flex items-center justify-between gap-1">
                                     <span>Word Mẫu 02</span>
-                                    <span>↓</span>
+                                    <span id="badgeLockDocx" class="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950">🔒 PRO</span>
                                 </div>
-                                <div class="text-[11px] text-blue-700">Chuẩn nộp NĐ 06/2022</div>
+                                <div class="text-[11px] text-blue-700 truncate">Chuẩn nộp NĐ 06/2022</div>
                             </div>
                         </a>
 
                         <!-- PDF Audit -->
                         <a id="btnDlPdf" href="/api/report/pdf" target="_blank" class="p-4 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 transition text-left flex items-start gap-3 group">
                             <span class="text-2xl">📕</span>
-                            <div class="truncate">
-                                <div class="text-xs font-bold text-rose-950 group-hover:text-rose-900 flex items-center gap-1">
+                            <div class="truncate flex-1">
+                                <div class="text-xs font-bold text-rose-950 group-hover:text-rose-900 flex items-center justify-between gap-1">
                                     <span>Báo Cáo PDF</span>
-                                    <span>↓</span>
+                                    <span>↗</span>
                                 </div>
-                                <div class="text-[11px] text-rose-700">Chuẩn ký duyệt kiểm toán</div>
+                                <div id="subDlPdf" class="text-[11px] text-rose-700 truncate">Xem trước (Watermark)</div>
                             </div>
                         </a>
 
                         <!-- Excel QA -->
-                        <a id="btnDlExcel" href="/api/report/excel" download="Ho_so_ket_qua_CO2_EcoStream.xlsx" class="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 transition text-left flex items-start gap-3 group">
+                        <a id="btnDlExcel" href="/api/report/excel" onclick="return handleProDownload(event, 'excel')" download="Ho_so_ket_qua_CO2_EcoStream.xlsx" class="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 transition text-left flex items-start gap-3 group">
                             <span class="text-2xl">📊</span>
-                            <div class="truncate">
-                                <div class="text-xs font-bold text-slate-900 group-hover:text-slate-800 flex items-center gap-1">
+                            <div class="truncate flex-1">
+                                <div class="text-xs font-bold text-slate-900 group-hover:text-slate-800 flex items-center justify-between gap-1">
                                     <span>Hồ Sơ Excel</span>
-                                    <span>↓</span>
+                                    <span id="badgeLockExcel" class="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950">🔒 PRO</span>
                                 </div>
-                                <div class="text-[11px] text-slate-600">Đối soát chi tiết từng dòng</div>
+                                <div class="text-[11px] text-slate-600 truncate">Đối soát chi tiết từng dòng</div>
                             </div>
                         </a>
                     </div>
@@ -340,6 +354,54 @@
 
     </main>
 
+    <!-- Modal: Enterprise Account Login & Pro License Activation -->
+    <div id="accountLicenseModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5">
+            <div class="flex items-start justify-between border-b border-slate-100 pb-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🔐</span>
+                        <h3 class="text-base font-extrabold text-slate-900">Tài Khoản Doanh Nghiệp & License Pro</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5">Cô lập dữ liệu theo Mã Tổ Chức (Multi-Tenant) & Mở khóa xuất bản Mẫu 02</p>
+                </div>
+                <button type="button" onclick="closeAccountModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center">✕</button>
+            </div>
+
+            <form onsubmit="handleEnterpriseLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Email Cán Bộ / Kế Toán</label>
+                    <input type="email" id="modalEmailInput" value="hse@ecogarment.vn" class="w-full text-xs font-medium px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-brand-500 outline-hidden" required>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mã Tổ Chức / Doanh Nghiệp (Org ID)</label>
+                    <input type="text" id="modalOrgInput" value="ecogarment-vn" placeholder="Ví dụ: ecogarment-vn" class="w-full text-xs font-mono font-bold px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-brand-500 outline-hidden" required>
+                    <p class="text-[11px] text-slate-400 mt-1">Mỗi Org ID có không gian lưu trữ phiên chạy (<code class="font-mono">run_id</code>) tách biệt.</p>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-[11px] font-bold text-amber-950 uppercase">Mã Kích Hoạt Gói Pro / Enterprise</label>
+                        <button type="button" onclick="fillDemoProKey()" class="text-[11px] font-bold text-emerald-700 hover:underline">✨ Dùng mã Demo Pro</button>
+                    </div>
+                    <input type="text" id="modalLicenseInput" placeholder="Để trống nếu dùng gói Free Preview..." class="w-full text-xs font-mono font-bold px-3 py-2 bg-white border border-amber-300 rounded-xl focus:border-emerald-600 outline-hidden uppercase">
+                    <div class="text-[11px] text-amber-800 space-y-0.5 leading-relaxed">
+                        <div>• <strong>Gói Free:</strong> Xem báo cáo HTML/PDF có đóng dấu Watermark.</div>
+                        <div>• <strong>Gói Pro:</strong> Gỡ Watermark + Mở khóa tải <strong>Word Mẫu 02 NĐ 06/2022</strong> & <strong>Hồ sơ Excel</strong>.</div>
+                    </div>
+                </div>
+
+                <div id="modalStatusMsg" class="hidden text-xs font-bold p-2.5 rounded-xl text-center"></div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" onclick="switchToFreeTier()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Chuyển về Free</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white gradient-brand hover:opacity-95 transition shadow-sm">Lưu & Kích Hoạt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="border-t border-slate-200/80 bg-white py-5 text-center text-xs text-slate-400">
         EcoStream AI Carbon Accounting • Trường Đại học Khoa học và Công nghệ Hà Nội (USTH)
@@ -349,6 +411,182 @@
     <script>
         let selectedFiles = [];
         let latestRunId = 'benchmark';
+        let currentOrgId = localStorage.getItem('ecostream_org_id') || 'ecogarment-vn';
+        let currentUserId = localStorage.getItem('ecostream_user_id') || 'anonymous';
+        let currentEmail = localStorage.getItem('ecostream_email') || 'hse@ecogarment.vn';
+        let currentTier = localStorage.getItem('ecostream_tier') || 'FREE';
+        let currentLicenseKey = localStorage.getItem('ecostream_license_key') || '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAccountAndTierUI();
+        });
+
+        function openAccountModal() {
+            document.getElementById('modalEmailInput').value = currentEmail;
+            document.getElementById('modalOrgInput').value = currentOrgId;
+            document.getElementById('modalLicenseInput').value = currentLicenseKey;
+            document.getElementById('modalStatusMsg').classList.add('hidden');
+            const modal = document.getElementById('accountLicenseModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAccountModal() {
+            const modal = document.getElementById('accountLicenseModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function fillDemoProKey() {
+            document.getElementById('modalLicenseInput').value = 'ECO-PRO-2026';
+        }
+
+        function switchToFreeTier() {
+            document.getElementById('modalLicenseInput').value = '';
+            currentTier = 'FREE';
+            currentLicenseKey = '';
+            localStorage.setItem('ecostream_tier', 'FREE');
+            localStorage.setItem('ecostream_license_key', '');
+            updateAccountAndTierUI();
+            refreshDownloadLinks();
+            closeAccountModal();
+        }
+
+        async function handleEnterpriseLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('modalEmailInput').value.trim();
+            const orgId = document.getElementById('modalOrgInput').value.trim();
+            const licenseKey = document.getElementById('modalLicenseInput').value.trim();
+            const msgBox = document.getElementById('modalStatusMsg');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, org_id: orgId, license_key: licenseKey || null })
+                });
+                const data = await res.json();
+                if (licenseKey && !data.is_pro) {
+                    msgBox.className = "text-xs font-bold p-2.5 rounded-xl text-center bg-rose-50 text-rose-700 border border-rose-200";
+                    msgBox.innerText = "Mã License không hợp lệ! Hãy bấm '✨ Dùng mã Demo Pro' (ECO-PRO-2026) để thử nghiệm.";
+                    msgBox.classList.remove('hidden');
+                    return;
+                }
+
+                currentEmail = data.email;
+                currentOrgId = data.org_id;
+                currentUserId = data.user_id;
+                currentTier = data.tier;
+                currentLicenseKey = data.is_pro ? licenseKey.toUpperCase() : '';
+
+                localStorage.setItem('ecostream_email', currentEmail);
+                localStorage.setItem('ecostream_org_id', currentOrgId);
+                localStorage.setItem('ecostream_user_id', currentUserId);
+                localStorage.setItem('ecostream_tier', currentTier);
+                localStorage.setItem('ecostream_license_key', currentLicenseKey);
+
+                updateAccountAndTierUI();
+                refreshDownloadLinks();
+                closeAccountModal();
+            } catch (err) {
+                alert('Lỗi xác thực tài khoản: ' + err);
+            }
+        }
+
+        function updateAccountAndTierUI() {
+            const btn = document.getElementById('btnAccountBadge');
+            const icon = document.getElementById('headerTierIcon');
+            const orgText = document.getElementById('headerOrgText');
+            const badge = document.getElementById('headerTierBadge');
+            const monLink = document.getElementById('linkMonitor');
+
+            if (monLink && currentOrgId) {
+                monLink.href = `/monitor?org_id=${encodeURIComponent(currentOrgId)}`;
+            }
+            if (orgText) {
+                orgText.innerText = currentOrgId || 'Khách';
+            }
+
+            const isPro = (currentTier === 'PRO');
+            if (isPro) {
+                btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 transition flex items-center gap-1.5 shadow-2xs";
+                icon.innerText = "💎";
+                badge.className = "px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-600 text-white";
+                badge.innerText = "PRO VERIFIED";
+            } else {
+                btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition flex items-center gap-1.5 shadow-2xs";
+                icon.innerText = "🔒";
+                badge.className = "px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950";
+                badge.innerText = "FREE PREVIEW";
+            }
+        }
+
+        function refreshDownloadLinks() {
+            const isPro = (currentTier === 'PRO');
+            const tierParam = isPro ? 'pro' : 'free';
+            const qs = `?run_id=${encodeURIComponent(latestRunId)}&tier=${tierParam}` + (currentLicenseKey ? `&license_key=${encodeURIComponent(currentLicenseKey)}` : '');
+
+            const runBadge = document.getElementById('resRunIdBadge');
+            if (runBadge) runBadge.innerText = `run: ${latestRunId}`;
+
+            document.getElementById('btnDlHtml').href = `/api/report/html${qs}`;
+            document.getElementById('btnDlPdf').href = `/api/report/pdf${qs}`;
+            document.getElementById('btnDlDocx').href = `/api/report/docx${qs}`;
+            document.getElementById('btnDlExcel').href = `/api/report/excel${qs}`;
+
+            const notice = document.getElementById('tierNoticeBanner');
+            const subHtml = document.getElementById('subDlHtml');
+            const subPdf = document.getElementById('subDlPdf');
+            const lockDocx = document.getElementById('badgeLockDocx');
+            const lockExcel = document.getElementById('badgeLockExcel');
+
+            if (isPro) {
+                if (notice) {
+                    notice.className = "text-left sm:text-right text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-200 transition";
+                    notice.innerHTML = `💎 Gói Pro (${currentOrgId}) • Đã mở khóa toàn bộ báo cáo gốc không Watermark`;
+                }
+                if (subHtml) subHtml.innerText = "Bản chính thức (Không Watermark)";
+                if (subPdf) subPdf.innerText = "Bản chính thức ký duyệt kiểm toán";
+                if (lockDocx) {
+                    lockDocx.className = "px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-600 text-white";
+                    lockDocx.innerText = "↓ TẢI";
+                }
+                if (lockExcel) {
+                    lockExcel.className = "px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-600 text-white";
+                    lockExcel.innerText = "↓ TẢI";
+                }
+            } else {
+                if (notice) {
+                    notice.className = "text-left sm:text-right text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-1 rounded-lg border border-amber-200 transition";
+                    notice.innerHTML = `⚠️ Bản Free Preview (Có Watermark) • <span class="underline">Kích hoạt Pro để mở khóa Mẫu 02 & Excel</span>`;
+                }
+                if (subHtml) subHtml.innerText = "Xem trước (Có Watermark)";
+                if (subPdf) subPdf.innerText = "Xem trước (Có Watermark)";
+                if (lockDocx) {
+                    lockDocx.className = "px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950";
+                    lockDocx.innerText = "🔒 PRO";
+                }
+                if (lockExcel) {
+                    lockExcel.className = "px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950";
+                    lockExcel.innerText = "🔒 PRO";
+                }
+            }
+        }
+
+        function handleProDownload(e, docType) {
+            if (currentTier !== 'PRO') {
+                e.preventDefault();
+                openAccountModal();
+                const msgBox = document.getElementById('modalStatusMsg');
+                msgBox.className = "text-xs font-bold p-2.5 rounded-xl text-center bg-amber-100 text-amber-900 border border-amber-300";
+                msgBox.innerText = docType === 'docx'
+                    ? "🔒 Tải file Word Mẫu 02 NĐ 06/2022 yêu cầu gói Pro/Enterprise. Bấm '✨ Dùng mã Demo Pro' bên trên để mở khóa ngay!"
+                    : "🔒 Tải Hồ sơ kiểm toán Excel yêu cầu gói Pro/Enterprise. Bấm '✨ Dùng mã Demo Pro' bên trên để mở khóa ngay!";
+                msgBox.classList.remove('hidden');
+                return false;
+            }
+            return true;
+        }
 
         // 1. File Selection & Drag-and-Drop
         function handleDragOver(e) {
@@ -409,10 +647,10 @@
         async function runDemoQuick() {
             showLoading('Đang phân tích bộ dữ liệu kiểm chứng benchmark...', 'EcoGarment Vietnam JSC — Nhà máy Hà Nam');
             try {
-                const res = await fetch('/api/demo');
+                const res = await fetch(`/api/demo?org_id=${encodeURIComponent(currentOrgId)}&user_id=${encodeURIComponent(currentUserId)}`);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
-                latestRunId = 'benchmark';
+                latestRunId = data.run_id || 'benchmark';
                 displayResults(data);
             } catch (err) {
                 alert('Lỗi nạp demo: ' + err);
@@ -433,6 +671,8 @@
 
             formData.delete('files');
             selectedFiles.forEach(f => formData.append('files', f));
+            formData.append('org_id', currentOrgId);
+            formData.append('user_id', currentUserId);
 
             showLoading('AI đang bóc tách chứng từ và tính toán...', 'Áp dụng hệ số phát thải MONRE & quy chuẩn NĐ 06/2022');
 
@@ -505,11 +745,8 @@
             gradeBadge.className = `px-2 py-0.5 rounded text-[11px] font-black ${grade === 'A' ? 'bg-emerald-600 text-white' : grade === 'B' ? 'bg-blue-600 text-white' : 'bg-amber-600 text-white'}`;
             document.getElementById('resVerdict').innerText = rel.summary_verdict || 'Đạt chuẩn kiểm toán và quyết toán';
 
-            // Deliverables Links (Direct and instant report downloads)
-            document.getElementById('btnDlHtml').href = '/api/report/html';
-            document.getElementById('btnDlPdf').href = '/api/report/pdf';
-            document.getElementById('btnDlDocx').href = '/api/report/docx';
-            document.getElementById('btnDlExcel').href = '/api/report/excel';
+            // Update per-run & tier-aware download links
+            refreshDownloadLinks();
 
             // Calculations Table
             const calcs = data.calculations || [];

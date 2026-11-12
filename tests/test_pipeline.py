@@ -55,6 +55,56 @@ class TestPipelineIntegration(unittest.TestCase):
         self.assertIn("EF-SCOPE2-VN-GRID", factor_ids)
         self.assertIn("EF-SCOPE1-DIESEL", factor_ids)
 
+    def test_multi_tenant_auth_and_license_tier_gating(self):
+        # 1. Free login
+        res_free = self.client.post(
+            "/api/auth/login",
+            json={"email": "ketoan@congty-a.vn", "org_id": "congty-a", "license_key": None},
+        )
+        self.assertEqual(res_free.status_code, 200)
+        data_free = res_free.json()
+        self.assertEqual(data_free["tier"], "FREE")
+        self.assertFalse(data_free["is_pro"])
+        self.assertEqual(data_free["org_id"], "congty-a")
+
+        # 2. Pro login with valid license key
+        res_pro = self.client.post(
+            "/api/auth/login",
+            json={"email": "hse@congty-a.vn", "org_id": "congty-a", "license_key": "ECO-PRO-2026"},
+        )
+        self.assertEqual(res_pro.status_code, 200)
+        data_pro = res_pro.json()
+        self.assertEqual(data_pro["tier"], "PRO")
+        self.assertTrue(data_pro["is_pro"])
+
+        # 3. Run demo with org_id and verify per-run report & watermark behavior
+        demo_res = self.client.get("/api/demo?org_id=congty-a&user_id=user123")
+        self.assertEqual(demo_res.status_code, 200)
+        run_id = demo_res.json().get("run_id")
+        self.assertTrue(run_id)
+
+        # Free tier HTML preview has watermark
+        html_free = self.client.get(f"/api/report/html?run_id={run_id}&tier=free")
+        self.assertEqual(html_free.status_code, 200)
+        self.assertIn("FREE PREVIEW", html_free.text)
+
+        # Pro tier HTML has no watermark
+        html_pro = self.client.get(f"/api/report/html?run_id={run_id}&tier=free&license_key=ECO-PRO-2026")
+        self.assertEqual(html_pro.status_code, 200)
+        self.assertNotIn("FREE PREVIEW", html_pro.text)
+
+        # Free tier DOCX & Excel are gated with 402 Payment Required
+        docx_free = self.client.get(f"/api/report/docx?run_id={run_id}&tier=free")
+        self.assertEqual(docx_free.status_code, 402)
+        excel_free = self.client.get(f"/api/report/excel?run_id={run_id}&tier=free")
+        self.assertEqual(excel_free.status_code, 402)
+
+        # Pro license unlocks DOCX & Excel for that specific run_id
+        docx_pro = self.client.get(f"/api/report/docx?run_id={run_id}&tier=free&license_key=ECO-PRO-2026")
+        self.assertEqual(docx_pro.status_code, 200)
+        excel_pro = self.client.get(f"/api/report/excel?run_id={run_id}&tier=free&license_key=ECO-PRO-2026")
+        self.assertEqual(excel_pro.status_code, 200)
+
 
 if __name__ == "__main__":
     unittest.main()

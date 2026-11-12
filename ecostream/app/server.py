@@ -6,7 +6,10 @@ import shutil
 import tempfile
 import socket
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
+import json
+import hashlib
+from pydantic import BaseModel
 
 # Configure UTF-8 on Windows
 if sys.platform == "win32":
@@ -105,8 +108,85 @@ STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 SAMPLES_DIR = os.path.join(PROJECT_ROOT, "data", "samples")
 RUNS_DIR = os.path.join(PROJECT_ROOT, "runs")
 
-# Cache latest generated report
+# Cache latest generated report and per-run reports for multi-tenant isolation
 _latest_report: Optional[AuditReport] = None
+_reports_by_run: Dict[str, AuditReport] = {}
+
+DEFAULT_PRO_KEYS = {"ECO-PRO-2026", "ECO-ENTERPRISE-2026", "USTH-INNO-2026"}
+
+
+class EnterpriseLoginRequest(BaseModel):
+    email: str = "demo@ecogarment.vn"
+    org_id: str = "ecogarment-vn"
+    license_key: Optional[str] = None
+
+
+class LicenseVerifyRequest(BaseModel):
+    license_key: str
+
+
+def _get_valid_pro_keys() -> set:
+    env_keys = os.environ.get("ECOSTREAM_PRO_KEYS", "")
+    custom = {k.strip().upper() for k in env_keys.split(",") if k.strip()}
+    return DEFAULT_PRO_KEYS.union(custom)
+
+
+def _is_valid_pro_key(key: Optional[str]) -> bool:
+    if not key:
+        return False
+    return key.strip().upper() in _get_valid_pro_keys()
+
+
+def _save_tenant_meta(run_dir: str, org_id: Optional[str], user_id: Optional[str]) -> None:
+    if not org_id and not user_id:
+        return
+    try:
+        os.makedirs(run_dir, exist_ok=True)
+        meta_path = os.path.join(run_dir, "tenant_meta.json")
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "org_id": org_id or "public",
+                    "user_id": user_id or "anonymous",
+                    "created_at": datetime.now().isoformat(),
+                },
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
+    except Exception:
+        pass
+
+
+def _load_tenant_meta(run_dir: str) -> dict:
+    meta_path = os.path.join(run_dir, "tenant_meta.json")
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"org_id": "public", "user_id": "anonymous"}
+
+
+def _resolve_report(run_id: Optional[str] = None) -> AuditReport:
+    """Resolve report for a specific run_id (multi-user safe) or fall back to _latest_report."""
+    global _latest_report
+    if run_id and run_id != "benchmark":
+        _validate_safe_identifier(run_id, "run_id")
+        if run_id in _reports_by_run:
+            return _reports_by_run[run_id]
+        workspace = BlackboardWorkspace(run_id, RUNS_DIR)
+        deliv_json = os.path.join(workspace.deliverables_dir, "final_inventory_summary.json")
+        if os.path.exists(deliv_json):
+            with open(deliv_json, "r", encoding="utf-8") as f:
+                report_data = json.load(f)
+                report_Obj = AuditReport(**report_data)
+                _reports_by_run[run_id] = report_Obj
+                return report_Obj
+    if not _latest_report:
+        run_demo()
+    return _latest_report
 
 # Mount static files directory if present
 if os.path.exists(STATIC_DIR):
@@ -159,8 +239,56 @@ def get_auth_status(
     }
 
 
+@app.post("/api/auth/login")
+def enterprise_login(req: EnterpriseLoginRequest):
+    """Authenticate an enterprise user/organization and determine subscription tier (FREE vs PRO)."""
+    clean_org = re.sub(r"[^a-zA-Z0-9_\-\.]", "-", req.org_id.strip() or "default-org").strip("-") or "default-org"
+    clean_email = req.email.strip() or "user@enterprise.vn"
+    user_id = hashlib.sha256(f"{clean_org}:{clean_email}".encode("utf-8")).hexdigest()[:12]
+    is_pro = _is_valid_pro_key(req.license_key)
+    tier = "PRO" if is_pro else "FREE"
+    token_seed = f"{clean_org}:{user_id}:{tier}:{secrets.token_hex(8)}"
+    session_token = hashlib.sha256(token_seed.encode("utf-8")).hexdigest()
+    return {
+        "authenticated": True,
+        "email": clean_email,
+        "user_id": user_id,
+        "org_id": clean_org,
+        "tier": tier,
+        "is_pro": is_pro,
+        "session_token": session_token,
+        "features": {
+            "watermark_free": is_pro,
+            "docx_mau02_export": is_pro,
+            "excel_audit_export": is_pro,
+        },
+    }
+
+
+@app.post("/api/license/verify")
+def verify_license_key(req: LicenseVerifyRequest):
+    """Verify whether a provided License Key unlocks Pro/Enterprise features."""
+    is_valid = _is_valid_pro_key(req.license_key)
+    if not is_valid:
+        raise HTTPException(
+            status_code=403,
+            detail="Mã License không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại (Gợi ý mã trải nghiệm Pro: ECO-PRO-2026).",
+        )
+    return {
+        "valid": True,
+        "tier": "PRO",
+        "license_key": req.license_key.strip().upper(),
+        "message": "Đã kích hoạt thành công gói EcoStream Pro / Enterprise! Toàn bộ báo cáo Word Mẫu 02 & Excel đã được mở khóa.",
+    }
+
+
 @app.get("/api/demo", dependencies=[Depends(verify_api_key)])
-def run_demo():
+def run_demo(
+    org_id: Optional[str] = Query(None),
+    user_id: Optional[str] = Query(None),
+    x_org_id: Optional[str] = Header(None, alias="X-Org-Id"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+):
     """Run benchmark case study using multi-agent workflow on data/samples/input.xlsx."""
     global _latest_report
     sample_xlsx = os.path.join(SAMPLES_DIR, "input.xlsx")
@@ -175,15 +303,20 @@ def run_demo():
         facility_name="Nhà máy May & Năng lượng Hà Nam",
         reporting_year=2026,
     )
+    eff_org = org_id or x_org_id
+    eff_user = user_id or x_user_id
+    _save_tenant_meta(orch.workspace.run_dir, eff_org, eff_user)
 
     # Build backward-compatible AuditReport structure
     deliv_json = os.path.join(orch.workspace.deliverables_dir, "final_inventory_summary.json")
     if os.path.exists(deliv_json):
         with open(deliv_json, "r", encoding="utf-8") as f:
-            import json
             report_data = json.load(f)
             report_data["run_id"] = orch.run_id
-            _latest_report = AuditReport(**report_data)
+            report_data["org_id"] = eff_org or "public"
+            report_obj = AuditReport(**report_data)
+            _latest_report = report_obj
+            _reports_by_run[orch.run_id] = report_obj
             return report_data
 
     return res
@@ -197,6 +330,10 @@ async def upload_documents(
     location: str = Form("Nhà máy May & Năng lượng Hà Nam"),
     enable_scope3: bool = Form(False),
     enable_mitigation: bool = Form(False),
+    org_id: Optional[str] = Form(None),
+    user_id: Optional[str] = Form(None),
+    x_org_id: Optional[str] = Header(None, alias="X-Org-Id"),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
 ):
     """Upload custom business files (Excel, PDF, Word, CSV) and run multi-agent pipeline."""
     global _latest_report
@@ -217,19 +354,19 @@ async def upload_documents(
         # Parse year if available
         year_num = 2026
         try:
-            import re
             m = re.search(r"\b(202\d)\b", period)
             if m:
                 year_num = int(m.group(1))
         except Exception:
             pass
 
-        import re
+        eff_org = org_id or x_org_id
+        eff_user = user_id or x_user_id
         safe_c = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', company).strip('-')
         safe_l = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', location).strip('-')
-        from datetime import datetime
         ts_suffix = datetime.now().strftime("%H%M%S")
-        run_name = f"{safe_c}_{safe_l}_{period}_{ts_suffix}"
+        org_prefix = f"{re.sub(r'[^a-zA-Z0-9_-]+', '', eff_org)}_" if eff_org else ""
+        run_name = f"{org_prefix}{safe_c}_{safe_l}_{period}_{ts_suffix}"
         orch = WorkflowOrchestrator(run_id=run_name, offline_mode=True)
         res = orch.run_pipeline(
             input_files=saved_paths,
@@ -239,14 +376,17 @@ async def upload_documents(
             enable_scope3=enable_scope3,
             enable_mitigation=enable_mitigation,
         )
+        _save_tenant_meta(orch.workspace.run_dir, eff_org, eff_user)
 
         deliv_json = os.path.join(orch.workspace.deliverables_dir, "final_inventory_summary.json")
         if os.path.exists(deliv_json):
             with open(deliv_json, "r", encoding="utf-8") as f:
-                import json
                 report_data = json.load(f)
                 report_data["run_id"] = orch.run_id
-                _latest_report = AuditReport(**report_data)
+                report_data["org_id"] = eff_org or "public"
+                report_obj = AuditReport(**report_data)
+                _latest_report = report_obj
+                _reports_by_run[orch.run_id] = report_obj
                 return report_data
 
         return res
@@ -259,14 +399,21 @@ async def upload_documents(
 
 
 @app.get("/api/orchestrator/runs")
-def list_runs():
-    """List all pipeline execution runs in blackboard workspace."""
+def list_runs(
+    org_id: Optional[str] = Query(None),
+    x_org_id: Optional[str] = Header(None, alias="X-Org-Id"),
+):
+    """List pipeline execution runs in blackboard workspace (supports multi-tenant org_id isolation)."""
     if not os.path.exists(RUNS_DIR):
         return {"runs": []}
+    filter_org = org_id or x_org_id
     runs = []
     for r_name in sorted(os.listdir(RUNS_DIR), reverse=True):
         r_dir = os.path.join(RUNS_DIR, r_name)
         if os.path.isdir(r_dir):
+            tenant_meta = _load_tenant_meta(r_dir)
+            if filter_org and tenant_meta.get("org_id") not in (filter_org, "public"):
+                continue
             workspace = BlackboardWorkspace(r_name, RUNS_DIR)
             state = workspace.load_state()
             queries = workspace.load_intermediate_json("query_log.json") or []
@@ -276,6 +423,8 @@ def list_runs():
 
             runs.append({
                 "run_id": r_name,
+                "org_id": tenant_meta.get("org_id", "public"),
+                "user_id": tenant_meta.get("user_id", "anonymous"),
                 "state": state.model_dump() if state else None,
                 "phase": state.phase.value if state else "UNKNOWN",
                 "progress_pct": state.progress_pct if state else 0.0,
@@ -396,29 +545,37 @@ def list_factors():
 
 @app.get("/api/export/html", response_class=HTMLResponse, dependencies=[Depends(verify_api_key)])
 @app.get("/api/report/html", response_class=HTMLResponse, dependencies=[Depends(verify_api_key)])
-def export_html():
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    return HTMLResponse(content=ReportExporter.to_html(_latest_report))
+def export_html(
+    run_id: Optional[str] = Query(None),
+    tier: Optional[str] = Query(None),
+    license_key: Optional[str] = Query(None),
+    x_license_key: Optional[str] = Header(None, alias="X-License-Key"),
+):
+    report = _resolve_report(run_id)
+    eff_key = license_key or x_license_key
+    use_watermark = (tier and tier.lower() == "free") and not _is_valid_pro_key(eff_key)
+    return HTMLResponse(content=ReportExporter.to_html(report, watermark=bool(use_watermark)))
 
 
 @app.get("/api/export/markdown", response_class=PlainTextResponse, dependencies=[Depends(verify_api_key)])
 @app.get("/api/report/markdown", response_class=PlainTextResponse, dependencies=[Depends(verify_api_key)])
-def export_markdown():
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    return PlainTextResponse(content=ReportExporter.to_markdown(_latest_report))
+def export_markdown(run_id: Optional[str] = Query(None)):
+    report = _resolve_report(run_id)
+    return PlainTextResponse(content=ReportExporter.to_markdown(report))
 
 
 @app.get("/api/export/pdf", dependencies=[Depends(verify_api_key)])
 @app.get("/api/report/pdf", dependencies=[Depends(verify_api_key)])
-def export_pdf():
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    pdf_bytes = ReportExporter.to_pdf(_latest_report)
+def export_pdf(
+    run_id: Optional[str] = Query(None),
+    tier: Optional[str] = Query(None),
+    license_key: Optional[str] = Query(None),
+    x_license_key: Optional[str] = Header(None, alias="X-License-Key"),
+):
+    report = _resolve_report(run_id)
+    eff_key = license_key or x_license_key
+    use_watermark = (tier and tier.lower() == "free") and not _is_valid_pro_key(eff_key)
+    pdf_bytes = ReportExporter.to_pdf(report, watermark=bool(use_watermark))
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -428,11 +585,20 @@ def export_pdf():
 
 @app.get("/api/export/docx", dependencies=[Depends(verify_api_key)])
 @app.get("/api/report/docx", dependencies=[Depends(verify_api_key)])
-def export_docx():
-    global _latest_report
-    if not _latest_report:
-        run_demo()
-    docx_bytes = ReportExporter.to_docx(_latest_report)
+def export_docx(
+    run_id: Optional[str] = Query(None),
+    tier: Optional[str] = Query(None),
+    license_key: Optional[str] = Query(None),
+    x_license_key: Optional[str] = Header(None, alias="X-License-Key"),
+):
+    eff_key = license_key or x_license_key
+    if tier and tier.lower() == "free" and not _is_valid_pro_key(eff_key):
+        raise HTTPException(
+            status_code=402,
+            detail="Yêu cầu nâng cấp gói Pro/Enterprise để tải về file Word Mẫu 02 NĐ 06/2022/NĐ-CP.",
+        )
+    report = _resolve_report(run_id)
+    docx_bytes = ReportExporter.to_docx(report)
     return Response(
         content=docx_bytes,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -442,14 +608,23 @@ def export_docx():
 
 @app.get("/api/export/excel", dependencies=[Depends(verify_api_key)])
 @app.get("/api/report/excel", dependencies=[Depends(verify_api_key)])
-def export_excel():
-    global _latest_report
-    if not _latest_report:
-        run_demo()
+def export_excel(
+    run_id: Optional[str] = Query(None),
+    tier: Optional[str] = Query(None),
+    license_key: Optional[str] = Query(None),
+    x_license_key: Optional[str] = Header(None, alias="X-License-Key"),
+):
+    eff_key = license_key or x_license_key
+    if tier and tier.lower() == "free" and not _is_valid_pro_key(eff_key):
+        raise HTTPException(
+            status_code=402,
+            detail="Yêu cầu nâng cấp gói Pro/Enterprise để tải về Hồ sơ kiểm toán Excel.",
+        )
+    report = _resolve_report(run_id)
     with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
         tmp_path = tmp.name
     try:
-        ReportExporter.to_excel(_latest_report, tmp_path)
+        ReportExporter.to_excel(report, tmp_path)
         with open(tmp_path, "rb") as f:
             excel_bytes = f.read()
     finally:
@@ -484,10 +659,17 @@ def find_available_port(start_port: int = 8000, host: str = "127.0.0.1", max_att
     return port
 
 
-def run_server(host: str = "127.0.0.1", port: int = 8000):
-    actual_port = find_available_port(port, host)
-    print(f"\n[EcoStream] Multi-Agent Web Server is live at: http://{host}:{actual_port}\n")
-    uvicorn.run(app, host=host, port=actual_port)
+def run_server(host: Optional[str] = None, port: Optional[int] = None):
+    env_port = os.environ.get("PORT")
+    env_host = os.environ.get("ECOSTREAM_HOST") or os.environ.get("HOST")
+    if env_port:
+        actual_host = host or env_host or "0.0.0.0"
+        actual_port = int(env_port)
+    else:
+        actual_host = host or env_host or "127.0.0.1"
+        actual_port = find_available_port(port or 8000, actual_host)
+    print(f"\n[EcoStream] Multi-Agent Web Server is live at: http://{actual_host}:{actual_port}\n")
+    uvicorn.run(app, host=actual_host, port=actual_port)
 
 
 if __name__ == "__main__":

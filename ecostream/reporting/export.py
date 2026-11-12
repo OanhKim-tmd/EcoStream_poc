@@ -85,7 +85,7 @@ class ReportExporter:
         return "\n".join(md)
 
     @classmethod
-    def to_html(cls, report: AuditReport) -> str:
+    def to_html(cls, report: AuditReport, watermark: bool = False) -> str:
         s = report.summary
         rel = s.reliability
 
@@ -316,6 +316,22 @@ class ReportExporter:
         </div>
         """
 
+        watermark_html = ""
+        if watermark:
+            watermark_html = """
+            <div class="fixed inset-0 pointer-events-none flex items-center justify-center z-50 overflow-hidden select-none">
+                <div class="text-slate-900/10 font-black text-4xl sm:text-6xl uppercase tracking-widest -rotate-30 text-center leading-tight border-4 border-slate-900/10 p-6 rounded-2xl">
+                    BẢN XEM TRƯỚC DÙNG THỬ (FREE PREVIEW)<br/>
+                    <span class="text-2xl sm:text-3xl">ECOSTREAM AI • NÂNG CẤP PRO ĐỂ NỘP BÁO CÁO MẪU 02</span>
+                </div>
+            </div>
+            <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between no-print">
+                <div>
+                    <strong>⚠️ BẢN XEM TRƯỚC MIỄN PHÍ (WATERMARK PREVIEW):</strong> Tài liệu này chỉ phục vụ xem trước kết quả tính toán. Vui lòng kích hoạt <strong>Gói Pro / Enterprise</strong> để gỡ đóng dấu Watermark và tải xuống hồ sơ gốc <strong>Word Mẫu 02 NĐ 06/2022/NĐ-CP</strong> & <strong>Excel Kiểm Toán</strong>.
+                </div>
+            </div>
+            """
+
         return f"""<!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -335,7 +351,8 @@ class ReportExporter:
     </style>
 </head>
 <body class="py-8 px-4 sm:px-6 lg:px-8">
-    <div id="reportContainer" class="max-w-5xl mx-auto bg-white rounded-xl shadow-md border border-slate-200 p-8">
+    <div id="reportContainer" class="max-w-5xl mx-auto bg-white rounded-xl shadow-md border border-slate-200 p-8 relative">
+        {watermark_html}
 
         <!-- Header -->
         <header class="flex justify-between items-start pb-6 border-b border-slate-200">
@@ -559,7 +576,7 @@ class ReportExporter:
         return buffer.read()
     
     @classmethod
-    def to_pdf(cls, report: AuditReport) -> bytes:
+    def to_pdf(cls, report: AuditReport, watermark: bool = False) -> bytes:
         import io
         from reportlab.lib.pagesizes import A4
         from reportlab.lib import colors
@@ -595,6 +612,23 @@ class ReportExporter:
         sub_title = ParagraphStyle("SubTitle", fontName=font_name_bold, fontSize=12, alignment=1)
         normal = ParagraphStyle("NormalText", fontName=font_name, fontSize=11, leading=14)
         bold_text = ParagraphStyle("BoldText", fontName=font_name_bold, fontSize=11, leading=14)
+        watermark_style = ParagraphStyle(
+            "WatermarkNotice",
+            fontName=font_name_bold,
+            fontSize=10,
+            textColor=colors.HexColor("#b45309"),
+            alignment=1,
+            leading=13,
+        )
+
+        if watermark:
+            elements.append(
+                Paragraph(
+                    "[BẢN XEM TRƯỚC DÙNG THỬ / FREE PREVIEW — NÂNG CẤP GÓI PRO ĐỂ GỠ WATERMARK & TẢI MẪU 02]",
+                    watermark_style,
+                )
+            )
+            elements.append(Spacer(1, 10))
 
         elements.append(Paragraph(f"CÔNG TY {s.company_name.upper()}", title_style))
         elements.append(Paragraph("--------------***--------------", sub_title))
@@ -664,7 +698,18 @@ class ReportExporter:
         elements.append(Paragraph("IV. Kết luận và kiến nghị", bold_text))
         elements.append(Paragraph(f"Tổng phát thải ròng của cơ sở là <b>{s.total_co2e_tonnes:,.3f} tCO2e</b>.", normal))
 
-        doc.build(elements)
+        def _draw_watermark(canvas_obj, _doc):
+            if not watermark:
+                return
+            canvas_obj.saveState()
+            canvas_obj.setFont(font_name_bold, 32)
+            canvas_obj.setFillColor(colors.Color(0.6, 0.6, 0.6, alpha=0.18))
+            canvas_obj.translate(300, 400)
+            canvas_obj.rotate(35)
+            canvas_obj.drawCentredString(0, 0, "FREE PREVIEW - ECOSTREAM AI")
+            canvas_obj.restoreState()
+
+        doc.build(elements, onFirstPage=_draw_watermark, onLaterPages=_draw_watermark)
         return buffer.getvalue()
 
 

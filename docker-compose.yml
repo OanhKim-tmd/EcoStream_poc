@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  ecostream-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecostream-ai-carbon
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - ECOSTREAM_PRO_KEYS=ECO-PRO-2026,ECO-ENTERPRISE-2026,USTH-INNO-2026
+    volumes:
+      - ./runs:/app/runs
+      - ./data/samples:/app/data/samples
+

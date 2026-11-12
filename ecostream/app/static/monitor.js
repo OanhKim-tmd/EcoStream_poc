@@ -107,7 +107,10 @@ function setConnectionStatus(online, msg = 'Đang kết nối') {
 
 async function loadRunsList() {
     try {
-        const res = await fetch('/api/orchestrator/runs');
+        const urlParams = new URLSearchParams(window.location.search);
+        const orgFilter = urlParams.get('org_id');
+        const endpoint = orgFilter ? `/api/orchestrator/runs?org_id=${encodeURIComponent(orgFilter)}` : '/api/orchestrator/runs';
+        const res = await fetch(endpoint);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         runsCache = data.runs || [];
