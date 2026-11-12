@@ -1,6 +1,7 @@
 """Blackboard state workspace manager for isolated pipeline runs."""
 
 import os
+import sys
 import json
 import shutil
 from typing import Dict, Any, Optional, List
@@ -14,8 +15,17 @@ class BlackboardWorkspace:
     def __init__(self, run_id: str, base_runs_dir: Optional[str] = None):
         self.run_id = run_id
         if base_runs_dir is None:
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            base_runs_dir = os.path.join(project_root, "runs")
+            if getattr(sys, "frozen", False):
+                if sys.platform == "darwin":
+                    user_root = os.path.expanduser("~/Library/Application Support/EcoStream")
+                elif sys.platform == "win32":
+                    user_root = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "EcoStream")
+                else:
+                    user_root = os.path.expanduser("~/.ecostream")
+                base_runs_dir = os.environ.get("ECOSTREAM_RUNS_DIR", os.path.join(user_root, "runs"))
+            else:
+                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                base_runs_dir = os.environ.get("ECOSTREAM_RUNS_DIR", os.path.join(project_root, "runs"))
         self.run_dir = os.path.join(base_runs_dir, run_id)
         self.raw_inputs_dir = os.path.join(self.run_dir, "raw_inputs")
         self.markdown_inputs_dir = os.path.join(self.run_dir, "markdown_inputs")

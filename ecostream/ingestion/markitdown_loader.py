@@ -77,8 +77,11 @@ class MarkItDownLoader:
         elif ext == ".pdf":
             full_md = self._convert_pdf(file_path)
             sheet_mds = {}
+        elif ext == ".docx":
+            full_md = self._convert_docx(file_path)
+            sheet_mds = {}
         else:
-            # DOCX, PPTX, HTML, etc.
+            # PPTX, HTML, etc.
             converter = self._get_converter()
             if converter:
                 try:
@@ -102,8 +105,40 @@ class MarkItDownLoader:
             is_cache_hit=False,
         )
 
+    def _convert_docx(self, file_path: str) -> str:
+        """Convert DOCX to markdown using MarkItDown or python-docx fallback."""
+        converter = self._get_converter()
+        if converter:
+            try:
+                res = converter.convert(file_path)
+                text = (res.text_content or "").strip()
+                if text:
+                    return text
+            except Exception:
+                pass
+        try:
+            import docx
+            doc = docx.Document(file_path)
+            parts: List[str] = []
+            for p in doc.paragraphs:
+                if p.text.strip():
+                    parts.append(p.text.strip())
+            for table in doc.tables:
+                rows = [[cell.text.strip().replace("\n", " ") for cell in row.cells] for row in table.rows]
+                if rows:
+                    parts.append("| " + " | ".join(rows[0]) + " |")
+                    parts.append("| " + " | ".join(["---"] * len(rows[0])) + " |")
+                    for r in rows[1:]:
+                        parts.append("| " + " | ".join(r) + " |")
+                    parts.append("")
+            if parts:
+                return "\n".join(parts)
+        except Exception:
+            pass
+        return f"Could not extract text from {os.path.basename(file_path)}"
+
     def _convert_pdf(self, file_path: str) -> str:
-        """Convert PDF to markdown. Tries MarkItDown first; falls back to pytesseract OCR for scanned PDFs."""
+        """Convert PDF to markdown. Tries MarkItDown or pypdf first; falls back to pytesseract OCR for scanned PDFs."""
         converter = self._get_converter()
         if converter:
             try:
@@ -113,6 +148,20 @@ class MarkItDownLoader:
                     return text
             except Exception:
                 pass
+
+        try:
+            import pypdf
+            reader = pypdf.PdfReader(file_path)
+            pages_text = []
+            for page in reader.pages:
+                t = (page.extract_text() or "").strip()
+                if t:
+                    pages_text.append(t)
+            joined = "\n\n".join(pages_text).strip()
+            if len(joined) >= 20:
+                return joined
+        except Exception:
+            pass
 
         # Scanned PDF fallback: rasterize then OCR (vie+eng)
         try:

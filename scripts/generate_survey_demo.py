@@ -62,7 +62,7 @@ def generate(output_dir: Path = OUT) -> list[Path]:
 
     pdf = output_dir / "electricity_month_01.pdf"
     canvas = Canvas(str(pdf), pagesize=A4)
-    fonts = ["/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"]
+    fonts = ["/System/Library/Fonts/Supplemental/Arial.ttf", "C:/Windows/Fonts/arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"]
     font = next((p for p in fonts if Path(p).exists()), None)
     if font:
         pdfmetrics.registerFont(TTFont("DemoFont", font))

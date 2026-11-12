@@ -106,18 +106,32 @@ def verify_api_key(
         )
     return True
 
-# Locate base directories
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROJECT_ROOT = os.path.dirname(BASE_DIR)
-STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-SAMPLES_DIR = os.path.join(PROJECT_ROOT, "data", "samples")
-RUNS_DIR = os.path.join(PROJECT_ROOT, "runs")
+# Locate base directories (supports both source execution and PyInstaller .app/.exe bundle)
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    PROJECT_ROOT = sys._MEIPASS
+    BASE_DIR = os.path.join(PROJECT_ROOT, "ecostream")
+    STATIC_DIR = os.path.join(BASE_DIR, "app", "static")
+    SAMPLES_DIR = os.path.join(PROJECT_ROOT, "data", "samples")
+    if sys.platform == "darwin":
+        _user_data_root = os.path.expanduser("~/Library/Application Support/EcoStream")
+    elif sys.platform == "win32":
+        _user_data_root = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "EcoStream")
+    else:
+        _user_data_root = os.path.expanduser("~/.ecostream")
+    RUNS_DIR = os.environ.get("ECOSTREAM_RUNS_DIR", os.path.join(_user_data_root, "runs"))
+    os.makedirs(RUNS_DIR, exist_ok=True)
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    PROJECT_ROOT = os.path.dirname(BASE_DIR)
+    STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+    SAMPLES_DIR = os.path.join(PROJECT_ROOT, "data", "samples")
+    RUNS_DIR = os.environ.get("ECOSTREAM_RUNS_DIR", os.path.join(PROJECT_ROOT, "runs"))
 
 # Cache latest generated report and per-run reports for multi-tenant isolation
 _latest_report: Optional[AuditReport] = None
 _reports_by_run: Dict[str, AuditReport] = {}
 
-DEFAULT_PRO_KEYS = {"ECO-PRO-2026", "ECO-ENTERPRISE-2026", "USTH-INNO-2026"}
+from ecostream.privacy.licensing import DEFAULT_PRO_KEYS, verify_commercial_license
 
 
 class EnterpriseLoginRequest(BaseModel):
@@ -136,10 +150,11 @@ def _get_valid_pro_keys() -> set:
     return DEFAULT_PRO_KEYS.union(custom)
 
 
-def _is_valid_pro_key(key: Optional[str]) -> bool:
+def _is_valid_pro_key(key: Optional[str], org_id: Optional[str] = None) -> bool:
     if not key:
         return False
-    return key.strip().upper() in _get_valid_pro_keys()
+    valid, _ = verify_commercial_license(key, org_id)
+    return valid
 
 
 def _save_tenant_meta(run_dir: str, org_id: Optional[str], user_id: Optional[str]) -> None:

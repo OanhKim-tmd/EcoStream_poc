@@ -1,6 +1,8 @@
 """SHA-256 caching layer for MarkItDown document conversion."""
+from __future__ import annotations
 
 import os
+import sys
 import hashlib
 from typing import Optional
 
@@ -10,10 +12,19 @@ class IngestionCache:
 
     def __init__(self, cache_dir: Optional[str] = None):
         if cache_dir is None:
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            claude_cache = os.path.join(base_dir, ".claude", "references", "cache")
-            ref_cache = os.path.join(base_dir, "references", "cache")
-            cache_dir = claude_cache if os.path.exists(os.path.dirname(claude_cache)) else ref_cache
+            if getattr(sys, "frozen", False):
+                if sys.platform == "darwin":
+                    user_root = os.path.expanduser("~/Library/Application Support/EcoStream")
+                elif sys.platform == "win32":
+                    user_root = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "EcoStream")
+                else:
+                    user_root = os.path.expanduser("~/.ecostream")
+                cache_dir = os.path.join(user_root, "cache")
+            else:
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                claude_cache = os.path.join(base_dir, ".claude", "references", "cache")
+                ref_cache = os.path.join(base_dir, "references", "cache")
+                cache_dir = claude_cache if os.path.exists(os.path.dirname(claude_cache)) else ref_cache
         self.cache_dir = cache_dir
         os.makedirs(self.cache_dir, exist_ok=True)
 

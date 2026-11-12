@@ -6,6 +6,7 @@ Unknown or incomplete data is reported, never silently imputed.
 from __future__ import annotations
 
 import re
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
@@ -14,7 +15,10 @@ from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 
 SURVEY_NAME = "06.01.2025.-Bang-khao-sat-SLHD-cap-co-so-VN.xlsx"
-TEMPLATES = Path(__file__).resolve().parents[2] / "data" / "test_documents"
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    TEMPLATES = Path(sys._MEIPASS) / "data" / "test_documents"
+else:
+    TEMPLATES = Path(__file__).resolve().parents[2] / "data" / "test_documents"
 
 # Survey row, inventory row, standard unit. Only explicitly verified mappings.
 FUEL_ROWS = {

@@ -43,6 +43,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 def register_vietnamese_fonts():
     """Register TrueType fonts with full Vietnamese Unicode support."""
     font_paths = [
+        ("DejaVuSans", "/System/Library/Fonts/Supplemental/Arial.ttf"),
+        ("DejaVuSans-Bold", "/System/Library/Fonts/Supplemental/Arial Bold.ttf"),
+        ("DejaVuSans-Oblique", "/System/Library/Fonts/Supplemental/Arial Italic.ttf"),
         ("DejaVuSans", "C:/Windows/Fonts/arial.ttf"),
         ("DejaVuSans-Bold", "C:/Windows/Fonts/arialbd.ttf"),
         ("DejaVuSans-Oblique", "C:/Windows/Fonts/ariali.ttf"),
