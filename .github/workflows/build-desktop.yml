@@ -3,6 +3,9 @@ name: Build Desktop Installers (.exe & .dmg)
 on:
   workflow_dispatch:
   push:
+    branches:
+      - web_demo
+      - main
     tags:
       - 'v*'
 
