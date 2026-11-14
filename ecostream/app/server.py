@@ -265,7 +265,7 @@ def enterprise_login(req: EnterpriseLoginRequest):
     clean_org = re.sub(r"[^a-zA-Z0-9_\-\.]", "-", req.org_id.strip() or "default-org").strip("-") or "default-org"
     clean_email = req.email.strip() or "user@enterprise.vn"
     user_id = hashlib.sha256(f"{clean_org}:{clean_email}".encode("utf-8")).hexdigest()[:12]
-    is_pro = _is_valid_pro_key(req.license_key)
+    is_pro = _is_valid_pro_key(req.license_key, clean_org)
     tier = "PRO" if is_pro else "FREE"
     token_seed = f"{clean_org}:{user_id}:{tier}:{secrets.token_hex(8)}"
     session_token = hashlib.sha256(token_seed.encode("utf-8")).hexdigest()
@@ -288,17 +288,62 @@ def enterprise_login(req: EnterpriseLoginRequest):
 @app.post("/api/license/verify")
 def verify_license_key(req: LicenseVerifyRequest):
     """Verify whether a provided License Key unlocks Pro/Enterprise features."""
-    is_valid = _is_valid_pro_key(req.license_key)
+    clean_key = req.license_key.strip()
+    is_valid, meta = verify_commercial_license(clean_key)
     if not is_valid:
         raise HTTPException(
             status_code=403,
-            detail="Mã License không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại (Gợi ý mã trải nghiệm Pro: ECO-PRO-2026).",
+            detail=f"Mã License không hợp lệ: {meta.get('reason', 'Xác thực thất bại')}. (Gợi ý mã trải nghiệm Pro: ECO-PRO-2026).",
         )
     return {
         "valid": True,
-        "tier": "PRO",
-        "license_key": req.license_key.strip().upper(),
+        "tier": meta.get("tier", "PRO"),
+        "license_key": clean_key,
+        "bound_org": meta.get("bound_org", "ANY"),
+        "expires": meta.get("expires", ""),
+        "features": meta.get("features", []),
         "message": "Đã kích hoạt thành công gói EcoStream Pro / Enterprise! Toàn bộ báo cáo Word Mẫu 02 & Excel đã được mở khóa.",
+    }
+
+
+class AISettingsRequest(BaseModel):
+    provider: str = "gemini"  # gemini, openai, ollama, offline
+    api_key: Optional[str] = ""
+    model: Optional[str] = ""
+    base_url: Optional[str] = ""
+
+
+@app.get("/api/settings/ai")
+def get_ai_settings_endpoint():
+    """Retrieve current AI provider configuration status."""
+    from ecostream.privacy.ai_settings import get_ai_config, mask_key
+    cfg = get_ai_config()
+    return {
+        "provider": cfg.get("provider", "offline"),
+        "model": cfg.get("model", ""),
+        "base_url": cfg.get("base_url", ""),
+        "configured": cfg.get("configured", False),
+        "masked_key": mask_key(cfg.get("api_key", "")),
+    }
+
+
+@app.post("/api/settings/ai")
+def save_ai_settings_endpoint(req: AISettingsRequest):
+    """Save user AI provider configuration locally (BYOK)."""
+    from ecostream.privacy.ai_settings import save_ai_config, mask_key
+    cfg = save_ai_config(
+        provider=req.provider,
+        api_key=req.api_key or "",
+        model=req.model or "",
+        base_url=req.base_url or "",
+    )
+    return {
+        "success": True,
+        "provider": cfg.get("provider"),
+        "model": cfg.get("model"),
+        "configured": cfg.get("configured"),
+        "masked_key": mask_key(cfg.get("api_key", "")),
+        "message": "Đã lưu cấu hình AI thành công!",
     }
 
 

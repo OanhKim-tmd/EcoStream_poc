@@ -18,7 +18,17 @@ BUILD_DIR = ROOT / "build"
 
 def build() -> None:
     os.environ.setdefault("PYINSTALLER_CONFIG_DIR", str(BUILD_DIR / "pyinstaller_cache"))
+    os.environ.setdefault("PYTHONUTF8", "1")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
     sep = ";" if sys.platform == "win32" else ":"
+
+    # Remove stale spec file to prevent cross-platform path pollution
+    spec_file = ROOT / "EcoStream.spec"
+    if spec_file.exists():
+        try:
+            spec_file.unlink()
+        except OSError:
+            pass
 
     data_args = [
         f"--add-data=ecostream/app/static{sep}ecostream/app/static",
@@ -40,6 +50,7 @@ def build() -> None:
         "--hidden-import=ecostream.app.server",
         "--hidden-import=multipart",
         "--hidden-import=python_multipart",
+        "--hidden-import=cryptography",
     ]
 
     cmd = [
@@ -65,17 +76,24 @@ def build() -> None:
 
         if app_path.exists():
             print(f"[✓] Built macOS App Bundle: {app_path}")
+            # Always produce guaranteed ZIP archive
+            zip_out = shutil.make_archive(str(DIST_DIR / "EcoStream-macOS-App"), "zip", root_dir=str(DIST_DIR), base_dir="EcoStream.app")
+            print(f"[✓] Created macOS App Archive: {zip_out}")
+
             print("[2/2] Packaging macOS Disk Image (EcoStream-Installer.dmg)...")
-            if dmg_staging.exists():
-                shutil.rmtree(dmg_staging)
-            dmg_staging.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(app_path, dmg_staging / "EcoStream.app", symlinks=True)
-            os.symlink("/Applications", dmg_staging / "Applications")
-
-            if dmg_path.exists():
-                dmg_path.unlink()
-
             try:
+                if dmg_staging.exists():
+                    shutil.rmtree(dmg_staging)
+                dmg_staging.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(app_path, dmg_staging / "EcoStream.app", symlinks=True)
+                try:
+                    os.symlink("/Applications", dmg_staging / "Applications")
+                except Exception:
+                    pass
+
+                if dmg_path.exists():
+                    dmg_path.unlink()
+
                 subprocess.run(
                     [
                         "hdiutil",
@@ -94,8 +112,6 @@ def build() -> None:
                 print(f"[✓] Successfully created macOS Installer DMG: {dmg_path}")
             except Exception as e:
                 print(f"[!] Note: hdiutil DMG creation skipped or requires elevated device access ({e}).")
-                zip_out = shutil.make_archive(str(DIST_DIR / "EcoStream-macOS-App"), "zip", root_dir=str(DIST_DIR), base_dir="EcoStream.app")
-                print(f"[✓] Created macOS App Archive instead: {zip_out}")
             finally:
                 shutil.rmtree(dmg_staging, ignore_errors=True)
     elif sys.platform == "win32":

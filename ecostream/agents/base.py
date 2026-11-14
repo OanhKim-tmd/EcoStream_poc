@@ -45,10 +45,24 @@ class LLMClient:
         model: str = "qwen2.5:7b",
         timeout: float = 30.0,
     ):
-        # Default to local-first Ollama / vLLM on-premise endpoint
-        self.base_url = base_url or os.environ.get("OPENAI_BASE_URL", os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1"))
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", os.environ.get("OLLAMA_API_KEY", "local-token"))
-        self.model = os.environ.get("LLM_MODEL", model)
+        from ecostream.privacy.ai_settings import get_ai_config
+        ai_cfg = get_ai_config()
+
+        # Priority: explicit argument -> user saved local config -> environment variables -> fallback
+        self.base_url = (
+            base_url
+            or ai_cfg.get("base_url")
+            or os.environ.get("OPENAI_BASE_URL", os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1"))
+        )
+        self.api_key = (
+            api_key
+            or ai_cfg.get("api_key")
+            or os.environ.get("OPENAI_API_KEY", os.environ.get("OLLAMA_API_KEY", "local-token"))
+        )
+        self.model = (
+            ai_cfg.get("model")
+            or os.environ.get("LLM_MODEL", model)
+        )
         self.timeout = timeout
 
     def generate_json(self, system_prompt: str, user_prompt: str, max_retries: int = 2) -> Optional[Dict[str, Any]]:

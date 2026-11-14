@@ -430,11 +430,28 @@
                         <label class="block text-[11px] font-bold text-amber-950 uppercase">Mã Kích Hoạt Gói Pro / Enterprise</label>
                         <button type="button" onclick="fillDemoProKey()" class="text-[11px] font-bold text-emerald-700 hover:underline">✨ Dùng mã Demo Pro</button>
                     </div>
-                    <input type="text" id="modalLicenseInput" placeholder="Để trống nếu dùng gói Free Preview..." class="w-full text-xs font-mono font-bold px-3 py-2 bg-white border border-amber-300 rounded-xl focus:border-emerald-600 outline-hidden uppercase">
+                    <input type="text" id="modalLicenseInput" placeholder="Dán mã kích hoạt (ECO-PRO-2026 hoặc ECO2....)" class="w-full text-xs font-mono font-bold px-3 py-2 bg-white border border-amber-300 rounded-xl focus:border-emerald-600 outline-hidden">
                     <div class="text-[11px] text-amber-800 space-y-0.5 leading-relaxed">
                         <div>• <strong>Gói Free:</strong> Xem báo cáo HTML/PDF có đóng dấu Watermark.</div>
                         <div>• <strong>Gói Pro:</strong> Gỡ Watermark + Mở khóa tải <strong>Word Mẫu 02 NĐ 06/2022</strong> & <strong>Hồ sơ Excel</strong>.</div>
                     </div>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-[11px] font-bold text-indigo-950 uppercase">Cấu hình AI Bóc Tách (BYOK - 0đ)</label>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] font-bold text-indigo-700 hover:underline">🔑 Lấy Gemini Key Free ↗</a>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <select id="modalAiProviderSelect" onchange="toggleAiKeyInput()" class="text-xs font-bold px-2 py-2 bg-white border border-indigo-300 rounded-xl focus:border-indigo-600 outline-hidden">
+                            <option value="gemini">Google Gemini (Free)</option>
+                            <option value="openai">OpenAI (API)</option>
+                            <option value="ollama">Ollama (Local)</option>
+                            <option value="offline">Tắt AI (Chỉ dùng Core)</option>
+                        </select>
+                        <input type="password" id="modalAiKeyInput" placeholder="Dán API Key (AIzaSy...)" class="col-span-2 text-xs font-mono px-3 py-2 bg-white border border-indigo-300 rounded-xl focus:border-indigo-600 outline-hidden">
+                    </div>
+                    <p class="text-[10px] text-indigo-700">Google Gemini cung cấp hạn mức miễn phí 1.500 lượt/ngày. Dữ liệu nhạy cảm được che chắn (PII Masking) an toàn tuyệt đối trước khi gửi.</p>
                 </div>
 
                 <div id="modalStatusMsg" class="hidden text-xs font-bold p-2.5 rounded-xl text-center"></div>
@@ -500,11 +517,40 @@
             updateAccountAndTierUI();
         });
 
-        function openAccountModal() {
+        function toggleAiKeyInput() {
+            const provider = document.getElementById('modalAiProviderSelect').value;
+            const keyInput = document.getElementById('modalAiKeyInput');
+            if (provider === 'offline' || provider === 'ollama') {
+                keyInput.disabled = true;
+                keyInput.placeholder = provider === 'ollama' ? 'Ollama chạy tại http://127.0.0.1:11434' : 'Chế độ tính toán Offline thuần túy';
+            } else {
+                keyInput.disabled = false;
+                keyInput.placeholder = provider === 'gemini' ? 'Dán Google Gemini API Key (AIzaSy...)' : 'Dán OpenAI API Key (sk-...)';
+            }
+        }
+
+        async function openAccountModal() {
             document.getElementById('modalEmailInput').value = currentEmail;
             document.getElementById('modalOrgInput').value = currentOrgId;
             document.getElementById('modalLicenseInput').value = currentLicenseKey;
             document.getElementById('modalStatusMsg').classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/settings/ai');
+                if (res.ok) {
+                    const cfg = await res.json();
+                    if (cfg.provider) {
+                        document.getElementById('modalAiProviderSelect').value = cfg.provider;
+                    }
+                    if (cfg.configured && cfg.masked_key) {
+                        document.getElementById('modalAiKeyInput').placeholder = 'Đang dùng key: ' + cfg.masked_key;
+                    }
+                    toggleAiKeyInput();
+                }
+            } catch (err) {
+                console.warn('Cannot load AI settings:', err);
+            }
+
             const modal = document.getElementById('accountLicenseModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -536,9 +582,23 @@
             const email = document.getElementById('modalEmailInput').value.trim();
             const orgId = document.getElementById('modalOrgInput').value.trim();
             const licenseKey = document.getElementById('modalLicenseInput').value.trim();
+            const aiProvider = document.getElementById('modalAiProviderSelect').value;
+            const aiKey = document.getElementById('modalAiKeyInput').value.trim();
             const msgBox = document.getElementById('modalStatusMsg');
 
             try {
+                // Save AI Settings if provided
+                if (aiProvider) {
+                    await fetch('/api/settings/ai', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            provider: aiProvider,
+                            api_key: aiKey || undefined
+                        })
+                    });
+                }
+
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -556,7 +616,7 @@
                 currentOrgId = data.org_id;
                 currentUserId = data.user_id;
                 currentTier = data.tier;
-                currentLicenseKey = data.is_pro ? licenseKey.toUpperCase() : '';
+                currentLicenseKey = data.is_pro ? (licenseKey.startsWith('ECO2.') ? licenseKey : licenseKey.toUpperCase()) : '';
 
                 localStorage.setItem('ecostream_email', currentEmail);
                 localStorage.setItem('ecostream_org_id', currentOrgId);

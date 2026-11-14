@@ -9,6 +9,10 @@ on:
     tags:
       - 'v*'
 
+env:
+  PYTHONUTF8: '1'
+  PYTHONIOENCODING: 'utf-8'
+
 jobs:
   build-windows-exe:
     runs-on: windows-latest
@@ -23,11 +27,25 @@ jobs:
           pip install -r requirements.txt pyinstaller cryptography
       - name: Build Windows .exe & Portable ZIP
         run: python scripts/build_desktop_app.py
-      - name: Upload Windows Installer Artifact
+      - name: Compile Inno Setup Installer (.exe)
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+            & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" scripts/installer_windows.iss
+          } elseif (Test-Path "C:\Program Files\Inno Setup 6\ISCC.exe") {
+            & "C:\Program Files\Inno Setup 6\ISCC.exe" scripts/installer_windows.iss
+          } else {
+            Write-Warning "Inno Setup compiler not found; portable ZIP is ready in dist/"
+          }
+      - name: Upload Windows Installer Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: EcoStream-Windows-EXE
-          path: dist/EcoStream-Windows-Desktop.zip
+          name: EcoStream-Windows-Installers
+          path: |
+            dist/*.exe
+            dist/*.zip
+          if-no-files-found: warn
 
   build-macos-dmg:
     runs-on: macos-latest
@@ -42,9 +60,11 @@ jobs:
           pip install -r requirements.txt pyinstaller cryptography
       - name: Build macOS .app & .dmg
         run: python scripts/build_desktop_app.py
-      - name: Upload macOS DMG Artifact
+      - name: Upload macOS Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: EcoStream-macOS-DMG
-          path: dist/EcoStream-Installer.dmg
-
+          name: EcoStream-macOS-Installers
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: warn

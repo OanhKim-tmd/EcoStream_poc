@@ -6,7 +6,7 @@ rich>=13.0.0
 reportlab>=4.0.0
 
 # Document Ingestion & MarkItDown Universal Processing
-markitdown[all]>=0.0.1
+markitdown>=0.0.1
 pytesseract>=0.3.10
 pdf2image>=1.17.0
 Pillow>=10.0.0

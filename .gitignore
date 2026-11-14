@@ -38,6 +38,10 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
+
+# Vendor Secret Keys (Never commit private license signing keys)
+*.key
+vendor_ed25519_private.key
 .tox/
 .nox/
 .coverage
