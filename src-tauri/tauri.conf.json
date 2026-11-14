@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "EcoStream",
+  "version": "1.0.0",
+  "identifier": "vn.ecostream.desktop",
+  "build": {
+    "frontendDist": "../ecostream/app/static"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "EcoStream AI Carbon Accounting",
+        "width": 1320,
+        "height": 880,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Business",
+    "shortDescription": "EcoStream Enterprise GHG & Carbon Accounting Desktop",
+    "longDescription": "Offline-First Enterprise Carbon Accounting and GHG Inventory compliant with Vietnam Decree 06/2022/ND-CP and ISO 14064."
+  }
+}
