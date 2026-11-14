@@ -38,9 +38,10 @@ class MarkItDownLoader:
             try:
                 from markitdown import MarkItDown
                 self._md_converter = MarkItDown()
-            except ImportError:
-                self._md_converter = None
-        return self._md_converter
+            except Exception:
+                # Catch all errors (e.g. missing magika models or onnx runtime in PyInstaller frozen apps)
+                self._md_converter = False
+        return self._md_converter if self._md_converter is not False else None
 
     def convert_file(self, file_path: str) -> ConvertedDocument:
         """Convert a single document (.xlsx, .pdf, .docx, .csv, .txt) to clean markdown with caching."""

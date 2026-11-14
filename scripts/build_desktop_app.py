@@ -51,6 +51,8 @@ def build() -> None:
         "--hidden-import=multipart",
         "--hidden-import=python_multipart",
         "--hidden-import=cryptography",
+        "--collect-data=magika",
+        "--copy-metadata=magika",
     ]
 
     cmd = [
