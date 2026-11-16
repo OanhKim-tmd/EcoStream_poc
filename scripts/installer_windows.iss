@@ -1,4 +1,4 @@
-; Script Inno Setup tao bo cai dat chuyen nghiep EcoStream cho Windows
+`; Script Inno Setup tao bo cai dat chuyen nghiep EcoStream cho Windows
 ; Hoan toan mien phi, giup han che toi da loi bao dong gia virus (false-positive)
 ; Tai Inno Setup mien phi tai: https://jrsoftware.org/isdl.php
 
