@@ -59,7 +59,9 @@ def prepare_survey(files: list[str], company: str, facility: str, year: int, bas
     for path in files:
         name = Path(path).name
         count = sum(1 for item in data.items if item.source_document == name)
-        manifest.append({"filename": name, "records": count, "status": "đã dùng để điền khảo sát" if count else "chưa dùng — cần rà soát"})
+        aux_used = any(w.startswith(f"{name}: đã trích xuất đầy đủ") for w in data.warnings)
+        status = "đã dùng để điền khảo sát" if (count or aux_used) else "chưa dùng — cần rà soát"
+        manifest.append({"filename": name, "records": count, "status": status})
         workspace.store_raw_input(path)
     if not data.items:
         data.warnings.append("Không có số liệu Scope 1/2 hợp lệ; tải biểu khảo sát về để điền thủ công trước khi tính")
@@ -77,9 +79,32 @@ def prepare_survey(files: list[str], company: str, facility: str, year: int, bas
 
 def _records(data: SurveyData, year: int) -> list[ActivityRecord]:
     db = get_factor_database()
-    factor_ids = {"diesel": "EF-SCOPE1-DIESEL", "petrol": "EF-SCOPE1-PETROL", "lpg": "EF-SCOPE1-LPG",
-                  "fo": "EF-SCOPE1-FO", "anthracite": "EF-SCOPE1-COAL", "bituminous": "EF-SCOPE1-COAL",
-                  "subbituminous": "EF-SCOPE1-COAL", "naturalgas": "EF-SCOPE1-NATURAL-GAS", "electricity": "EF-SCOPE2-VN-GRID"}
+    factor_ids = {
+        "mixed_coal": "EF-SCOPE1-COAL",
+        "bituminous": "EF-SCOPE1-COAL",
+        "subbituminous": "EF-SCOPE1-COAL",
+        "anthracite": "EF-SCOPE1-COAL",
+        "diesel": "EF-SCOPE1-DIESEL",
+        "fo": "EF-SCOPE1-FO",
+        "kerosene": "EF-SCOPE1-DIESEL",
+        "petrol": "EF-SCOPE1-PETROL",
+        "naturalgas": "EF-SCOPE1-NATURAL-GAS",
+        "lpg": "EF-SCOPE1-LPG",
+        "lng": "EF-SCOPE1-LPG",
+        "biogas": "EF-SCOPE1-NATURAL-GAS",
+        "liquid_biofuel": "EF-SCOPE1-PETROL",
+        "other_petroleum": "EF-SCOPE1-FO",
+        "wood": "EF-SCOPE1-COAL",
+        "charcoal": "EF-SCOPE1-COAL",
+        "bagasse": "EF-SCOPE1-COAL",
+        "rice_husk": "EF-SCOPE1-COAL",
+        "straw": "EF-SCOPE1-COAL",
+        "other_solid_biomass": "EF-SCOPE1-COAL",
+        "industrial_waste": "EF-SCOPE1-COAL",
+        "municipal_waste": "EF-SCOPE1-COAL",
+        "peat": "EF-SCOPE1-COAL",
+        "electricity": "EF-SCOPE2-VN-GRID",
+    }
     records = []
     for i, item in enumerate(data.items, 1):
         factor = db.get(factor_ids[item.kind])

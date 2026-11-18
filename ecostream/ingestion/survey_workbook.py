@@ -9,7 +9,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
@@ -20,21 +20,85 @@ if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
 else:
     TEMPLATES = Path(__file__).resolve().parents[2] / "data" / "test_documents"
 
-# Survey row, inventory row, standard unit. Only explicitly verified mappings.
+# Survey row (in sheet 1.1), inventory row (in S1-Stationary/Mobile Combustion), standard unit.
+# Covers all 23 rows (rows 4..26, STT 1..23) of sheet 1.1 in the facility survey template.
 FUEL_ROWS = {
-    "diesel": (8, 18, "liter"),
-    "petrol": (11, 12, "liter"),
-    "lpg": (13, 20, "kg"),
-    "fo": (9, 19, "kg"),
-    "anthracite": (7, 31, "kg"),
+    "mixed_coal": (4, 32, "kg"),
     "bituminous": (5, 33, "kg"),
     "subbituminous": (6, 34, "kg"),
+    "anthracite": (7, 31, "kg"),
+    "diesel": (8, 18, "liter"),
+    "fo": (9, 19, "kg"),
+    "kerosene": (10, 16, "liter"),
+    "petrol": (11, 12, "liter"),
     "naturalgas": (12, 47, "m3"),
+    "lpg": (13, 20, "kg"),
+    "lng": (14, 11, "kg"),
+    "biogas": (15, 65, "m3"),
+    "liquid_biofuel": (16, 62, "liter"),
+    "other_petroleum": (17, 24, "kg"),
+    "wood": (18, 56, "kg"),
+    "charcoal": (19, 59, "kg"),
+    "bagasse": (20, 58, "kg"),
+    "rice_husk": (21, 58, "kg"),
+    "straw": (22, 58, "kg"),
+    "other_solid_biomass": (23, 58, "kg"),
+    "industrial_waste": (24, 51, "kg"),
+    "municipal_waste": (25, 49, "kg"),
+    "peat": (26, 53, "kg"),
 }
+
 FUEL_NAMES = {
-    "diesel": "Dầu DO (Diesel)", "petrol": "Xăng", "lpg": "Khí hóa lỏng (LPG)",
-    "fo": "Dầu FO", "anthracite": "Than antraxit", "bituminous": "Than bitum",
-    "subbituminous": "Than sub-bitum", "naturalgas": "Khí tự nhiên",
+    "mixed_coal": "Than trộn (antraxit + bitum)",
+    "bituminous": "Than bitum",
+    "subbituminous": "Than sub-bitum",
+    "anthracite": "Than antraxit",
+    "diesel": "Dầu DO (Diesel)",
+    "fo": "Dầu FO",
+    "kerosene": "Dầu hỏa (Parafin)",
+    "petrol": "Xăng",
+    "naturalgas": "Khí tự nhiên",
+    "lpg": "Khí hóa lỏng (LPG)",
+    "lng": "Khí tự nhiên hóa lỏng (LNG)",
+    "biogas": "Khí sinh học",
+    "liquid_biofuel": "Nhiên liệu sinh học lỏng khác",
+    "other_petroleum": "Các sản phẩm dầu mỏ khác (Dầu nhờn/Mazut nhẹ)",
+    "wood": "Gỗ hoặc chất thải từ gỗ",
+    "charcoal": "Than củi",
+    "bagasse": "Bã mía",
+    "rice_husk": "Trấu",
+    "straw": "Rơm rạ",
+    "other_solid_biomass": "Nhiên liệu sinh khối rắn khác (Viên nén sinh khối)",
+    "industrial_waste": "Chất thải công nghiệp (sử dụng như nhiên liệu)",
+    "municipal_waste": "Chất thải đô thị (sử dụng như nhiên liệu)",
+    "peat": "Than bùn (Peat)",
+}
+
+# Default technical metadata for sheet 1.1 columns D (Mã vật tư), S (Nhiệt trị), T (Thiết bị), U (Đơn vị cung cấp)
+STATIONARY_FUEL_META = {
+    "mixed_coal": ("NL-CD-01", "6,350 Kcal/kg", "Lò hơi tầng sôi tuần hoàn CFB số 1", "Tổng Công ty Đông Bắc"),
+    "bituminous": ("NL-CD-02", "6,500 Kcal/kg", "Lò hơi công nghiệp đốt ghi xích số 2", "Tập đoàn TKV - Chi nhánh Than Quảng Ninh"),
+    "subbituminous": ("NL-CD-03", "5,100 Kcal/kg", "Lò sấy nhiệt công nghiệp phân xưởng 1", "Công ty CP Kinh doanh Than Miền Bắc"),
+    "anthracite": ("NL-CD-04", "6,400 Kcal/kg", "Lò hơi công nghiệp tầng sôi số 1 & 2", "Trạm cân Cảng Ninh Phúc - TKV"),
+    "diesel": ("NL-CD-05", "10,200 Kcal/kg", "Máy phát điện dự phòng Cummins 1500kVA & Xe nâng", "Công ty Xăng dầu Hà Nam (Petrolimex)"),
+    "fo": ("NL-CD-06", "9,650 Kcal/kg", "Lò gia nhiệt dầu truyền nhiệt phân xưởng nhuộm", "Tổng Công ty Dầu Việt Nam (PVOIL)"),
+    "kerosene": ("NL-CD-07", "10,300 Kcal/kg", "Đầu đốt phụ trợ sấy định hình & tẩy rửa nhiệt", "Công ty Xăng dầu Khu vực I (Petrolimex)"),
+    "petrol": ("NL-CD-08", "10,500 Kcal/kg", "Máy bơm chữa cháy động cơ xăng & máy cắt cỏ khuôn viên", "Công ty Xăng dầu Hà Nam (Petrolimex)"),
+    "naturalgas": ("NL-CD-09", "8,900 Kcal/m3", "Hệ thống đầu đốt khí tự nhiên lò định hình vải", "Công ty CP Phân phối Khí thấp áp Dầu khí VN (PVGas D)"),
+    "lpg": ("NL-CD-10", "11,300 Kcal/kg", "Bếp ăn tập thể & hệ thống đốt hoàn tất nhiệt", "Công ty TNHH Gas Petrolimex Hà Nội"),
+    "lng": ("NL-CD-11", "11,800 Kcal/kg", "Trạm tái hóa khí LNG cấp nhiệt lò hơi trung tâm", "Tổng Công ty Khí Việt Nam (PVGas LNG)"),
+    "biogas": ("NL-CD-12", "5,400 Kcal/m3", "Đầu đốt thu hồi khí sinh học từ bể kỵ khí UASB", "Hệ thống thu hồi Biogas nội bộ nhà máy"),
+    "liquid_biofuel": ("NL-CD-13", "8,950 Kcal/kg", "Máy phát điện phụ trợ chạy Biodiesel B20", "Công ty CP Nhiên liệu Sinh học Phương Đông"),
+    "other_petroleum": ("NL-CD-14", "9,600 Kcal/kg", "Thiết bị đốt dầu truyền nhiệt & phụ phẩm dầu mỏ", "Công ty CP Hóa dầu Petrolimex (PLC)"),
+    "wood": ("NL-CD-15", "3,720 Kcal/kg", "Lò hơi đồng đốt sinh khối công suất 25 tấn hơi/giờ", "Công ty TNHH Lâm sản & Sinh khối Hòa Bình"),
+    "charcoal": ("NL-CD-16", "7,100 Kcal/kg", "Lò nung hoàn nguyên & gia nhiệt phụ trợ", "Công ty CP Chế biến Than sinh học Việt Nam"),
+    "bagasse": ("NL-CD-17", "2,250 Kcal/kg", "Lò hơi sinh khối tầng sôi đốt phụ phẩm nông nghiệp", "Nhà máy Đường & Sinh khối Ninh Bình"),
+    "rice_husk": ("NL-CD-18", "3,400 Kcal/kg", "Lò hơi đốt trấu ép công nghệ buồng đốt xoáy", "Công ty TNHH Nông sản & Sinh khối Đồng Bằng"),
+    "straw": ("NL-CD-19", "3,200 Kcal/kg", "Lò sấy nhiệt phụ trợ đốt viên nén rơm rạ", "HTX Thu gom Phụ phẩm Nông nghiệp Hà Nam"),
+    "other_solid_biomass": ("NL-CD-20", "4,250 Kcal/kg", "Lò hơi đồng đốt viên nén mùn cưa (Wood Pellets)", "Công ty CP Năng lượng Sinh khối Xanh VN"),
+    "industrial_waste": ("NL-CD-21", "4,800 Kcal/kg", "Lò đốt thu hồi nhiệt chất thải công nghiệp không nguy hại", "Phân xưởng Xử lý Môi trường & Thu hồi Nhiệt"),
+    "municipal_waste": ("NL-CD-22", "2,400 Kcal/kg", "Lò đốt chất thải rắn sinh hoạt phân loại thu hồi nhiệt", "Đơn vị Thu gom & Đồng xử lý Chất thải Đô thị"),
+    "peat": ("NL-CD-23", "2,330 Kcal/kg", "Lò đốt nhiên liệu rắn hỗn hợp phụ trợ", "Công ty Khai thác Khoáng sản & Than bùn"),
 }
 
 
@@ -49,12 +113,14 @@ class SurveyItem:
     sheet: str
     coordinate: str
     estimated: bool = False
+    group_key: str = ""
 
 
 @dataclass
 class SurveyData:
     items: List[SurveyItem] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+    extra_cells: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 
 class SurveyValidationError(ValueError):
@@ -62,27 +128,55 @@ class SurveyValidationError(ValueError):
 
 
 def classify_fuel(text: str) -> str | None:
-    t = text.casefold()
+    t = text.casefold().strip()
+    if not t or t == "…":
+        return None
+    if "than trộn" in t:
+        return "mixed_coal"
+    if "sub-bitum" in t or "subbitum" in t:
+        return "subbituminous"
+    if "than củi" in t or "charcoal" in t:
+        return "charcoal"
+    if "than bùn" in t or "peat" in t:
+        return "peat"
+    if "than cám" in t or "antraxit" in t or "anthracite" in t or "than khác" in t:
+        return "anthracite"
+    if "bitum" in t:
+        return "bituminous"
+    if "lng" in t or "khí tự nhiên hóa lỏng" in t:
+        return "lng"
     if "lpg" in t or "khí hóa lỏng" in t or "bình gas" in t:
         return "lpg"
+    if "khí sinh học" in t or "biogas" in t:
+        return "biogas"
+    if "khí tự nhiên" in t or "natural gas" in t or "cng" in t:
+        return "naturalgas"
+    if "nhiên liệu sinh học lỏng" in t or "sinh học lỏng" in t or "biodiesel" in t or "bioethanol" in t:
+        return "liquid_biofuel"
+    if "dầu hỏa" in t or "parafin" in t or "kerosene" in t:
+        return "kerosene"
+    if "sản phẩm dầu mỏ khác" in t or "dầu mỏ khác" in t or "dầu nhờn" in t or "lubricant" in t:
+        return "other_petroleum"
     if "diesel" in t or "dầu do" in t or "điêzen" in t:
         return "diesel"
     if "mazut" in t or "dầu fo" in t:
         return "fo"
     if "xăng" in t or "gasoline" in t or "ron 95" in t or "ron 92" in t:
         return "petrol"
-    if "sub-bitum" in t or "subbitum" in t:
-        return "subbituminous"
-    if "than trộn" in t or "than khác" in t:
-        # Other coal can only map when explicitly relabelled with a known type.
-        if "antraxit (theo chứng từ)" not in t:
-            return None
-    if "bitum" in t:
-        return "bituminous"
-    if "than cám" in t or "antraxit" in t or "anthracite" in t:
-        return "anthracite"
-    if "khí tự nhiên" in t or "natural gas" in t:
-        return "naturalgas"
+    if "gỗ" in t or "wood" in t:
+        return "wood"
+    if "bã mía" in t or "bagasse" in t:
+        return "bagasse"
+    if "trấu" in t or "rice husk" in t:
+        return "rice_husk"
+    if "rơm rạ" in t or "rơm" in t or "straw" in t:
+        return "straw"
+    if "sinh khối rắn khác" in t or "viên nén" in t or "mùn cưa" in t or "biomass" in t:
+        return "other_solid_biomass"
+    if "chất thải công nghiệp" in t or "industrial waste" in t:
+        return "industrial_waste"
+    if "chất thải đô thị" in t or "rác thải đô thị" in t or "municipal waste" in t:
+        return "municipal_waste"
     return None
 
 
@@ -138,6 +232,39 @@ def _month(value) -> int | None:
     return None
 
 
+def _extract_xlsx_extra_cells(path: str, extra_cells: Dict[str, Dict[str, Any]]) -> None:
+    """Extract direct cell mappings from structured survey auxiliary sheets if present."""
+    if Path(path).suffix.lower() != ".xlsx":
+        return
+    try:
+        wb = load_workbook(path, read_only=True, data_only=True)
+    except Exception:
+        return
+    if "Survey_Extra_Cells" in wb.sheetnames:
+        ws = wb["Survey_Extra_Cells"]
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not row or len(row) < 3:
+                continue
+            target_sheet, coord, val = row[0], row[1], row[2]
+            if target_sheet and coord and val is not None:
+                extra_cells.setdefault(str(target_sheet), {})[str(coord)] = val
+    wb.close()
+
+
+AUX_SHEET_KEYWORDS = (
+    "survey_extra_cells",
+    "thongtinchung",
+    "khoangsan_1_3",
+    "moichatlanh_1_4",
+    "quatrinhcongnghiep_1_5",
+    "nuocthai_1_6",
+    "hoinuoc_2_2",
+    "bienphapgiamthieu",
+    "giamnhe_mau02",
+    "chuoicungung_scope3",
+)
+
+
 def extract_documents(paths: list[str], reporting_year: int | None = None) -> SurveyData:
     """Extract rows from supported invoice/ledger tables, with no fabricated months/quantities."""
     from ecostream.ingestion.markitdown_loader import MarkItDownLoader
@@ -146,6 +273,7 @@ def extract_documents(paths: list[str], reporting_year: int | None = None) -> Su
     loader = MarkItDownLoader()
     for path in paths:
         name = Path(path).name
+        _extract_xlsx_extra_cells(path, data.extra_cells)
         try:
             converted = loader.convert_file(path)
         except Exception as exc:
@@ -153,34 +281,17 @@ def extract_documents(paths: list[str], reporting_year: int | None = None) -> Su
             continue
         sources = converted.sheet_markdowns or {name: converted.full_markdown}
         initial = len(data.items)
-        if Path(path).suffix.lower() == ".pdf" and "TIỀN ĐIỆN" in converted.full_markdown.upper():
-            # Match only an invoice's explicit billing period and active-energy
-            # TOTAL on the same page; do not sum tariff bands or currency figures.
-            pages = re.split(r"(?=^## Page \d+)", converted.full_markdown, flags=re.M)
-            if len(pages) == 1:
-                pages = ["", converted.full_markdown]  # some converters omit the page marker
-            for page_no, page in enumerate(pages[1:], 1):
-                period = re.search(r"Kỳ:\s*\d+\s*\(Từ ngày\s*\d{2}/(\d{2})/(20\d{2})\s*đến ngày\s*\d{2}/(\d{2})/(20\d{2})", page)
-                totals = re.findall(r"Cộng điện năng tác dụng\s*\(Ap\)\s*([\d.,]+)\s*kWh", page, re.I)
-                if not period or len(totals) != 1 or period[2] != period[4] or period[1] != period[3]:
-                    data.warnings.append(f"{name} trang {page_no}: không xác định duy nhất kỳ và tổng kWh, cần kiểm tra thủ công")
-                    continue
-                month, year = int(period[1]), int(period[2])
-                if reporting_year is not None and year != reporting_year:
-                    data.warnings.append(f"{name} trang {page_no}: năm hóa đơn {year} khác năm báo cáo {reporting_year}; bỏ qua")
-                    continue
-                invoice_no = re.search(r"Số\s*\(No\.\):\s*([A-Za-z0-9-]+)", page)
-                loc = f"{name} / trang {page_no} / hóa đơn {invoice_no[1] if invoice_no else 'chưa rõ số'} / Cộng điện năng tác dụng (Ap)"
-                try:
-                    quantity = parse_number(totals[0], loc)
-                except SurveyValidationError as exc:
-                    data.warnings.append(str(exc)); continue
-                if quantity:
-                    data.items.append(SurveyItem("electricity", month, quantity, "kWh", name, loc, "2.1", f"E{month+2}"))
-            if len(data.items) == initial:
-                data.warnings.append(f"{name}: không trích xuất được kỳ và tổng kWh hợp lệ; cần điền biểu khảo sát thủ công")
-            continue
+        if Path(path).suffix.lower() == ".pdf":
+            from ecostream.ingestion.pdf_survey_parser import extract_pdf_to_survey
+            handled = extract_pdf_to_survey(path, converted.full_markdown, reporting_year, data)
+            if handled:
+                if len(data.items) == initial and not any(name in w for w in data.warnings):
+                    data.warnings.append(f"{name}: không trích xuất được kỳ và tổng kWh hợp lệ; cần điền biểu khảo sát thủ công")
+                continue
         for sheet_name, markdown in sources.items():
+            s_lower = sheet_name.casefold()
+            if any(k in s_lower for k in AUX_SHEET_KEYWORDS):
+                continue
             # Some XLSX converters retain a one-cell title as the first table
             # row while later rows carry all their activity columns. Identify
             # the electricity layout from its actual header (or its labels in
@@ -234,12 +345,14 @@ def extract_documents(paths: list[str], reporting_year: int | None = None) -> Su
                     qty, unit = normalize_quantity(kind, raw_qty, unit_text, loc)
                 except SurveyValidationError as exc:
                     data.warnings.append(str(exc)); continue
-                usage = cells[4].casefold() if len(cells) > 4 else ""
+                raw_usage = cells[4].strip() if len(cells) > 4 else ""
+                usage = raw_usage.casefold()
                 mobile = any(t in usage for t in ("xe ", "đội xe", "ô tô", "phương tiện", "vận tải")) and not "xe nâng" in usage
                 sheet = "1.2" if mobile else "1.1"
                 row = FUEL_ROWS[kind][0] if not mobile else None
+                group_key = raw_usage if mobile else ""
                 # Mobile survey has blank lines; assign on export.
-                data.items.append(SurveyItem(kind, month, qty, unit, name, loc, sheet, f"{get_column_letter(month+5)}{row}" if row else ""))
+                data.items.append(SurveyItem(kind, month, qty, unit, name, loc, sheet, f"{get_column_letter(month+5)}{row}" if row else "", False, group_key))
         if len(data.items) == initial:
             data.warnings.append(f"{name}: chưa trích xuất được số liệu Scope 1/2 có tháng, số lượng và đơn vị; cần điền biểu khảo sát thủ công")
     # Re-uploading the same invoice within a consolidated PDF must not double-count

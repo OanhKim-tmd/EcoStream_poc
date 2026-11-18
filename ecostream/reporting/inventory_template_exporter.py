@@ -76,7 +76,7 @@ def export_inventory(data: SurveyData, report: AuditReport, target: str) -> list
             # The provided workbook's default Q formula for stationary diesel assumes tonnes;
             # map litres via the density provided by its Conversion Factors sheet.
             if unit == "liter":
-                if row not in (12, 18):
+                if row not in (12, 16, 18, 62):
                     raise SurveyValidationError(f"{name}!B{row}: chưa có tỷ trọng quy đổi cho nhiên liệu này")
                 density = "$F$5" if row == 18 else "$F$7"
                 sheet[f"Q{row}"] = f"=P{row}*'Conversion Factors'!{density}/1000000"
@@ -84,23 +84,35 @@ def export_inventory(data: SurveyData, report: AuditReport, target: str) -> list
             elif unit == "kg":
                 sheet[f"Q{row}"] = f"=P{row}/1000000"
             elif unit == "m3":
-                sheet[f"Q{row}"] = f"=P{row}*'Conversion Factors'!$F$9/1000000"
+                density_cell = "$F$13" if row == 65 else "$F$9"
+                sheet[f"Q{row}"] = f"=P{row}*'Conversion Factors'!{density_cell}/1000000"
             sheet[f"C{row}"] = {"liter": "Litres", "kg": "kg", "m3": "m3"}[unit]
             sheet[f"P{row}"] = f"=SUM(D{row}:O{row})"
-            if not isinstance(sheet[f"R{row}"].value, (int, float)) or not isinstance(sheet[f"T{row}"].value, (int, float)):
+            r_val = sheet[f"R{row}"].value
+            t_val = sheet[f"T{row}"].value
+            v_val = sheet[f"V{row}"].value
+            x_val = sheet[f"X{row}"].value
+            if not isinstance(r_val, (int, float)) or (
+                not isinstance(t_val, (int, float)) and not (isinstance(v_val, (int, float)) and isinstance(x_val, (int, float)))
+            ):
                 raise SurveyValidationError(f"{name}!R{row}/T{row}: thiếu hệ số nhiệt trị hoặc CO2 của mẫu")
             sheet[f"S{row}"] = f'=IF(Q{row}=0,"",Q{row}*R{row})'
             for factor_col, output_col in (("T", "U"), ("V", "W"), ("X", "Y")):
                 if sheet[f"{factor_col}{row}"].value is not None:
                     sheet[f"{output_col}{row}"] = f'=IF(Q{row}=0,"",S{row}*{factor_col}{row}/1000)'
+                elif output_col == "U":
+                    sheet[f"{output_col}{row}"] = 0
             sheet[f"Z{row}"] = f"=U{row}+W{row}*28+Y{row}*273"
             sheet.cell(row, month + 3).value = quantity
             density = book["Conversion Factors"]["F5" if row == 18 else "F7"].value if unit == "liter" else 1.0
             if unit == "m3":
-                density = book["Conversion Factors"]["F9"].value
+                density = book["Conversion Factors"]["F13" if row == 65 else "F9"].value
             q_kilotonnes = quantity * density / 1_000_000
-            energy_tj = q_kilotonnes * sheet[f"R{row}"].value
-            template_fuel_total += energy_tj * (sheet[f"T{row}"].value + 28 * sheet[f"V{row}"].value + 273 * sheet[f"X{row}"].value) / 1000
+            energy_tj = q_kilotonnes * r_val
+            co2_ef = t_val if isinstance(t_val, (int, float)) else 0.0
+            ch4_ef = v_val if isinstance(v_val, (int, float)) else 0.0
+            n2o_ef = x_val if isinstance(x_val, (int, float)) else 0.0
+            template_fuel_total += energy_tj * (co2_ef + 28 * ch4_ef + 273 * n2o_ef) / 1000
         else:
             template_electricity_total += quantity * grid.factor_value / 1000
             sheet[f"C{row}"] = quantity
