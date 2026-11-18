@@ -1,17 +1,15 @@
 /**
- * EcoStream Live Multi-Agent Workflow Monitor
- * Pure JavaScript Real-Time Polling & Reactive UI Controller
+ * EcoStream Workflow Monitor
+ * Real-Time Polling & Reactive UI Controller
  */
 
-// Global State
 let activeRunId = null;
-let pollingInterval = 3; // default seconds
+let pollingInterval = 3;
 let isPollingActive = true;
 let pollTimer = null;
 let currentRunData = null;
 let runsCache = [];
 
-// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     initPollSpeedSelector();
     initPathInputListener();
@@ -28,7 +26,7 @@ function initPollSpeedSelector() {
     if (select) {
         select.addEventListener('change', (e) => {
             pollingInterval = parseInt(e.target.value, 10) || 3;
-            document.getElementById('pollStatusMsg').innerText = `Đang tự động cập nhật mỗi ${pollingInterval} giây...`;
+            document.getElementById('pollStatusMsg').innerText = `Tự động cập nhật mỗi ${pollingInterval} giây`;
             restartPollingLoop();
         });
     }
@@ -40,7 +38,6 @@ function initPathInputListener() {
         input.addEventListener('change', (e) => {
             let val = e.target.value.trim();
             if (val) {
-                // Strip "runs/" prefix if entered
                 val = val.replace(/^runs[\\\/]/, '').replace(/[\\\/]$/, '');
                 activeRunId = val;
                 updateActiveRunBadge(activeRunId);
@@ -58,18 +55,18 @@ function togglePolling() {
     const dot = document.getElementById('pollingPulseDot');
 
     if (isPollingActive) {
-        btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition flex items-center gap-1.5 shadow-2xs";
-        icon.innerText = "⏸";
-        text.innerText = "Tự Động Quét (Bật)";
-        dot.className = "w-2 h-2 rounded-full bg-emerald-500 pulse-active";
-        document.getElementById('pollStatusMsg').innerText = `Đang tự động cập nhật mỗi ${pollingInterval} giây...`;
+        btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-[#003c33] bg-[#edf5e9] hover:bg-[#dff4cc] border border-[#cce5c0] transition inline-flex items-center gap-1.5";
+        icon.innerText = "||";
+        text.innerText = "Tự động (Bật)";
+        dot.className = "w-2 h-2 rounded-full bg-[#003c33]";
+        document.getElementById('pollStatusMsg').innerText = `Tự động cập nhật mỗi ${pollingInterval} giây`;
         startPollingLoop();
     } else {
-        btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center gap-1.5 shadow-2xs";
-        icon.innerText = "▶";
-        text.innerText = "Tự Động Quét (Tắt)";
-        dot.className = "w-2 h-2 rounded-full bg-slate-400";
-        document.getElementById('pollStatusMsg').innerText = `Tự động quét đang tạm dừng.`;
+        btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition inline-flex items-center gap-1.5";
+        icon.innerText = ">";
+        text.innerText = "Tự động (Tắt)";
+        dot.className = "w-2 h-2 rounded-full bg-[#6a8978]";
+        document.getElementById('pollStatusMsg').innerText = "Đã tạm dừng tự động quét";
         clearInterval(pollTimer);
     }
 }
@@ -92,11 +89,14 @@ function restartPollingLoop() {
 function setConnectionStatus(online, msg = 'Đang kết nối') {
     const chip = document.getElementById('connStatus');
     const text = document.getElementById('connStatusText');
+    const dot = chip ? chip.querySelector('span') : null;
     if (online) {
-        chip.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
+        chip.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]";
+        if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-[#003c33]";
         text.innerText = msg;
     } else {
-        chip.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200";
+        chip.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-700 border border-red-200";
+        if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-red-600";
         text.innerText = "Mất kết nối";
     }
 }
@@ -121,11 +121,11 @@ async function loadRunsList() {
         datalist.innerHTML = '';
 
         if (runsCache.length === 0) {
-            select.innerHTML = '<option value="">-- Không tìm thấy phiên chạy nào trong runs/ --</option>';
+            select.innerHTML = '<option value="">-- Không tìm thấy phiên nào trong runs/ --</option>';
             return;
         }
 
-        runsCache.forEach((r, idx) => {
+        runsCache.forEach((r) => {
             const opt = document.createElement('option');
             opt.value = r.run_id;
             const phase = r.phase || (r.state ? r.state.phase : 'UNKNOWN');
@@ -138,7 +138,6 @@ async function loadRunsList() {
             datalist.appendChild(dlOpt);
         });
 
-        // Default to first run if not set
         if (!activeRunId && runsCache.length > 0) {
             activeRunId = runsCache[0].run_id;
             select.value = activeRunId;
@@ -148,7 +147,7 @@ async function loadRunsList() {
         }
     } catch (err) {
         console.error('Error loading runs list:', err);
-        setConnectionStatus(false, 'Lỗi kết nối máy chủ');
+        setConnectionStatus(false, 'Lỗi kết nối');
     }
 }
 
@@ -180,20 +179,18 @@ async function fetchRunData(isManual = false) {
         const res = await fetch(`/api/orchestrator/runs/${encodeURIComponent(activeRunId)}`);
         if (!res.ok) {
             if (res.status === 404) {
-                document.getElementById('pollStatusMsg').innerText = `Run ${activeRunId} chưa tồn tại hoặc đang khởi tạo...`;
+                document.getElementById('pollStatusMsg').innerText = `Phiên ${activeRunId} chưa tồn tại`;
             }
             throw new Error(`HTTP ${res.status}`);
         }
 
         const data = await res.json();
         currentRunData = data;
-        setConnectionStatus(true, 'Trực tuyến • Đã đồng bộ');
+        setConnectionStatus(true, 'Đã đồng bộ');
 
-        // Update timestamp
         const now = new Date();
         document.getElementById('lastUpdatedTime').innerText = now.toLocaleTimeString('vi-VN');
 
-        // Render sections
         renderLifecycleStepper(data);
         renderSubagentsGrid(data);
         renderDeliverables(data);
@@ -216,18 +213,19 @@ function renderLifecycleStepper(data) {
     const phase = state.phase || 'INITIALIZED';
     const pct = Math.round(state.progress_pct || 0);
 
-    // Header metadata
     document.getElementById('lifecyclePhaseChip').innerText = phase;
     document.getElementById('progressPctText').innerText = `${pct}%`;
     document.getElementById('lifecycleProgressBar').style.width = `${pct}%`;
 
     if (data.index) {
-        document.getElementById('runCompanyDisplay').innerText = data.index.company_name || 'EcoGarment Vietnam JSC';
-        document.getElementById('runFacilityDisplay').innerText = data.index.facility_name || 'Nhà máy Hà Nam';
+        document.getElementById('runCompanyDisplay').innerText = data.index.company_name || '--';
+        document.getElementById('runFacilityDisplay').innerText = data.index.facility_name || '--';
         document.getElementById('runYearDisplay').innerText = data.index.reporting_year || '2026';
+    } else {
+        document.getElementById('runCompanyDisplay').innerText = data.run_id || '--';
+        document.getElementById('runFacilityDisplay').innerText = 'Phiên khảo sát';
     }
 
-    // Set step badge statuses
     const PHASES_ORDER = ['INITIALIZED', 'INGESTED', 'INDEXED', 'SUBAGENTS_EXTRACTING', 'CALCULATING', 'SYNTHESIZING', 'COMPLETED'];
     const currentIdx = PHASES_ORDER.indexOf(phase);
 
@@ -235,30 +233,31 @@ function renderLifecycleStepper(data) {
         const card = document.getElementById(cardId);
         const badge = document.getElementById(badgeId);
         const detail = document.getElementById(detailId);
+        if (!card || !badge || !detail) return;
 
         if (currentIdx > targetIdx || phase === 'COMPLETED') {
-            card.className = "p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/70 flex flex-col justify-between transition shadow-2xs";
-            badge.className = "w-2.5 h-2.5 rounded-full bg-emerald-600";
-            detail.className = "text-[10px] font-mono text-emerald-800 font-bold truncate";
+            card.className = "p-3 rounded-xl border border-[#cce5c0] bg-[#edf5e9]/70 flex flex-col justify-between transition";
+            badge.className = "w-2 h-2 rounded-full bg-[#003c33]";
+            detail.className = "text-[10px] font-mono text-[#003c33] font-semibold truncate";
             detail.innerText = doneLabel;
         } else if (currentIdx === targetIdx) {
-            card.className = "p-3.5 rounded-xl border border-amber-400 bg-amber-50/70 flex flex-col justify-between transition shadow-xs";
-            badge.className = "w-2.5 h-2.5 rounded-full bg-amber-500 pulse-active";
-            detail.className = "text-[10px] font-mono text-amber-800 font-bold truncate";
+            card.className = "p-3 rounded-xl border border-amber-300 bg-amber-50 flex flex-col justify-between transition";
+            badge.className = "w-2 h-2 rounded-full bg-amber-500";
+            detail.className = "text-[10px] font-mono text-amber-800 font-semibold truncate";
             detail.innerText = activeLabel;
         } else {
-            card.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between transition opacity-60";
-            badge.className = "w-2.5 h-2.5 rounded-full bg-slate-300";
-            detail.className = "text-[10px] font-mono text-slate-500 truncate";
-            detail.innerText = "Chờ bắt đầu";
+            card.className = "p-3 rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/60 flex flex-col justify-between transition opacity-65";
+            badge.className = "w-2 h-2 rounded-full bg-[#cce5c0]";
+            detail.className = "text-[10px] font-mono text-[#6a8978] truncate";
+            detail.innerText = "Chờ";
         }
     }
 
-    updateCard('stepCard-ingestion', 'stepBadge-ingestion', 'stepDetail-ingestion', 1, 'Đang phân giải...', '✓ Hoàn tất Ingestion');
-    updateCard('stepCard-discovery', 'stepBadge-discovery', 'stepDetail-discovery', 2, 'Đang catalog...', '✓ Hoàn tất Schema Discovery');
-    updateCard('stepCard-subagents', 'stepBadge-subagents', 'stepDetail-subagents', 3, 'Đang chạy 4 tác tử...', '✓ Hoàn tất trích xuất');
-    updateCard('stepCard-math', 'stepBadge-math', 'stepDetail-math', 4, 'Đang tính toán...', '✓ Hoàn tất Math & 95% CI');
-    updateCard('stepCard-synthesis', 'stepBadge-synthesis', 'stepDetail-synthesis', 5, 'Đang xuất bản...', '✓ Hoàn tất Báo cáo');
+    updateCard('stepCard-ingestion', 'stepBadge-ingestion', 'stepDetail-ingestion', 1, 'Đang đọc...', 'Hoàn tất');
+    updateCard('stepCard-discovery', 'stepBadge-discovery', 'stepDetail-discovery', 2, 'Đang phân loại...', 'Hoàn tất');
+    updateCard('stepCard-subagents', 'stepBadge-subagents', 'stepDetail-subagents', 3, 'Đang trích xuất...', 'Hoàn tất');
+    updateCard('stepCard-math', 'stepBadge-math', 'stepDetail-math', 4, 'Đang tính...', 'Hoàn tất');
+    updateCard('stepCard-synthesis', 'stepBadge-synthesis', 'stepDetail-synthesis', 5, 'Đang xuất...', 'Hoàn tất');
 }
 
 function renderSubagentsGrid(data) {
@@ -270,12 +269,13 @@ function renderSubagentsGrid(data) {
 
     function setAgentBadge(elemId, records, isCompleted) {
         const badge = document.getElementById(elemId);
+        if (!badge) return;
         if (records.length > 0 || isCompleted) {
-            badge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
-            badge.innerText = `Hoàn tất (${records.length} mục)`;
+            badge.className = "px-2 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]";
+            badge.innerText = `${records.length} mục`;
         } else {
-            badge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600";
-            badge.innerText = "Pending";
+            badge.className = "px-2 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#6a8978]";
+            badge.innerText = "Chờ";
         }
     }
 
@@ -294,7 +294,7 @@ function renderDeliverables(data) {
     const deliverables = data.deliverables || [];
     const countBadge = document.getElementById('deliverablesCountBadge');
     if (countBadge) {
-        countBadge.innerText = `${deliverables.length} file sẵn sàng`;
+        countBadge.innerText = `${deliverables.length} tệp sẵn sàng`;
     }
 
     function setupDeliverable(statusId, linkId, btnPreviewId, targetName) {
@@ -302,10 +302,11 @@ function renderDeliverables(data) {
         const statusElem = document.getElementById(statusId);
         const linkElem = document.getElementById(linkId);
         const btnPreview = btnPreviewId ? document.getElementById(btnPreviewId) : null;
+        if (!statusElem) return;
 
         if (found) {
-            statusElem.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
-            statusElem.innerText = `Sẵn sàng (${Math.round(found.size_bytes / 1024)} KB)`;
+            statusElem.className = "px-2 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]";
+            statusElem.innerText = `${Math.round(found.size_bytes / 1024)} KB`;
 
             if (linkElem) {
                 linkElem.href = found.url;
@@ -315,7 +316,7 @@ function renderDeliverables(data) {
                 btnPreview.disabled = false;
             }
         } else {
-            statusElem.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600";
+            statusElem.className = "px-2 py-0.5 rounded text-[10px] font-semibold bg-white text-[#6a8978] border border-[#e2f0db]";
             statusElem.innerText = "Đang chờ";
             if (linkElem && !linkElem.className.includes('opacity-40')) {
                 linkElem.className += " opacity-40 pointer-events-none";
@@ -338,7 +339,7 @@ function renderDeliverables(data) {
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.className = "tab-btn px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:bg-slate-100 flex items-center gap-1.5";
+        btn.className = "tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition text-[#2c4a3c] hover:bg-[#edf5e9] inline-flex items-center gap-1.5";
     });
     document.querySelectorAll('.tab-panel').forEach(panel => {
         panel.classList.add('hidden');
@@ -346,7 +347,7 @@ function switchTab(tabId) {
 
     const activeBtn = document.getElementById(`btnTab-${tabId}`);
     if (activeBtn) {
-        activeBtn.className = "tab-btn px-3 py-2 rounded-xl text-xs font-bold transition bg-emerald-800 text-white shadow-xs flex items-center gap-1.5";
+        activeBtn.className = "tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-[#003c33] text-white inline-flex items-center gap-1.5";
     }
     const activePanel = document.getElementById(`tabContent-${tabId}`);
     if (activePanel) {
@@ -363,7 +364,6 @@ function renderIntermediateTabs(data) {
     const state = data.state || {};
     const index = data.index || {};
 
-    // 1. State & Index tab
     document.getElementById('statePhaseBadge').innerText = state.phase || '--';
     document.getElementById('stateRunId').innerText = state.run_id || '--';
     document.getElementById('stateStartTime').innerText = state.start_time || '--';
@@ -377,142 +377,113 @@ function renderIntermediateTabs(data) {
         routingList.innerHTML = tasks.map(t => {
             const sheetLabel = t.sheet_name ? `Sheet: ${t.sheet_name}` : (t.source_file || t.description || 'Mục dữ liệu');
             const agentLabel = t.target_agent || t.assigned_subagent || '--';
-            const desc = t.description ? `<div class="text-[10px] text-slate-500">${t.description}</div>` : '';
+            const desc = t.description ? `<div class="text-[10px] text-[#6a8978]">${t.description}</div>` : '';
             return `
-            <div class="p-2 rounded-lg bg-white border border-slate-200 flex items-center justify-between">
+            <div class="p-2 rounded-lg bg-white border border-[#e2f0db] flex items-center justify-between">
                 <div>
-                    <span class="font-bold text-slate-800 text-xs">${sheetLabel}</span>
+                    <span class="font-semibold text-[#091710] text-xs">${sheetLabel}</span>
                     ${desc}
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap ml-2">${agentLabel}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#003c33] border border-[#cce5c0] whitespace-nowrap ml-2">${agentLabel}</span>
             </div>
             `;
         }).join('');
+    } else {
+        document.getElementById('sheetCountBadge').innerText = '0 mục';
+        routingList.innerHTML = '<div class="text-[#6a8978]">Chưa có thông tin định tuyến</div>';
     }
 
-    // 2. Scope 1 Table
     const scope1 = intermediate.scope1 || [];
-    document.getElementById('tabCount-scope1').innerText = scope1.length;
+    const tc1 = document.getElementById('tabCount-scope1');
+    if (tc1) tc1.innerText = scope1.length;
     const s1Body = document.getElementById('tableScope1Body');
-    if (scope1.length > 0) {
-        s1Body.innerHTML = scope1.map(r => {
-            const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : (r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '95%');
-            return `
-            <tr class="hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${r.description || r.fuel_type || r.activity_type || '--'}</td>
-                <td class="p-3 text-slate-600 font-sans">${r.category || r.equipment_category || 'Lò hơi / Máy phát'}</td>
-                <td class="p-3 text-slate-900 font-bold font-mono">${Number(r.quantity || r.original_quantity || 0).toLocaleString()}</td>
-                <td class="p-3 text-slate-500 font-mono">${r.unit || r.original_unit || '--'}</td>
-                <td class="p-3 text-emerald-700 font-bold font-mono">${Number(r.quantity || r.standard_quantity || 0).toLocaleString()} ${r.unit || r.standard_unit || 'kg'}</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">${conf}</span></td>
-            </tr>
-            `;
-        }).join('');
+    if (s1Body) {
+        if (scope1.length > 0) {
+            s1Body.innerHTML = scope1.map(r => {
+                const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : (r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '95%');
+                return `
+                <tr class="hover:bg-[#f5f9f4] transition">
+                    <td class="p-3 font-semibold text-[#091710]">${r.description || r.fuel_type || r.activity_type || '--'}</td>
+                    <td class="p-3 text-[#2c4a3c] font-sans">${r.category || r.equipment_category || 'Cố định / di động'}</td>
+                    <td class="p-3 text-[#091710] font-semibold font-mono">${Number(r.quantity || r.original_quantity || 0).toLocaleString()}</td>
+                    <td class="p-3 text-[#6a8978] font-mono">${r.unit || r.original_unit || '--'}</td>
+                    <td class="p-3 text-[#003c33] font-semibold font-mono">${Number(r.quantity || r.standard_quantity || 0).toLocaleString()} ${r.unit || r.standard_unit || 'kg'}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#003c33]">${conf}</span></td>
+                </tr>
+                `;
+            }).join('');
+        } else {
+            s1Body.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-[#6a8978] font-sans">Chưa có dữ liệu Scope 1</td></tr>';
+        }
     }
 
-    // 3. Scope 2 Table
     const scope2 = intermediate.scope2 || [];
-    document.getElementById('tabCount-scope2').innerText = scope2.length;
+    const tc2 = document.getElementById('tabCount-scope2');
+    if (tc2) tc2.innerText = scope2.length;
     const s2Body = document.getElementById('tableScope2Body');
-    if (scope2.length > 0) {
-        s2Body.innerHTML = scope2.map(r => {
-            const isInterpolated = r.is_interpolated || r.interpolated || (r.measurement_type && r.measurement_type.includes('Estimated')) || (r.evidence?.extraction_method === 'INTERPOLATED');
-            const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : (r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '90%');
-            const periodOrMonth = r.date || r.billing_month || r.period || r.description || '--';
-            const kwhVal = r.quantity || r.active_energy_kwh || r.kwh || 0;
-            const meterOrDoc = r.supplier || r.meter_id || r.customer_code || r.evidence?.source_document || 'EVN';
-            return `
-            <tr class="hover:bg-slate-50 transition ${isInterpolated ? 'bg-amber-50/40' : ''}">
-                <td class="p-3 font-bold text-slate-800">${periodOrMonth}</td>
-                <td class="p-3 font-bold font-mono ${isInterpolated ? 'text-amber-800' : 'text-slate-900'}">${Number(kwhVal).toLocaleString()}</td>
-                <td class="p-3 text-slate-500 text-[11px] font-mono">${r.unit || 'kWh'}</td>
-                <td class="p-3 text-slate-600">${meterOrDoc}</td>
-                <td class="p-3">${isInterpolated ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">⚠️ Nội suy (Interpolated)</span>' : '<span class="text-slate-500 font-sans">Hóa đơn EVN gốc</span>'}</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${isInterpolated ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">${conf}</span></td>
-            </tr>
-            `;
-        }).join('');
+    if (s2Body) {
+        if (scope2.length > 0) {
+            s2Body.innerHTML = scope2.map(r => {
+                const isInterpolated = r.is_interpolated || r.interpolated || (r.measurement_type && r.measurement_type.includes('Estimated')) || (r.evidence?.extraction_method === 'INTERPOLATED');
+                const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : (r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '90%');
+                const periodOrMonth = r.date || r.billing_month || r.period || r.description || '--';
+                const kwhVal = r.quantity || r.active_energy_kwh || r.kwh || 0;
+                const meterOrDoc = r.supplier || r.meter_id || r.customer_code || r.evidence?.source_document || 'EVN';
+                return `
+                <tr class="hover:bg-[#f5f9f4] transition ${isInterpolated ? 'bg-amber-50/40' : ''}">
+                    <td class="p-3 font-semibold text-[#091710]">${periodOrMonth}</td>
+                    <td class="p-3 font-semibold font-mono ${isInterpolated ? 'text-amber-800' : 'text-[#091710]'}">${Number(kwhVal).toLocaleString()}</td>
+                    <td class="p-3 text-[#6a8978] text-[11px] font-mono">${r.unit || 'kWh'}</td>
+                    <td class="p-3 text-[#2c4a3c]">${meterOrDoc}</td>
+                    <td class="p-3">${isInterpolated ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-200">Nội suy</span>' : '<span class="text-[#6a8978] font-sans">Hóa đơn EVN</span>'}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${isInterpolated ? 'bg-amber-100 text-amber-900' : 'bg-[#edf5e9] text-[#003c33]'}">${conf}</span></td>
+                </tr>
+                `;
+            }).join('');
+        } else {
+            s2Body.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-[#6a8978] font-sans">Chưa có dữ liệu Scope 2</td></tr>';
+        }
     }
 
-    // 4. Scope 3 Table
-    const scope3 = intermediate.scope3 || [];
-    document.getElementById('tabCount-scope3').innerText = scope3.length;
-    const s3Body = document.getElementById('tableScope3Body');
-    if (scope3.length > 0) {
-        s3Body.innerHTML = scope3.map(r => {
-            const isSpend = r.cost_vnd != null || r.is_spend_based || (r.measurement_type && r.measurement_type.includes('Spend'));
-            const qtyDisplay = r.cost_vnd ? `${Number(r.cost_vnd).toLocaleString()} VND` : `${Number(r.quantity || 0).toLocaleString()} ${r.unit || ''}`;
-            const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : '65%';
-            return `
-            <tr class="hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${r.description || r.category || '--'}</td>
-                <td class="p-3 text-slate-600 font-sans">${r.category || r.transport_mode || 'Chuỗi cung ứng'}</td>
-                <td class="p-3 font-bold text-slate-900 font-mono">${qtyDisplay}</td>
-                <td class="p-3 text-slate-600 font-sans">${r.supplier || r.evidence?.source_document || 'EXIOBASE Proxy'}</td>
-                <td class="p-3 text-amber-700 font-bold font-mono">±${isSpend ? '40%' : '15%'}</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 font-sans">${isSpend ? 'Ước tính chi tiêu' : 'Dữ liệu sơ cấp'}</span></td>
-            </tr>
-            `;
-        }).join('');
-    }
-
-    // 5. Mitigation Table
-    const mitSummary = intermediate.mitigation_summary || data.mitigation_summary || {};
-    const measures = mitSummary.measures || (Array.isArray(intermediate.mitigation) ? intermediate.mitigation : []);
-    document.getElementById('tabCount-mitigation').innerText = measures.length;
-    const mitBody = document.getElementById('tableMitigationBody');
-    if (measures.length > 0) {
-        mitBody.innerHTML = measures.map((r, idx) => {
-            const mId = r.measure_id || `M-${idx + 1}`;
-            const mName = r.measure_name || r.name || '--';
-            const ptcs = r.baseline_emissions_ptcs || r.baseline_emissions_tco2e || r.pt_cs || 0;
-            const pt = r.actual_emissions_pt || r.actual_emissions_tco2e || r.pt || 0;
-            const gpt = r.emission_reduction_gpt || r.reduction_tco2e || r.gpt || 0;
-            const status = r.monitoring_method || r.status || 'Đang vận hành';
-            return `
-            <tr class="hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800 font-mono">${mId}</td>
-                <td class="p-3 font-sans text-slate-700 font-medium">${mName}</td>
-                <td class="p-3 text-slate-600 font-bold font-mono">${Number(ptcs).toLocaleString()} tCO₂e</td>
-                <td class="p-3 text-slate-900 font-bold font-mono">${Number(pt).toLocaleString()} tCO₂e</td>
-                <td class="p-3 text-emerald-700 font-bold text-sm font-mono">-${Number(gpt).toLocaleString()} tCO₂e</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">${status}</span></td>
-            </tr>
-            `;
-        }).join('');
-    }
-
-    // 6. Logs Table
     const queries = intermediate.queries || data.queries || [];
     const assumptions = intermediate.assumptions || data.assumptions || [];
-    document.getElementById('tabCount-logs').innerText = queries.length + assumptions.length;
+    const tcLogs = document.getElementById('tabCount-logs');
+    if (tcLogs) tcLogs.innerText = queries.length + assumptions.length;
     document.getElementById('queryLogCount').innerText = `${queries.length} mục`;
     document.getElementById('assumptionLogCount').innerText = `${assumptions.length} mục`;
 
     const qBody = document.getElementById('tableQueryLogBody');
-    if (queries.length > 0) {
-        qBody.innerHTML = queries.map(q => `
-            <tr class="hover:bg-amber-100/40 transition">
-                <td class="p-3 font-mono font-bold text-amber-900">${q.query_id || '--'}</td>
-                <td class="p-3 text-slate-700 font-medium">${q.scope || '--'}</td>
-                <td class="p-3 text-slate-800">${q.detected_issue || q.description || q.issue || '--'}</td>
-                <td class="p-3 text-slate-600">${q.action_taken || q.provisional_action || '--'}</td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">${q.status || 'Tự động giả định'}</span></td>
-            </tr>
-        `).join('');
+    if (qBody) {
+        if (queries.length > 0) {
+            qBody.innerHTML = queries.map(q => `
+                <tr class="hover:bg-amber-50/40 transition">
+                    <td class="p-3 font-mono font-semibold text-amber-900">${q.query_id || '--'}</td>
+                    <td class="p-3 text-[#2c4a3c] font-medium">${q.scope || '--'}</td>
+                    <td class="p-3 text-[#091710]">${q.detected_issue || q.description || q.issue || '--'}</td>
+                    <td class="p-3 text-[#6a8978]">${q.action_taken || q.provisional_action || '--'}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-900">${q.status || 'Tạm tính'}</span></td>
+                </tr>
+            `).join('');
+        } else {
+            qBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-[#6a8978]">Không có truy vấn bất thường</td></tr>';
+        }
     }
 
     const aBody = document.getElementById('tableAssumptionLogBody');
-    if (assumptions.length > 0) {
-        aBody.innerHTML = assumptions.map(a => `
-            <tr class="hover:bg-slate-50 transition">
-                <td class="p-3 font-mono font-bold text-slate-800">${a.assumption_id || '--'}</td>
-                <td class="p-3 text-slate-700 font-medium">${a.parameter_name || a.scope || '--'}</td>
-                <td class="p-3 text-slate-800">${a.justification || a.rule_applied || `${a.assumed_value} ${a.assumed_unit}`}</td>
-                <td class="p-3 font-mono font-bold text-rose-700">-${((a.confidence_penalty || 0.1) * 100).toFixed(0)}%</td>
-                <td class="p-3 font-mono font-bold text-amber-700">+${a.uncertainty_markup_pct || 15}%</td>
-            </tr>
-        `).join('');
+    if (aBody) {
+        if (assumptions.length > 0) {
+            aBody.innerHTML = assumptions.map(a => `
+                <tr class="hover:bg-[#f5f9f4] transition">
+                    <td class="p-3 font-mono font-semibold text-[#091710]">${a.assumption_id || '--'}</td>
+                    <td class="p-3 text-[#2c4a3c] font-medium">${a.parameter_name || a.scope || '--'}</td>
+                    <td class="p-3 text-[#091710]">${a.justification || a.rule_applied || `${a.assumed_value} ${a.assumed_unit}`}</td>
+                    <td class="p-3 font-mono font-semibold text-red-700">-${((a.confidence_penalty || 0.1) * 100).toFixed(0)}%</td>
+                    <td class="p-3 font-mono font-semibold text-amber-800">+${a.uncertainty_markup_pct || 15}%</td>
+                </tr>
+            `).join('');
+        } else {
+            aBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-[#6a8978]">Không có giả định nào</td></tr>';
+        }
     }
 }
 
@@ -530,7 +501,7 @@ async function loadRawFileContent() {
         viewer.innerText = `// Đang nạp ${filename}...`;
         const res = await fetch(`/api/orchestrator/runs/${encodeURIComponent(activeRunId)}/intermediate/${encodeURIComponent(filename)}`);
         if (!res.ok) {
-            viewer.innerText = `// Tệp ${filename} chưa tồn tại trên blackboard workspace.`;
+            viewer.innerText = `// Tệp ${filename} chưa tồn tại.`;
             return;
         }
         const data = await res.json();
@@ -544,7 +515,7 @@ function copyRawJson() {
     const viewer = document.getElementById('rawJsonViewer');
     if (viewer && viewer.innerText) {
         navigator.clipboard.writeText(viewer.innerText);
-        alert('Đã sao chép nội dung JSON vào clipboard!');
+        alert('Đã sao chép nội dung JSON.');
     }
 }
 
@@ -570,7 +541,7 @@ async function previewMarkdownReport() {
         const text = await res.text();
         content.innerText = text;
     } catch (err) {
-        content.innerText = "Chưa thể xem trước báo cáo. Tệp có thể đang được tạo hoặc chưa hoàn tất.";
+        content.innerText = "Chưa thể xem trước báo cáo.";
     }
 }
 

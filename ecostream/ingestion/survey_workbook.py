@@ -103,6 +103,83 @@ STATIONARY_FUEL_META = {
 
 
 @dataclass
+class SurveyGeneralInfo:
+    contact_name: str = ""
+    contact_role: str = ""
+    contact_phone: str = ""
+    contact_email: str = ""
+    facility_name: str = ""
+    facility_address: str = ""
+    facility_phone: str = ""
+    facility_email: str = ""
+    legal_representative: str = ""
+    legal_rep_title: str = ""
+    industry_sector: str = ""
+    operating_status: str = ""
+    start_year: str = ""
+    facility_representative: str = ""
+
+    @classmethod
+    def from_dict(cls, raw: dict | None) -> "SurveyGeneralInfo":
+        if not raw:
+            return cls()
+        return cls(**{f.name: _clean_info_text(raw.get(f.name, "")) for f in cls.__dataclass_fields__.values()})
+
+
+def _clean_info_text(value) -> str:
+    if value is None:
+        return ""
+    return re.sub(r"[\r\n\t]+", " ", str(value)).strip()
+
+
+def _strip_placeholder_dots(value: str) -> str:
+    return re.sub(r"\.{2,}", "", value).strip()
+
+
+def read_general_info(sheet) -> SurveyGeneralInfo:
+    """Safely parse filled fields from the 'Thông tin chung' sheet, ignoring dotted placeholders."""
+    def _after_prefix(cell_coord: str, prefix_pattern: str) -> str:
+        val = str(sheet[cell_coord].value or "")
+        if not re.match(prefix_pattern, val, re.I):
+            return ""
+        stripped = re.sub(prefix_pattern, "", val, count=1, flags=re.I)
+        return _strip_placeholder_dots(stripped)
+
+    b12 = str(sheet["B12"].value or "")
+    legal_rep, legal_title = "", ""
+    if re.search(r"Người đại diện pháp luật", b12, re.I):
+        parts = re.split(r"Chức danh\s*:", b12, maxsplit=1, flags=re.I)
+        legal_rep = _strip_placeholder_dots(re.sub(r"^\s*-\s*Người đại diện pháp luật\s*:\s*", "", parts[0], flags=re.I))
+        if len(parts) > 1:
+            legal_title = _strip_placeholder_dots(parts[1])
+
+    b15 = str(sheet["B15"].value or "")
+    op_status, start_year = "", ""
+    if re.search(r"Tình trạng hoạt động", b15, re.I):
+        parts = re.split(r"/\s*Năm bắt đầu hoạt động\s*:", b15, maxsplit=1, flags=re.I)
+        op_status = _strip_placeholder_dots(re.sub(r"^\s*-\s*Tình trạng hoạt động\s*:\s*", "", parts[0], flags=re.I))
+        if len(parts) > 1:
+            start_year = _strip_placeholder_dots(parts[1])
+
+    return SurveyGeneralInfo(
+        contact_name=_after_prefix("B3", r"^\s*-\s*Họ và tên người cung cấp thông tin\s*:\s*"),
+        contact_role=_after_prefix("B4", r"^\s*-\s*Chức vụ/Bộ phận\s*:\s*"),
+        contact_phone=_after_prefix("B5", r"^\s*-\s*Điện thoại\s*:\s*"),
+        contact_email=_after_prefix("B6", r"^\s*-\s*Email\s*:\s*"),
+        facility_name=_after_prefix("B8", r"^\s*1\.\s*Tên cơ sở\s*:\s*"),
+        facility_address=_after_prefix("B9", r"^\s*-\s*Địa chỉ\s*:\s*"),
+        facility_phone=_after_prefix("B10", r"^\s*-\s*Điện thoại\s*:\s*"),
+        facility_email=_after_prefix("B11", r"^\s*-\s*Email\s*:\s*"),
+        legal_representative=legal_rep,
+        legal_rep_title=legal_title,
+        industry_sector=_after_prefix("B14", r"^\s*-\s*Ngành nghề sản xuất/Loại hình kinh doanh\s*:\s*"),
+        operating_status=op_status,
+        start_year=start_year,
+        facility_representative=_clean_info_text(sheet["B17"].value),
+    )
+
+
+@dataclass
 class SurveyItem:
     kind: str
     month: int
@@ -121,6 +198,7 @@ class SurveyData:
     items: List[SurveyItem] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
     extra_cells: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    general_info: SurveyGeneralInfo | None = None
 
 
 class SurveyValidationError(ValueError):
@@ -157,11 +235,12 @@ def classify_fuel(text: str) -> str | None:
         return "kerosene"
     if "sản phẩm dầu mỏ khác" in t or "dầu mỏ khác" in t or "dầu nhờn" in t or "lubricant" in t:
         return "other_petroleum"
-    if "diesel" in t or "dầu do" in t or "điêzen" in t:
+    if "diesel" in t or "dầu do" in t or "điêzen" in t or "diezen" in t:
+        return "diesel"
         return "diesel"
     if "mazut" in t or "dầu fo" in t:
         return "fo"
-    if "xăng" in t or "gasoline" in t or "ron 95" in t or "ron 92" in t:
+    if "xăng" in t or "xãng" in t or "gasoline" in t or "ron 95" in t or "ron 92" in t:
         return "petrol"
     if "gỗ" in t or "wood" in t:
         return "wood"
@@ -232,6 +311,7 @@ def _month(value) -> int | None:
     return None
 
 
+
 def _extract_xlsx_extra_cells(path: str, extra_cells: Dict[str, Dict[str, Any]]) -> None:
     """Extract direct cell mappings from structured survey auxiliary sheets if present."""
     if Path(path).suffix.lower() != ".xlsx":
@@ -263,7 +343,121 @@ AUX_SHEET_KEYWORDS = (
     "giamnhe_mau02",
     "chuoicungung_scope3",
 )
+_UNIT_TOKEN_RE = re.compile(
+    r"^(l|lít|l[íìi]t|l1t|lit|liter|litre|litres|kg|kilogram|kilograms|tấn|tan|tonne|tonnes|ton|m3|m\^3|m³)$",
+    re.I,
+)
+_NUMBER_TOKEN_RE = re.compile(r"^\d[\d.,]*$")
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff"}
 
+
+def _extract_fuel_pages(path: str, name: str, fallback_markdown: str, reporting_year: int | None, *, is_image: bool = False) -> tuple[list[SurveyItem], list[str]]:
+    """Extract fuel line items from Vietnamese VAT fuel invoice PDFs or OCR image text."""
+    pages_text: list[str] = []
+    if not is_image:
+        try:
+            import pypdf
+            reader = pypdf.PdfReader(path)
+            pages_text = [(p.extract_text() or "").strip() for p in reader.pages]
+        except Exception:
+            pages_text = []
+    if not any(pages_text):
+        if re.search(r"^## Page \d+", fallback_markdown, flags=re.M):
+            pages_text = [p for p in re.split(r"(?=^## Page \d+)", fallback_markdown, flags=re.M)[1:] if p.strip()]
+        elif "\x0c" in fallback_markdown:
+            pages_text = [p for p in fallback_markdown.split("\x0c") if p.strip()]
+        else:
+            pages_text = [fallback_markdown] if fallback_markdown.strip() else []
+
+    items: list[SurveyItem] = []
+    warnings: list[str] = []
+    for page_no, page_text in enumerate(pages_text, 1):
+        m_date = re.search(r"Ngày\s*(\d{1,2})\s*th[áaàã]ng\s*(0?[1-9]|1[0-2])\s*n[ăaâ]m\s*(20\d{2})", page_text, re.I)
+        if m_date:
+            month, year = int(m_date.group(2)), int(m_date.group(3))
+        else:
+            m_date2 = re.search(r"(?:Ngày\s*lập(?:\s*\(Date\))?|Ký\s*ngày|Ngày)\s*:?\s*\d{1,2}/(0?[1-9]|1[0-2])/(20\d{2})", page_text, re.I)
+            if not m_date2:
+                continue
+            month, year = int(m_date2.group(1)), int(m_date2.group(2))
+
+        if reporting_year is not None and year != reporting_year:
+            warnings.append(f"{name} trang {page_no}: năm hóa đơn {year} khác năm báo cáo {reporting_year}; bỏ qua")
+            continue
+
+        inv_match = re.search(r"S[ốõo]\s*(?:\(No\.\))?\s*:?\s*([A-Za-z0-9-]{4,})", page_text)
+        inv_id = inv_match.group(1) if inv_match else "chưa rõ số"
+
+        lines = [ln.strip() for ln in page_text.splitlines() if ln.strip()]
+        start_idx = 0
+        end_idx = len(lines)
+        for idx, ln in enumerate(lines):
+            low = ln.casefold()
+            if start_idx == 0 and any(h in low for h in ("diễn giải", "dien giai", "tên hàng hóa", "chi tiết hàng hóa")):
+                start_idx = idx
+            elif start_idx > 0 and any(f in low for f in ("cộng (sub-total)", "công (sub-total)", "cộng tiền hàng", "thuế suất gtgt", "tổng cộng tiền thanh toán")):
+                end_idx = idx
+                break
+        table_lines = lines[start_idx:end_idx]
+
+        i = 0
+        while i < len(table_lines):
+            ln = table_lines[i]
+            low = ln.casefold()
+            if any(skip in low for skip in ("hóa đơn", "chứng từ", "đơn vị bán", "đơn vị mua", "diễn giải", "dien giai", "đơn vị tính", "số lượng", "đơn giá", "thành tiền")):
+                i += 1
+                continue
+            kind = classify_fuel(ln)
+            if not kind:
+                i += 1
+                continue
+
+            loc = f"{name} / trang {page_no} / hóa đơn {inv_id} / dòng {i + 1}"
+            raw_qty = None
+            unit_text = None
+
+            # Case A: Same-line fuel + unit + quantity (supports OCR 'Lit' / 'Lít')
+            m_inline = re.search(
+                r"\b(l[íìi]t|l1t|lit|liter|litre|litres|kg|t[ấầa]n|tan|m3|m³)\b\s+(\d[\d.,]*)",
+                ln,
+                re.I,
+            )
+            if m_inline:
+                unit_text = "lit" if m_inline.group(1).casefold() == "l1t" else m_inline.group(1)
+                try:
+                    raw_qty = parse_number(m_inline.group(2), loc)
+                except SurveyValidationError:
+                    raw_qty = None
+            else:
+                # Case B: Multi-line table cells (Description -> Unit -> Quantity)
+                for offset in range(1, 4):
+                    if i + offset >= len(table_lines):
+                        break
+                    cand = table_lines[i + offset]
+                    if unit_text is None and _UNIT_TOKEN_RE.match(cand):
+                        unit_text = "lit" if cand.casefold() == "l1t" else cand
+                        continue
+                    if unit_text is not None and _NUMBER_TOKEN_RE.match(cand):
+                        try:
+                            raw_qty = parse_number(cand, loc)
+                            i += offset
+                            break
+                        except SurveyValidationError:
+                            raw_qty = None
+                            break
+            if unit_text and raw_qty is not None and raw_qty > 0:
+                try:
+                    qty, norm_unit = normalize_quantity(kind, raw_qty, unit_text, loc)
+                except SurveyValidationError as exc:
+                    warnings.append(str(exc))
+                else:
+                    mobile = any(t in low for t in ("xe ", "đội xe", "ô tô", "xe tải", "phương tiện", "vận tải")) and "xe nâng" not in low
+                    sheet = "1.2" if mobile else "1.1"
+                    row = FUEL_ROWS[kind][0] if not mobile else None
+                    coord = f"{get_column_letter(month + 5)}{row}" if row else ""
+                    items.append(SurveyItem(kind, month, qty, norm_unit, name, loc, sheet, coord))
+            i += 1
+    return items, warnings
 
 def extract_documents(paths: list[str], reporting_year: int | None = None) -> SurveyData:
     """Extract rows from supported invoice/ledger tables, with no fabricated months/quantities."""
@@ -281,12 +475,138 @@ def extract_documents(paths: list[str], reporting_year: int | None = None) -> Su
             continue
         sources = converted.sheet_markdowns or {name: converted.full_markdown}
         initial = len(data.items)
-        if Path(path).suffix.lower() == ".pdf":
+        ext = Path(path).suffix.lower()
+        is_image = ext in _IMAGE_EXTS
+
+        if ext == ".pdf":
             from ecostream.ingestion.pdf_survey_parser import extract_pdf_to_survey
-            handled = extract_pdf_to_survey(path, converted.full_markdown, reporting_year, data)
+
+            handled = extract_pdf_to_survey(
+                path, converted.full_markdown, reporting_year, data
+            )
             if handled:
-                if len(data.items) == initial and not any(name in w for w in data.warnings):
-                    data.warnings.append(f"{name}: không trích xuất được kỳ và tổng kWh hợp lệ; cần điền biểu khảo sát thủ công")
+                if len(data.items) == initial and not any(
+                    name in w for w in data.warnings
+                ):
+                    data.warnings.append(
+                        f"{name}: không trích xuất được kỳ và tổng kWh hợp lệ; "
+                        "cần điền biểu khảo sát thủ công"
+                    )
+                continue
+
+        if ext == ".pdf" or is_image:
+            upper_md = converted.full_markdown.upper()
+
+            if "TIỀN ĐIỆN" in upper_md or (
+                is_image and "ĐIỆN LỰC" in upper_md and "KWH" in upper_md
+            ):
+                # Match only an invoice's explicit billing period and active-energy
+                # TOTAL on the same page; do not sum tariff bands or currency figures.
+                pages = re.split(
+                    r"(?=^## Page \d+)", converted.full_markdown, flags=re.M
+                )
+                if len(pages) == 1:
+                    pages = ["", converted.full_markdown]
+
+                for page_no, page in enumerate(pages[1:], 1):
+                    period = re.search(
+                        r"Kỳ:\s*\d+\s*\(Từ ngày\s*\d{2}/(\d{2})/(20\d{2})"
+                        r"\s*đến ngày\s*\d{2}/(\d{2})/(20\d{2})",
+                        page,
+                    )
+                    totals = re.findall(
+                        r"Cộng điện năng tác dụng\s*\(Ap\)\s*([\d.,]+)\s*kWh",
+                        page,
+                        re.I,
+                    )
+
+                    if (
+                        not period
+                        or len(totals) != 1
+                        or period[2] != period[4]
+                        or period[1] != period[3]
+                    ):
+                        data.warnings.append(
+                            f"{name} trang {page_no}: không xác định duy nhất "
+                            "kỳ và tổng kWh, cần kiểm tra thủ công"
+                        )
+                        continue
+
+                    month, year = int(period[1]), int(period[2])
+
+                    if reporting_year is not None and year != reporting_year:
+                        data.warnings.append(
+                            f"{name} trang {page_no}: năm hóa đơn {year} "
+                            f"khác năm báo cáo {reporting_year}; bỏ qua"
+                        )
+                        continue
+
+                    invoice_no = re.search(
+                        r"Số\s*\(No\.\):\s*([A-Za-z0-9-]+)", page
+                    )
+                    loc = (
+                        f"{name} / trang {page_no} / hóa đơn "
+                        f"{invoice_no[1] if invoice_no else 'chưa rõ số'} "
+                        "/ Cộng điện năng tác dụng (Ap)"
+                    )
+
+                    try:
+                        quantity = parse_number(totals[0], loc)
+                    except SurveyValidationError as exc:
+                        data.warnings.append(str(exc))
+                        continue
+
+                    if quantity:
+                        data.items.append(
+                            SurveyItem(
+                                "electricity",
+                                month,
+                                quantity,
+                                "kWh",
+                                name,
+                                loc,
+                                "2.1",
+                                f"E{month+2}",
+                            )
+                        )
+
+                if len(data.items) == initial:
+                    data.warnings.append(
+                        f"{name}: không trích xuất được kỳ và tổng kWh hợp lệ; "
+                        "cần điền biểu khảo sát thủ công"
+                    )
+                continue
+
+            if any(
+                k in upper_md
+                for k in (
+                    "XĂNG", "XÃNG", "DẦU", "ĐIÊZEN",
+                    "DIEZEN", "DIESEL", "RON 95", "RON 92", "LPG"
+                )
+            ):
+                fuel_items, fuel_warnings = _extract_fuel_pages(
+                    path,
+                    name,
+                    converted.full_markdown,
+                    reporting_year,
+                    is_image=is_image,
+                )
+                data.items.extend(fuel_items)
+                data.warnings.extend(fuel_warnings)
+
+                if len(data.items) == initial:
+                    data.warnings.append(
+                        f"{name}: không trích xuất được số liệu nhiên liệu "
+                        f"từ {'ảnh' if is_image else 'PDF'}; "
+                        "cần điền biểu khảo sát thủ công"
+                    )
+                continue
+
+            if is_image:
+                data.warnings.append(
+                    f"{name}: chưa trích xuất được số liệu Scope 1/2 từ ảnh; "
+                    "cần điền biểu khảo sát thủ công"
+                )
                 continue
         for sheet_name, markdown in sources.items():
             s_lower = sheet_name.casefold()
@@ -387,7 +707,7 @@ def read_survey(path: str, *, source_name: str | None = None) -> SurveyData:
             raise SurveyValidationError("Sheet 1.1 không đúng mẫu khảo sát")
         if "Lượng điện năng" not in str(book["2.1"]["B1"].value):
             raise SurveyValidationError("Sheet 2.1 không đúng mẫu khảo sát")
-        data = SurveyData()
+        data = SurveyData(general_info=read_general_info(book["Thông tin chung"]))
         label = source_name or Path(path).name
         for sheet_name in ("1.1", "1.2"):
             sheet = book[sheet_name]

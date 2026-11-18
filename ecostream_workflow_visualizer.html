@@ -1,0 +1,1426 @@
+<title>EcoStream Workflow Visualizer</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="alternate icon" href="/static/favicon.ico">
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* CSS Tokens */
+:root {
+  --bg: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-card-hover: #f8fafc;
+  --fg: #0f172a;
+  --fg-muted: #64748b;
+  --fg-subtle: #94a3b8;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --emerald: #059669;
+  --emerald-light: #ecfdf5;
+  --emerald-border: #a7f3d0;
+
+  --blue: #0284c7;
+  --blue-light: #f0f9ff;
+  --blue-border: #bae6fd;
+
+  --amber: #d97706;
+  --amber-light: #fffbeb;
+  --amber-border: #fde68a;
+
+  --purple: #7c3aed;
+  --purple-light: #f5f3ff;
+  --purple-border: #ddd6fe;
+
+  --rose: #e11d48;
+  --rose-light: #fff1f2;
+  --rose-border: #fecdd3;
+
+  --code-bg: #0f172a;
+  --code-fg: #f8fafc;
+  --accent-glow: rgba(5, 150, 105, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0f19;
+    --bg-surface: #111827;
+    --bg-subtle: #1e293b;
+    --bg-card-hover: #1f293d;
+    --fg: #f8fafc;
+    --fg-muted: #94a3b8;
+    --fg-subtle: #64748b;
+    --border: #283548;
+    --border-strong: #3b4d66;
+
+    --emerald: #10b981;
+    --emerald-light: #064e3b33;
+    --emerald-border: #047857;
+
+    --blue: #38bdf8;
+    --blue-light: #0c4a6e33;
+    --blue-border: #0369a1;
+
+    --amber: #f59e0b;
+    --amber-light: #78350f33;
+    --amber-border: #b45309;
+
+    --purple: #a78bfa;
+    --purple-light: #581c8733;
+    --purple-border: #6d28d9;
+
+    --rose: #fb7185;
+    --rose-light: #88133733;
+    --rose-border: #be123c;
+
+    --code-bg: #030712;
+    --code-fg: #f1f5f9;
+    --accent-glow: rgba(16, 185, 129, 0.2);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b0f19;
+  --bg-surface: #111827;
+  --bg-subtle: #1e293b;
+  --bg-card-hover: #1f293d;
+  --fg: #f8fafc;
+  --fg-muted: #94a3b8;
+  --fg-subtle: #64748b;
+  --border: #283548;
+  --border-strong: #3b4d66;
+
+  --emerald: #10b981;
+  --emerald-light: #064e3b33;
+  --emerald-border: #047857;
+
+  --blue: #38bdf8;
+  --blue-light: #0c4a6e33;
+  --blue-border: #0369a1;
+
+  --amber: #f59e0b;
+  --amber-light: #78350f33;
+  --amber-border: #b45309;
+
+  --purple: #a78bfa;
+  --purple-light: #581c8733;
+  --purple-border: #6d28d9;
+
+  --rose: #fb7185;
+  --rose-light: #88133733;
+  --rose-border: #be123c;
+
+  --code-bg: #030712;
+  --code-fg: #f1f5f9;
+  --accent-glow: rgba(16, 185, 129, 0.2);
+  color-scheme: dark;
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px;
+  min-height: 100vh;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.app-wrapper {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+.header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #059669, #047857);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.brand-subtitle {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theme-btn, .pill-btn {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.theme-btn:hover, .pill-btn:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-card-hover);
+}
+
+/* Tab Bar */
+.tabs-nav {
+  display: flex;
+  gap: 8px;
+  background: var(--bg-subtle);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.tab-item {
+  flex: 1;
+  min-width: 180px;
+  text-align: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--fg-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-item.active {
+  background: var(--bg-surface);
+  color: var(--emerald);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Main Layout Grid */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Diagram Canvas Card */
+.canvas-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.canvas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.canvas-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canvas-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+/* Workflow Flowchart Styles */
+.flow-diagram-container {
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.flow-step-lane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 650px;
+  position: relative;
+}
+
+.flow-step {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.step-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: 6px;
+}
+
+.step-number {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+}
+
+.step-name {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--fg);
+}
+
+.step-content {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.step-content:hover {
+  border-color: var(--border-strong);
+}
+
+.flow-nodes-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Interactive Interactive Nodes */
+.flow-node {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.flow-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.flow-node.active {
+  border-color: var(--node-color, var(--emerald));
+  background: var(--node-light, var(--emerald-light));
+  box-shadow: 0 0 0 2px var(--node-color, var(--emerald));
+}
+
+.node-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: var(--node-light, var(--emerald-light));
+  color: var(--node-color, var(--emerald));
+  flex-shrink: 0;
+}
+
+.node-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.node-title {
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.node-desc {
+  font-size: 0.72rem;
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+/* Connector Arrow */
+.flow-arrow-down {
+  display: flex;
+  justify-content: center;
+  margin-left: 140px;
+  height: 22px;
+  align-items: center;
+  color: var(--border-strong);
+}
+
+/* Detail Inspector Sidebar */
+.inspector-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.inspector-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+
+.inspector-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--emerald-light);
+  color: var(--emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.inspector-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  color: var(--fg-muted);
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.inspector-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--fg);
+}
+
+.inspector-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inspector-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.inspector-body {
+  font-size: 0.85rem;
+  color: var(--fg);
+  line-height: 1.6;
+}
+
+.code-box {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+}
+
+/* File Tree View */
+.file-tree {
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tree-folder {
+  font-weight: 700;
+  color: var(--emerald);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-file {
+  margin-left: 20px;
+  color: var(--fg-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-file:hover {
+  color: var(--fg);
+}
+
+/* Utility Colors for Nodes */
+.c-emerald { --node-color: var(--emerald); --node-light: var(--emerald-light); }
+.c-blue { --node-color: var(--blue); --node-light: var(--blue-light); }
+.c-amber { --node-color: var(--amber); --node-light: var(--amber-light); }
+.c-purple { --node-color: var(--purple); --node-light: var(--purple-light); }
+.c-rose { --node-color: var(--rose); --node-light: var(--rose-light); }
+
+.hidden-pane {
+  display: none !important;
+}
+</style>
+
+<div class="app-wrapper">
+  <!-- Top Navigation & Brand Header -->
+  <header class="header-bar">
+    <div class="brand-group">
+      <div class="brand-icon">🌱</div>
+      <div>
+        <div class="brand-title">EcoStream Workflow Visualizer</div>
+        <div class="brand-subtitle">Trực quan hóa cấu trúc quy trình Carbon Multi-Agent & Khảo sát kiểm toán</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <button class="pill-btn mono" onclick="selectRunMonitor()">
+        📡 Live Monitor (/monitor)
+      </button>
+      <button class="theme-btn" onclick="toggleTheme()" id="themeToggleBtn">
+        🌓 Đổi Giao Diện
+      </button>
+    </div>
+  </header>
+
+  <!-- Workflow Tab Switcher -->
+  <nav class="tabs-nav">
+    <button class="tab-item active" onclick="switchWorkflowTab('survey', this)">
+      📋 1. Luồng Khảo Sát (Survey-First)
+    </button>
+    <button class="tab-item" onclick="switchWorkflowTab('blackboard', this)">
+      🤖 2. Luồng Multi-Agent Blackboard
+    </button>
+    <button class="tab-item" onclick="switchWorkflowTab('storage', this)">
+      📁 3. Cấu Trúc File runs/&lt;run_id&gt;/
+    </button>
+    <button class="tab-item" onclick="switchWorkflowTab('monitor-guide', this)">
+      📡 4. Cách Mở Live Monitor
+    </button>
+  </nav>
+
+  <!-- Main Canvas & Detail Split View -->
+  <div class="main-grid">
+
+    <!-- LEFT COLUMN: Canvas -->
+    <div class="canvas-card">
+
+      <!-- ================= TAB 1: SURVEY-FIRST WORKFLOW ================= -->
+      <div id="tab-survey" class="tab-content">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>📋 Luồng Survey-First (Mặc định kiểm toán trên Web)</span>
+          </div>
+          <div class="canvas-legend">
+            <span><span class="legend-dot" style="background:var(--emerald);"></span>Tự động</span>
+            <span><span class="legend-dot" style="background:var(--amber);"></span>Con người kiểm tra</span>
+            <span><span class="legend-dot" style="background:var(--blue);"></span>Đối soát Excel</span>
+          </div>
+        </div>
+
+        <div class="flow-diagram-container">
+          <div class="flow-step-lane">
+
+            <!-- Step 1 -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Bước 1</span>
+                <span class="step-name">Nạp Chứng Từ</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-blue" onclick="showNodeDetail('doc_evn')">
+                    <span class="node-icon">⚡</span>
+                    <div class="node-text">
+                      <span class="node-title">Hóa đơn điện EVN</span>
+                      <span class="node-desc">PDF số / CSV 12 tháng</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-emerald" onclick="showNodeDetail('doc_fuel')">
+                    <span class="node-icon">🔥</span>
+                    <div class="node-text">
+                      <span class="node-title">Bảng kê xăng dầu</span>
+                      <span class="node-desc">Excel / Word DO, Petrol, LPG</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-purple" onclick="showNodeDetail('doc_cache')">
+                    <span class="node-icon">🛡️</span>
+                    <div class="node-text">
+                      <span class="node-title">MarkItDown + SHA256</span>
+                      <span class="node-desc">Chuyển bảng & lưu cache</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-arrow-down">↓</div>
+
+            <!-- Step 2 -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Bước 2</span>
+                <span class="step-name">Điền Tọa Độ</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-emerald" onclick="showNodeDetail('survey_fill')">
+                    <span class="node-icon">📊</span>
+                    <div class="node-text">
+                      <span class="node-title">Điền Biểu Khảo Sát</span>
+                      <span class="node-desc">Ánh xạ ô sheet 1.1, 1.2, 2.1</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-rose" onclick="showNodeDetail('safe_filter')">
+                    <span class="node-icon">🚫</span>
+                    <div class="node-text">
+                      <span class="node-title">Chốt chặn: Không điền khống</span>
+                      <span class="node-desc">F-gas, nước thải, hơi: để trống</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-arrow-down">↓</div>
+
+            <!-- Step 3 (Checkpoint) -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Bước 3</span>
+                <span class="step-name">Rà Soát Con Người</span>
+              </div>
+              <div class="step-content" style="background:var(--amber-light); border-color:var(--amber-border);">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-amber active" onclick="showNodeDetail('human_review')">
+                    <span class="node-icon">👤</span>
+                    <div class="node-text">
+                      <span class="node-title">Human-in-the-Loop Checkpoint</span>
+                      <span class="node-desc">Xem bảng preview / Tải .xlsx sửa ô trống</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-amber" onclick="showNodeDetail('read_survey_val')">
+                    <span class="node-icon">🔒</span>
+                    <div class="node-text">
+                      <span class="node-title">Kiểm tra công thức</span>
+                      <span class="node-desc">Cấm formula ô nhập, chuẩn hóa unit</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-arrow-down">↓</div>
+
+            <!-- Step 4 -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Bước 4</span>
+                <span class="step-name">Tính Toán Tất Định</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-emerald" onclick="showNodeDetail('calc_engine')">
+                    <span class="node-icon">🧮</span>
+                    <div class="node-text">
+                      <span class="node-title">Toán học Python E = Q * EF</span>
+                      <span class="node-desc">Hệ số MONRE 2023, phân tách Scope 1/2</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-blue" onclick="showNodeDetail('reconciliation')">
+                    <span class="node-icon">⚖️</span>
+                    <div class="node-text">
+                      <span class="node-title">Đối Soát Phương Pháp TJ</span>
+                      <span class="node-desc">Soi chênh lệch mẫu vs EcoStream</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-arrow-down">↓</div>
+
+            <!-- Step 5 -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Bước 5</span>
+                <span class="step-name">Bộ Hồ Sơ Ra Lò</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-blue" onclick="showNodeDetail('out_survey_xlsx')">
+                    <span class="node-icon">📑</span>
+                    <div class="node-text">
+                      <span class="node-title">GHGs_inventory_da_tinh.xlsx</span>
+                      <span class="node-desc">Kèm sheet đối soát chi tiết</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-emerald" onclick="showNodeDetail('out_report_docx')">
+                    <span class="node-icon">📝</span>
+                    <div class="node-text">
+                      <span class="node-title">Bao_cao_kiem_ke_KNK.docx</span>
+                      <span class="node-desc">Bản Word dự thảo ký duyệt</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-purple" onclick="showNodeDetail('out_final_json')">
+                    <span class="node-icon">💾</span>
+                    <div class="node-text">
+                      <span class="node-title">final_inventory_summary.json</span>
+                      <span class="node-desc">API Payload đồng bộ ERP</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 2: MULTI-AGENT BLACKBOARD ================= -->
+      <div id="tab-blackboard" class="tab-content hidden-pane">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>🤖 Kiến Trúc Multi-Agent Blackboard (5 Giai đoạn)</span>
+          </div>
+          <div class="canvas-legend">
+            <span><span class="legend-dot" style="background:var(--emerald);"></span>Subagents</span>
+            <span><span class="legend-dot" style="background:var(--amber);"></span>Dual Logs</span>
+            <span><span class="legend-dot" style="background:var(--purple);"></span>PII Security</span>
+          </div>
+        </div>
+
+        <div class="flow-diagram-container">
+          <div class="flow-step-lane">
+
+            <!-- Phase 1: Security & Ingestion -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Phase 1</span>
+                <span class="step-name">Bảo Mật &amp; Ingestion</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-purple" onclick="showNodeDetail('sec_aes')">
+                    <span class="node-icon">🔐</span>
+                    <div class="node-text">
+                      <span class="node-title">AES-256 Storage</span>
+                      <span class="node-desc">raw_inputs/*.enc tại chỗ</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-purple" onclick="showNodeDetail('sec_sanitizer')">
+                    <span class="node-icon">✂️</span>
+                    <div class="node-text">
+                      <span class="node-title">Data Sanitizer</span>
+                      <span class="node-desc">Cắt giá tiền, chiết khấu, STK</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-purple" onclick="showNodeDetail('sec_masker')">
+                    <span class="node-icon">🎭</span>
+                    <div class="node-text">
+                      <span class="node-title">PII Masker (RAM Only)</span>
+                      <span class="node-desc">Token hóa định danh, hủy sau chạy</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-arrow-down">↓</div>
+
+            <!-- Phase 2: Schema Discovery -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Phase 2</span>
+                <span class="step-name">Schema Discovery</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-blue" onclick="showNodeDetail('ag_discovery')">
+                    <span class="node-icon">🧭</span>
+                    <div class="node-text">
+                      <span class="node-title">ag-discovery Agent</span>
+                      <span class="node-desc">Khám phá sheet, lập index.json</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-arrow-down">↓</div>
+
+            <!-- Phase 3: Parallel Subagents -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Phase 3</span>
+                <span class="step-name">4 Domain Subagents</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-emerald" onclick="showNodeDetail('ag_scope1')">
+                    <span class="node-icon">⛽</span>
+                    <div class="node-text">
+                      <span class="node-title">ag-scope1-fuel</span>
+                      <span class="node-desc">Nhiên liệu đốt, quy đổi bình LPG</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-blue" onclick="showNodeDetail('ag_scope2')">
+                    <span class="node-icon">⚡</span>
+                    <div class="node-text">
+                      <span class="node-title">ag-scope2-power</span>
+                      <span class="node-desc">Điện EVN, nội suy mùa vụ T-1 / T+1</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-purple" onclick="showNodeDetail('ag_scope3')">
+                    <span class="node-icon">🚚</span>
+                    <div class="node-text">
+                      <span class="node-title">ag-scope3-supply</span>
+                      <span class="node-desc">Logistics tấn.km & spend proxy</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-amber" onclick="showNodeDetail('ag_mitigation')">
+                    <span class="node-icon">📉</span>
+                    <div class="node-text">
+                      <span class="node-title">ag-mitigation-quota</span>
+                      <span class="node-desc">Mẫu 02 NĐ 06 GPT = PT_CS - PT</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dual Logs Bridge -->
+                <div style="border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 4px;" class="flow-nodes-row">
+                  <div class="flow-node c-amber" onclick="showNodeDetail('log_query')">
+                    <span class="node-icon">❓</span>
+                    <div class="node-text">
+                      <span class="node-title">query_log.json</span>
+                      <span class="node-desc">Ghi vết điểm nghi vấn kiểm toán</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-amber" onclick="showNodeDetail('log_assumption')">
+                    <span class="node-icon">📝</span>
+                    <div class="node-text">
+                      <span class="node-title">assumption_log.json</span>
+                      <span class="node-desc">Giả định IPCC/TCVN + trừ điểm %</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-arrow-down">↓</div>
+
+            <!-- Phase 4: Math Engine -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Phase 4</span>
+                <span class="step-name">Deterministic Math</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-emerald" onclick="showNodeDetail('math_core')">
+                    <span class="node-icon">🎯</span>
+                    <div class="node-text">
+                      <span class="node-title">Python Math 100%</span>
+                      <span class="node-desc">E = Q * EF, RSS Error propagation</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-blue" onclick="showNodeDetail('engine_5d')">
+                    <span class="node-icon">📊</span>
+                    <div class="node-text">
+                      <span class="node-title">5-Dimension Reliability</span>
+                      <span class="node-desc">Grade A/B/C/D trừ điểm assumption</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-arrow-down">↓</div>
+
+            <!-- Phase 5: Synthesis -->
+            <div class="flow-step">
+              <div class="step-marker">
+                <span class="step-number">Phase 5</span>
+                <span class="step-name">Synthesis &amp; Export</span>
+              </div>
+              <div class="step-content">
+                <div class="flow-nodes-row">
+                  <div class="flow-node c-purple" onclick="showNodeDetail('ag_synth')">
+                    <span class="node-icon">📑</span>
+                    <div class="node-text">
+                      <span class="node-title">ag-synthesizer</span>
+                      <span class="node-desc">Thuyết minh Việt Nam &amp; 6 files</span>
+                    </div>
+                  </div>
+                  <div class="flow-node c-rose" onclick="showNodeDetail('sec_purge')">
+                    <span class="node-icon">🧹</span>
+                    <div class="node-text">
+                      <span class="node-title">Purge RAM Mapping</span>
+                      <span class="node-desc">Xóa sạch mapping &amp; gc.collect()</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 3: STORAGE DIRECTORY ================= -->
+      <div id="tab-storage" class="tab-content hidden-pane">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>📁 Bản Đồ Thư Mục runs/&lt;run_id&gt;/ (Blackboard)</span>
+          </div>
+          <span class="mono" style="font-size:0.75rem; color:var(--fg-muted);">Cô lập hoàn toàn theo từng phiên chạy</span>
+        </div>
+
+        <div style="background:var(--bg-subtle); padding:20px; border-radius:14px; border:1px solid var(--border);">
+          <div class="file-tree mono">
+            <div class="tree-folder">📂 runs/&lt;run_id&gt;/</div>
+            <div class="tree-file" onclick="showNodeDetail('file_state')">📄 state.json <span style="color:var(--emerald);">(Trạng thái lifecycle &amp; tiến độ %)</span></div>
+            <div class="tree-file" onclick="showNodeDetail('file_index')">📄 index.json <span style="color:var(--blue);">(Mục lục phân luồng subagents)</span></div>
+
+            <div class="tree-folder" style="margin-left: 12px; margin-top: 8px;">📁 raw_inputs/</div>
+            <div class="tree-file" onclick="showNodeDetail('sec_aes')">🔒 evn_invoice.pdf.enc <span style="color:var(--purple);">(Mã hóa AES-256 Fernet)</span></div>
+            <div class="tree-file" onclick="showNodeDetail('sec_aes')">🔒 fuel_records.xlsx.enc</div>
+
+            <div class="tree-folder" style="margin-left: 12px; margin-top: 8px;">📁 markdown_inputs/</div>
+            <div class="tree-file" onclick="showNodeDetail('sec_masker')">📝 fuel_records_Scope1.md <span style="color:var(--purple);">(Đã cắt giá &amp; che PII)</span></div>
+            <div class="tree-file" onclick="showNodeDetail('sec_masker')">📝 evn_invoice_Scope2.md</div>
+
+            <div class="tree-folder" style="margin-left: 12px; margin-top: 8px;">📁 intermediate/</div>
+            <div class="tree-file" onclick="showNodeDetail('ag_scope1')">📊 scope1_extracted.json</div>
+            <div class="tree-file" onclick="showNodeDetail('ag_scope2')">📊 scope2_extracted.json</div>
+            <div class="tree-file" onclick="showNodeDetail('log_query')">⚠️ query_log.json <span style="color:var(--amber);">(Bất thường cần hậu kiểm)</span></div>
+            <div class="tree-file" onclick="showNodeDetail('log_assumption')">⚠️ assumption_log.json <span style="color:var(--amber);">(Giả định &amp; điểm phạt)</span></div>
+            <div class="tree-file" onclick="showNodeDetail('calc_engine')">🧮 math_results.json</div>
+
+            <div class="tree-folder" style="margin-left: 12px; margin-top: 8px;">📁 deliverables/</div>
+            <div class="tree-file" onclick="showNodeDetail('out_survey_xlsx')">📗 GHGs_inventory_da_tinh.xlsx (hoặc Ho_so_ket_qua_CO2.xlsx)</div>
+            <div class="tree-file" onclick="showNodeDetail('out_report_docx')">📘 Bao_cao_kiem_ke_KNK.docx (hoặc Bao_cao_Mau02_ND06.docx)</div>
+            <div class="tree-file">🌐 Bao_cao_kiem_ke_va_giam_nhe_KNK.html</div>
+            <div class="tree-file">📕 Bao_cao_kiem_ke_va_giam_nhe_KNK.pdf</div>
+            <div class="tree-file">📄 final_inventory_summary.json</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= TAB 4: MONITOR GUIDE ================= -->
+      <div id="tab-monitor-guide" class="tab-content hidden-pane">
+        <div class="canvas-header">
+          <div class="canvas-title">
+            <span>📡 Cách Mở &amp; Dùng Live Workflow Monitor Trong App</span>
+          </div>
+          <button class="pill-btn" onclick="window.open('/monitor', '_blank')">Mở /monitor Ngay ↗</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:16px; font-size:0.88rem; line-height:1.7;">
+          <div style="background:var(--bg-subtle); padding:16px; border-radius:12px; border:1px solid var(--border);">
+            <strong style="color:var(--emerald);">1. Khởi động máy chủ Web Local:</strong>
+            <div class="code-box mono" style="margin-top:6px;">python -m ecostream.app</div>
+            <p style="font-size:0.8rem; color:var(--fg-muted); margin-top:4px;">Server sẽ chạy tại địa chỉ <code class="mono">http://127.0.0.1:8000/</code>.</p>
+          </div>
+
+          <div style="background:var(--bg-subtle); padding:16px; border-radius:12px; border:1px solid var(--border);">
+            <strong style="color:var(--blue);">2. Truy cập Live Monitor:</strong>
+            <p style="font-size:0.82rem; margin-top:4px;">
+              Mở trình duyệt gõ: <a href="/monitor" target="_blank" style="color:var(--blue); font-weight:700;">http://127.0.0.1:8000/monitor</a> hoặc click nút <strong>"📡 Live Monitor"</strong> ở góc phải trên cùng thanh header của trang chủ.
+            </p>
+          </div>
+
+          <div style="background:var(--bg-subtle); padding:16px; border-radius:12px; border:1px solid var(--border);">
+            <strong style="color:var(--amber);">3. Các tính năng chính trên trang Live Monitor:</strong>
+            <ul style="margin-left:20px; margin-top:6px; font-size:0.82rem; color:var(--fg-muted);" class="list-disc">
+              <li><strong>Run Selector:</strong> Dropdown danh sách các phiên chạy trong thư mục <code class="mono">runs/</code>.</li>
+              <li><strong>5-Phase Lifecycle Stepper:</strong> Đèn tín hiệu tiến độ % từ Ingestion &rarr; Discovery &rarr; Subagents &rarr; Math &rarr; Synthesis.</li>
+              <li><strong>Intermediate JSON Inspector:</strong> Xem trực tiếp dữ liệu trung gian <code class="mono">scope1_extracted.json</code>, <code class="mono">query_log.json</code>, <code class="mono">assumption_log.json</code>...</li>
+              <li><strong>Polling nhịp 3 giây:</strong> Tự động thăm dò trạng thái thời gian thực mà không cần tải lại trang.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Detail Inspector -->
+    <aside class="inspector-card" id="inspectorSidebar">
+      <div class="inspector-header">
+        <div class="inspector-icon" id="insIcon">💡</div>
+        <div>
+          <span class="inspector-badge" id="insBadge">Chi tiết</span>
+          <div class="inspector-title" id="insTitle">Chọn một thành phần</div>
+        </div>
+      </div>
+
+      <div class="inspector-section">
+        <div class="inspector-label">Mô tả &amp; Vai trò</div>
+        <div class="inspector-body" id="insDesc">
+          Click vào bất kỳ nút (node) nào trong sơ đồ bên trái để xem luồng dữ liệu, đoạn code thực thi, ranh giới dữ liệu và cơ chế xử lý ngoại lệ.
+        </div>
+      </div>
+
+      <div class="inspector-section">
+        <div class="inspector-label">Dữ liệu Vào / Ra (I/O)</div>
+        <div class="code-box mono" id="insIO">
+// Input / Output data signature
+Input: File chứng từ / JSON
+Output: Normalized activity records
+        </div>
+      </div>
+
+      <div class="inspector-section">
+        <div class="inspector-label">Vị trí Code trong Repo</div>
+        <div class="code-box mono" id="insCodeRef" style="color:var(--emerald);">
+ecostream/orchestrator/pipeline.py
+        </div>
+      </div>
+
+      <div class="inspector-section">
+        <div class="inspector-label">Tiêu chuẩn &amp; Cơ chế an toàn</div>
+        <div class="tag-list" id="insTags">
+          <span class="tag-chip">Local-First</span>
+          <span class="tag-chip">Deterministic</span>
+          <span class="tag-chip">Audit Trail</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+// Component Details Database
+const NODE_DB = {
+  // Tab 1: Survey Nodes
+  doc_evn: {
+    icon: '⚡',
+    badge: 'Chứng Từ Đầu Vào',
+    title: 'Hóa Đơn Tiền Điện EVN (PDF / CSV)',
+    desc: 'Hóa đơn tiền điện tử từ EVN. Hệ thống đọc kỳ thanh toán và tổng lượng điện năng tác dụng (Ap) kWh. Chống trùng số hóa đơn nếu tải nhiều file.',
+    io: 'Input: *.pdf (TIỀN ĐIỆN) hoặc *.csv (kỳ/công tơ)\nOutput: SurveyItem(electricity, month, quantity, "kWh", "2.1!E*")',
+    codeRef: 'ecostream/ingestion/survey_workbook.py:156',
+    tags: ['PDF Invoices', 'EVN Regex', 'Khử trùng lặp']
+  },
+  doc_fuel: {
+    icon: '🔥',
+    badge: 'Chứng Từ Đầu Vào',
+    title: 'Bảng Kê Nhiên Liệu Đốt (DO, FO, Gas, Than)',
+    desc: 'Bảng kê mua nhiên liệu theo 12 tháng. Phân biệt đốt di động (xe ô tô, vận chuyển) sang sheet 1.2 và đốt cố định (lò hơi, máy phát) sang sheet 1.1.',
+    io: 'Input: *.xlsx / *.csv / *.docx\nOutput: SurveyItem(kind, month, quantity, unit, sheet, cell)',
+    codeRef: 'ecostream/ingestion/survey_workbook.py:217',
+    tags: ['8 loại nhiên liệu', 'Mobile/Stationary split', 'Quy đổi kg/lít']
+  },
+  doc_cache: {
+    icon: '🛡️',
+    badge: 'Ingestion & Cache',
+    title: 'MarkItDown + SHA-256 Cache',
+    desc: 'Microsoft MarkItDown chuyển bảng tính, hóa đơn sang Markdown chuẩn. SHA-256 fingerprint giúp bỏ qua việc đọc lại các file không đổi. Tesseract OCR tự động kích hoạt cho PDF scan.',
+    io: 'Input: Raw binary file\nOutput: Markdown tables + IngestionCache hit/miss',
+    codeRef: 'ecostream/ingestion/markitdown_loader.py:46',
+    tags: ['SHA-256 Cache', 'Tesseract OCR vie+eng', 'openpyxl']
+  },
+  survey_fill: {
+    icon: '📊',
+    badge: 'Bước Tự Động',
+    title: 'Điền Bản Sao Biểu Khảo Sát Excel',
+    desc: 'Mở file mẫu 06.01.2025.-Bang-khao-sat-SLHD-cap-co-so-VN.xlsx, tự động điền các ô tháng 1-12 của sheet 1.1, 1.2 và 2.1 kèm công thức SUM.',
+    io: 'Input: SurveyData.items\nOutput: deliverables/Bang_khao_sat_da_dien.xlsx',
+    codeRef: 'ecostream/reporting/survey_template_exporter.py:11',
+    tags: ['openpyxl', 'Formula Preservation', 'Preserve Template']
+  },
+  safe_filter: {
+    icon: '🚫',
+    badge: 'Chốt Chặn Kiểm Toán',
+    title: 'Chốt Chặn: Tuyệt Đối Không Điền Khống',
+    desc: 'Môi chất lạnh (1.4), nước thải (1.6), quá trình công nghiệp (1.5), hơi mua (2.2) để trống kèm cảnh báo nếu thiếu thông số/phương pháp. Không tự suy diễn hay làm giả số.',
+    io: 'Rule: Nếu thiếu phương pháp GWP/COD/Entanpi\nAction: Để trống ô, đưa vào danh sách warnings',
+    codeRef: 'ecostream/orchestrator/survey_pipeline.py:129',
+    tags: ['Zero-Hallucination', 'Audit Safety', 'No fake data']
+  },
+  human_review: {
+    icon: '👤',
+    badge: 'Human Checkpoint',
+    title: 'Người Dùng Rà Soát Trước Khi Tính',
+    desc: 'Người dùng xem bản xem trước iframe, đối chiếu từng dòng chứng từ đã nạp, có quyền tải file Excel về bổ sung ô trống (do PDF scan lỗi) và nộp lại.',
+    io: 'Input: Bang_khao_sat_da_dien.xlsx (hoặc bản người dùng sửa)\nAction: Rà soát & Bấm "3. Tính phát thải & xuất báo cáo"',
+    codeRef: 'ecostream/app/static/index.html:168',
+    tags: ['Human-in-the-loop', 'Print Preview', 'Optional Re-upload']
+  },
+  read_survey_val: {
+    icon: '🔒',
+    badge: 'Validate Nghiêm Ngặt',
+    title: 'Kiểm Tra Toàn Vẹn Biểu Mẫu',
+    desc: 'Đọc lại file khảo sát. Bắt buộc đủ 4 sheet chuẩn. Cấm ô nhập liệu chứa công thức Excel chưa cache (data_type == "f"), ép kiểu số dương hợp lệ.',
+    io: 'Input: reviewed.xlsx\nOutput: Validated SurveyData (gắn cờ estimated nếu bị sửa)',
+    codeRef: 'ecostream/ingestion/survey_workbook.py:267',
+    tags: ['No formula injection', 'Unit normalization', 'Validation']
+  },
+  calc_engine: {
+    icon: '🧮',
+    badge: 'Toán Học Tất Định',
+    title: 'Tính Toán Phát Thải Scope 1 & Scope 2',
+    desc: 'Thực hiện phép tính thuần Python E = Q * EF / 1000 theo hệ số MONRE và IPCC. Tuyệt đối không để LLM tính số học.',
+    io: 'Input: ActivityRecord list\nOutput: CarbonCalculation list, ScopeBreakdowns, RSS Error',
+    codeRef: 'ecostream/engine/calculator.py:16',
+    tags: ['Deterministic Math', 'MONRE Grid 2023', 'IPCC EFDB']
+  },
+  reconciliation: {
+    icon: '⚖️',
+    badge: 'Minh Bạch Kiểm Toán',
+    title: 'Sheet "EcoStream Đối Soát"',
+    desc: 'Tự động tính thêm một cột theo phương pháp nhiệt trị TJ và hệ số từng khí của workbook mẫu, hiển thị chênh lệch công khai thay vì khẳng định 2 kết quả trùng nhau.',
+    io: 'So sánh: E_ecostream (kg CO2e) vs E_template (TJ * EF_gas)\nOutput: Cảnh báo chênh lệch trên giao diện & Excel',
+    codeRef: 'ecostream/reporting/inventory_template_exporter.py:125',
+    tags: ['Reconciliation Sheet', 'Transparency', 'TJ vs kgCO2e']
+  },
+  out_survey_xlsx: {
+    icon: '📑',
+    badge: 'Sản Phẩm Đầu Ra',
+    title: 'GHGs_inventory_da_tinh.xlsx',
+    desc: 'Workbook kiểm kê hoàn chỉnh đã đổ số liệu sạch vào S1-Stationary, S1-Mobile, S2-Electricity, kèm sheet đối soát chi tiết.',
+    io: 'File: deliverables/GHGs_inventory_da_tinh.xlsx\nFormat: Excel có công thức & đối soát',
+    codeRef: 'ecostream/reporting/inventory_template_exporter.py',
+    tags: ['Audit Ready', 'Excel Formulas', 'Clean Baseline']
+  },
+  out_report_docx: {
+    icon: '📝',
+    badge: 'Sản Phẩm Đầu Ra',
+    title: 'Bao_cao_kiem_ke_KNK.docx',
+    desc: 'Báo cáo Word chuẩn nộp, lấy layout lề từ mẫu gốc nhưng xóa sạch dữ liệu cũ để tránh rò rỉ thông tin mẫu.',
+    io: 'File: deliverables/Bao_cao_kiem_ke_KNK.docx\nFormat: Microsoft Word (.docx)',
+    codeRef: 'ecostream/reporting/report_template_exporter.py',
+    tags: ['Word DOCX', 'No Template Leak', 'Signed Ready']
+  },
+  out_final_json: {
+    icon: '💾',
+    badge: 'Sản Phẩm Đầu Ra',
+    title: 'final_inventory_summary.json',
+    desc: 'File JSON cấu trúc chứa toàn bộ tóm tắt phát thải, độ tin cậy và provenance phục vụ kết nối API hệ thống ERP/ESG.',
+    io: 'File: deliverables/final_inventory_summary.json\nFormat: JSON UTF-8',
+    codeRef: 'ecostream/orchestrator/survey_pipeline.py:154',
+    tags: ['API Payload', 'Pydantic Model', 'ERP Ready']
+  },
+
+  // Tab 2: Blackboard Nodes
+  sec_aes: {
+    icon: '🔐',
+    badge: 'Bảo Mật Local',
+    title: 'Mã Hóa AES-256 File Gốc (At Rest)',
+    desc: 'Chứng từ gốc upload lên máy được mã hóa ngay lập tức bằng Fernet (AES-256-CBC + HMAC) lưu thành *.enc trong raw_inputs/. Giải mã trực tiếp trên RAM khi cần.',
+    io: 'Input: file gốc (PDF/XLSX)\nOutput: raw_inputs/<file>.enc (Ciphertext)',
+    codeRef: 'ecostream/privacy/encryption.py:40',
+    tags: ['AES-256 Fernet', 'Zero Plaintext', 'Local Storage']
+  },
+  sec_sanitizer: {
+    icon: '✂️',
+    badge: 'Bảo Mật Local',
+    title: 'Data Sanitizer (Cắt Bí Mật Giá Bán)',
+    desc: 'Tự động quét và xóa sạch các cột/dòng Đơn giá, Thành tiền, Tiền thuế GTGT, Chiết khấu, Số tài khoản ngân hàng. Chỉ giữ lại số lượng vật lý và thời gian.',
+    io: 'Input: Bảng hóa đơn thô\nOutput: Bảng chỉ gồm Tháng, Loại nhiên liệu, Khối lượng, Đơn vị',
+    codeRef: 'ecostream/privacy/pii_masker.py:410',
+    tags: ['Strip Financials', 'No Price Leaks', 'Clean Tables']
+  },
+  sec_masker: {
+    icon: '🎭',
+    badge: 'Bảo Mật Local',
+    title: 'PII Masker Engine (Chỉ Nằm Trong RAM)',
+    desc: 'Thay thế Mã số thuế, Tên công ty, CCCD, Email, SĐT, Mã KH EVN, Số công tơ thành token [COMPANY_001], [TAX_ID_001]. Bảng giải mã chỉ lưu trong RAM, KHÔNG BAO GIỜ ghi ra đĩa.',
+    io: 'Input: Văn bản Markdown\nOutput: Masked Markdown + In-memory Reversible Mapping',
+    codeRef: 'ecostream/privacy/pii_masker.py:112',
+    tags: ['15 Regex Patterns', 'RAM Only', 'Reversible Tokenization']
+  },
+  ag_discovery: {
+    icon: '🧭',
+    badge: 'Subagent Khám Phá',
+    title: 'SchemaDiscoveryAgent (index.json)',
+    desc: 'Tác tử quét cấu trúc toàn bộ tài liệu Markdown, phân loại nguồn phát thải và lập bảng phân luồng nhiệm vụ index.json gán cho các tác tử chuyên biệt.',
+    io: 'Input: markdown_inputs/*.md\nOutput: runs/<run_id>/index.json (Routing Tasks)',
+    codeRef: 'ecostream/agents/discovery.py:9',
+    tags: ['Task Routing', 'Cataloging', 'Blackboard Index']
+  },
+  ag_scope1: {
+    icon: '⛽',
+    badge: 'Domain Subagent',
+    title: 'Scope1FuelAgent',
+    desc: 'Trích xuất nhiên liệu đốt trực tiếp. Tự động xử lý bất thường đóng gói (vd "50 bình LPG 12kg" -> 600 kg) và tự ghi QueryLog + AssumptionLog.',
+    io: 'Output: intermediate/scope1_extracted.json\nAnomalies: UNIT_AMBIGUITY penalty -8%',
+    codeRef: 'ecostream/agents/scope1.py:24',
+    tags: ['Fuel Combustion', 'LPG Cylinders', 'Auto Imputation']
+  },
+  ag_scope2: {
+    icon: '⚡',
+    badge: 'Domain Subagent',
+    title: 'Scope2PowerAgent',
+    desc: 'Trích xuất hóa đơn điện EVN theo tháng. Nếu phát hiện thiếu tháng trong chuỗi 12 tháng, tự động nội suy tuyến tính theo mùa T_t = (T_{t-1} + T_{t+1}) / 2.',
+    io: 'Output: intermediate/scope2_extracted.json\nAnomalies: SEASONAL_GAP penalty -15%',
+    codeRef: 'ecostream/agents/scope2.py:24',
+    tags: ['EVN 12-Month', 'Seasonal Interpolation', 'Grid Power']
+  },
+  ag_scope3: {
+    icon: '🚚',
+    badge: 'Domain Subagent',
+    title: 'Scope3SupplyAgent',
+    desc: 'Xử lý chuỗi cung ứng logistics (tính tấn.km) và nguyên vật liệu. Nếu thiếu số đo vật lý thì fallback sang hệ số chi phí EXIOBASE theo tiền VND.',
+    io: 'Output: intermediate/scope3_extracted.json\nFallback: SPEND_PROXY penalty -30%',
+    codeRef: 'ecostream/agents/scope3.py:24',
+    tags: ['Logistics tonne-km', 'Spend-based Proxy', 'EXIOBASE']
+  },
+  ag_mitigation: {
+    icon: '📉',
+    badge: 'Domain Subagent',
+    title: 'MitigationQuotaAgent',
+    desc: 'Trích xuất các dự án giảm nhẹ (NLTT mái nhà, biomass, biến tần VFD) theo Mẫu 02 Nghị định 06/2022/NĐ-CP và hạn ngạch phát thải phân bổ.',
+    io: 'Output: intermediate/mitigation_extracted.json\nMath: GPT = PT_CS - PT, Quota balance',
+    codeRef: 'ecostream/agents/mitigation.py:16',
+    tags: ['Nghị định 06 Mẫu 02', 'Đường cơ sở PT_CS', 'ETS Quota']
+  },
+  log_query: {
+    icon: '❓',
+    badge: 'Audit Trail',
+    title: 'query_log.json (Nhật Ký Nghi Vấn)',
+    desc: 'Ghi lại mọi điểm dữ liệu nghi vấn, thiếu hóa đơn, hoặc bất thường đơn vị để kiểm toán viên hoặc quản đốc nhà máy hậu kiểm mà không làm sập pipeline.',
+    io: 'File: intermediate/query_log.json\nStatus: AUTO_ASSUMED / OPEN',
+    codeRef: 'ecostream/models/state.py:63',
+    tags: ['Non-blocking', 'Audit Flags', 'Human verification']
+  },
+  log_assumption: {
+    icon: '📝',
+    badge: 'Audit Trail',
+    title: 'assumption_log.json (Nhật Ký Giả Định)',
+    desc: 'Minh bạch hóa các giả định bảo thủ IPCC/TCVN đã áp dụng, ghi rõ mức trừ điểm tin cậy (-% confidence) và mức tăng biên độ sai số (+% uncertainty).',
+    io: 'File: intermediate/assumption_log.json\nEffect: Trực tiếp trừ điểm Reliability Score',
+    codeRef: 'ecostream/models/state.py:77',
+    tags: ['Conservative Assumptions', 'Confidence Penalty', 'Transparent']
+  },
+  math_core: {
+    icon: '🎯',
+    badge: 'Math Engine',
+    title: 'Python Deterministic Math Engine',
+    desc: 'Tính toán phát thải E = Q * EF và lan truyền sai số Gaussian 95% CI bằng công thức căn tổng bình phương phương sai RSS.',
+    io: 'Input: all_records\nOutput: intermediate/math_results.json',
+    codeRef: 'ecostream/engine/calculator.py:77',
+    tags: ['100% Deterministic', 'Gaussian RSS', 'No LLM Math']
+  },
+  engine_5d: {
+    icon: '📊',
+    badge: 'Đánh Giá Chất Lượng',
+    title: '5-Dimension Reliability Engine',
+    desc: 'Chấm điểm chất lượng dữ liệu 5 chiều: Tính đầy đủ (25%), Thời gian (15%), Địa phương (20%), Nguồn sơ cấp (25%), Trích xuất (15%) và trừ điểm từ assumption log.',
+    io: 'Output: Grade A (>=85%), B (>=70%), C (>=50%), D (<50%)\nDisplay: Radar Chart trên báo cáo',
+    codeRef: 'ecostream/engine/reliability.py:12',
+    tags: ['5D Scoring', 'GHG Protocol QA', 'Audit Grade']
+  },
+  ag_synth: {
+    icon: '📑',
+    badge: 'Synthesizer Agent',
+    title: 'ReportSynthesizerAgent & 6 Deliverables',
+    desc: 'Tổng hợp toàn bộ bảng tính và nhật ký kiểm toán, tạo ra 6 tài liệu quy chuẩn trong deliverables/ (.md, .html, .docx Mẫu 02, .pdf, .xlsx, .json).',
+    io: 'Output: 6 files trong deliverables/\nFormat: DOCX, HTML, PDF, XLSX, MD, JSON',
+    codeRef: 'ecostream/agents/synthesizer.py:9',
+    tags: ['Vietnamese Executive Narrative', 'Multi-format Export', 'Dual Disclosures']
+  },
+  sec_purge: {
+    icon: '🧹',
+    badge: 'Bảo Mật Local',
+    title: 'Purge Mapping & Garbage Collection',
+    desc: 'Ngay khi xuất xong báo cáo, toàn bộ bảng ánh xạ định danh trong RAM bị hủy bỏ hoàn toàn bằng mapping.clear() và gc.collect(), xóa sạch dấu vết.',
+    io: 'Action: mapping.clear() -> del mapping -> gc.collect()\nResult: Không còn dữ liệu nhạy cảm trong RAM',
+    codeRef: 'ecostream/orchestrator/pipeline.py:366',
+    tags: ['Memory Zeroing', 'Zero Cloud Leak', 'Privacy First']
+  },
+
+  // Tab 3: Storage Files
+  file_state: {
+    icon: '📄',
+    badge: 'File Trạng Thái',
+    title: 'runs/<run_id>/state.json',
+    desc: 'Quản lý máy trạng thái vòng đời của phiên chạy gồm 5 phase: INITIALIZED -> INGESTED -> INDEXED -> SUBAGENTS_EXTRACTING -> CALCULATING -> SYNTHESIZING -> COMPLETED kèm thời gian thực thi.',
+    io: 'Fields: run_id, phase, progress_pct, start_time, end_time, active_agent, agent_results',
+    codeRef: 'ecostream/models/state.py:101',
+    tags: ['State Machine', 'Polling State', 'Blackboard Core']
+  },
+  file_index: {
+    icon: '📄',
+    badge: 'File Định Tuyến',
+    title: 'runs/<run_id>/index.json',
+    desc: 'Lưu trữ danh sách các tác vụ phân luồng cho từng Subagent sau khi SchemaDiscoveryAgent quét xong các sheet đầu vào.',
+    io: 'Fields: run_id, company_name, facility_name, discovered_sources, tasks[]',
+    codeRef: 'ecostream/models/state.py:31',
+    tags: ['Routing Tasks', 'Domain Mapping', 'Index Catalog']
+  }
+};
+
+// State
+let activeNodeKey = 'doc_evn';
+
+function selectRunMonitor() {
+  window.open('/monitor', '_blank');
+}
+
+function showNodeDetail(key) {
+  const data = NODE_DB[key];
+  if (!data) return;
+
+  activeNodeKey = key;
+
+  // Highlight active node in DOM
+  document.querySelectorAll('.flow-node').forEach(el => el.classList.remove('active'));
+  const clicked = event?.currentTarget;
+  if (clicked) clicked.classList.add('active');
+
+  // Update Inspector Sidebar
+  document.getElementById('insIcon').innerText = data.icon;
+  document.getElementById('insBadge').innerText = data.badge;
+  document.getElementById('insTitle').innerText = data.title;
+  document.getElementById('insDesc').innerText = data.desc;
+  document.getElementById('insIO').innerText = data.io;
+  document.getElementById('insCodeRef').innerText = data.codeRef;
+
+  const tagList = document.getElementById('insTags');
+  tagList.innerHTML = data.tags.map(t => `<span class="tag-chip">${t}</span>`).join('');
+}
+
+function switchWorkflowTab(tabKey, tabBtn) {
+  document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+  tabBtn.classList.add('active');
+
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden-pane'));
+  const target = document.getElementById(`tab-${tabKey}`);
+  if (target) target.classList.remove('hidden-pane');
+
+  // Auto trigger default node for that tab
+  if (tabKey === 'survey') showNodeDetail('doc_evn');
+  else if (tabKey === 'blackboard') showNodeDetail('sec_aes');
+  else if (tabKey === 'storage') showNodeDetail('file_state');
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  if (current === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+}
+
+// Initial display on load
+document.addEventListener('DOMContentLoaded', () => {
+  showNodeDetail('doc_evn');
+});
+</script>

@@ -13,7 +13,7 @@ class TestPipelineIntegration(unittest.TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, 200)
         self.assertIn("EcoStream", resp.text)
-        self.assertTrue("AI ORCHESTRATOR" in resp.text or "AI DATA ENGINE" in resp.text)
+        self.assertIn("Kiểm kê Khí nhà kính", resp.text)
 
     def test_demo_api(self):
         resp = self.client.get("/api/demo")

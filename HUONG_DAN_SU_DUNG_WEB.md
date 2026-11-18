@@ -73,7 +73,7 @@ Từ thư mục dự án chạy `python scripts/generate_survey_demo.py` để t
 
 ## 2. Luồng khảo sát → kiểm kê → một báo cáo Word (Scope 1/2)
 
-1. Chạy `python -m ecostream.app`, mở `http://127.0.0.1:8000/`. Chọn tối đa 20 chứng từ `.xlsx`, `.csv`, `.pdf`, `.docx` (mỗi tệp không quá 10 MB), nhập doanh nghiệp, cơ sở và năm rồi tạo khảo sát.
+1. Chạy `python -m ecostream.app`, mở `http://127.0.0.1:8000/`. Chọn tối đa 100 chứng từ `.xlsx`, `.csv`, `.pdf`, `.docx` (mỗi tệp không quá 10 MB), nhập doanh nghiệp, cơ sở và năm rồi tạo khảo sát.
 2. Xem danh sách tệp **đã dùng/chưa dùng**, bảng dòng có vị trí nguồn, cảnh báo và bản xem để in. Tải `Bang_khao_sat_da_dien.xlsx` để mở trong Excel. Các tháng chưa có chứng từ vẫn để trống; không nội suy. Có thể sửa file và nộp bản `.xlsx` đã sửa khi tính, nhưng không bắt buộc.
 3. Bấm tính từ biểu khảo sát. Tải `GHGs_inventory_da_tinh.xlsx` và `Bao_cao_kiem_ke_KNK.docx` trong cùng phiên. Sheet **EcoStream đối soát** ghi tổng theo hệ số EcoStream; các sheet gốc của mẫu kiểm kê sử dụng phương pháp nhiệt trị và hệ số từng khí khác nên không được coi là đã khớp số, phải rà soát trên phần mềm bảng tính có tính lại công thức.
 4. Bản Word là **dự thảo đối soát**, chỉ gồm Scope 1/2 có dữ liệu. Nếu thiếu PTCS, PT, phương pháp giám sát và bằng chứng, không tính giảm nhẹ/hạn ngạch. Không dùng hồ sơ này như hồ sơ kiểm kê đã thẩm tra.

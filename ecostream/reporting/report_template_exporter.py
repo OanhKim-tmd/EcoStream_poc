@@ -16,7 +16,13 @@ from ecostream.models.results import AuditReport
 REPORT_NAME = "2.-ND06._GHGs-Report-NS2PC_Final_VN (1).docx"
 
 
-def export_report(report: AuditReport, target: str, evidence_files: list[dict], warnings: list[str]) -> None:
+def export_report(
+    report: AuditReport,
+    target: str,
+    evidence_files: list[dict],
+    warnings: list[str],
+    general_info: dict | None = None,
+) -> None:
     original = Document(TEMPLATES / REPORT_NAME)
     # Start a clean package: deleting only the example body leaves embedded photos,
     # metadata and other unreferenced sample parts inside the DOCX archive.
@@ -34,6 +40,27 @@ def export_report(report: AuditReport, target: str, evidence_files: list[dict], 
     subtitle = doc.add_paragraph(f"Cơ sở: {s.facility_location} — Năm {s.reporting_period}")
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph(f"Đơn vị: {s.company_name}")
+    gi = general_info or {}
+    if gi.get("facility_address"):
+        doc.add_paragraph(f"Địa chỉ cơ sở: {gi['facility_address']}")
+    if gi.get("industry_sector"):
+        doc.add_paragraph(f"Ngành nghề sản xuất/Loại hình kinh doanh: {gi['industry_sector']}")
+    if gi.get("legal_representative"):
+        role = f" ({gi['legal_rep_title']})" if gi.get("legal_rep_title") else ""
+        doc.add_paragraph(f"Người đại diện pháp luật: {gi['legal_representative']}{role}")
+    if gi.get("operating_status") or gi.get("start_year"):
+        status = gi.get("operating_status") or "Chưa nêu"
+        year = gi.get("start_year") or "Chưa nêu"
+        doc.add_paragraph(f"Tình trạng hoạt động: {status} / Năm bắt đầu hoạt động: {year}")
+    if gi.get("contact_name"):
+        contact_parts = [gi["contact_name"]]
+        if gi.get("contact_role"):
+            contact_parts.append(gi["contact_role"])
+        if gi.get("contact_phone"):
+            contact_parts.append(f"ĐT: {gi['contact_phone']}")
+        if gi.get("contact_email"):
+            contact_parts.append(f"Email: {gi['contact_email']}")
+        doc.add_paragraph(f"Người cung cấp thông tin: {' — '.join(contact_parts)}")
     doc.add_paragraph("BẢN DỰ THẢO ĐỂ ĐỐI SOÁT — không thay thế hồ sơ kiểm kê được thẩm tra/duyệt.")
     doc.add_heading("1. Phạm vi và nguồn dữ liệu", level=1)
     doc.add_paragraph("Báo cáo giới hạn trong các nguồn đốt nhiên liệu có hệ số phù hợp và điện mua từ lưới (Scope 1 và Scope 2) đã có trong biểu khảo sát. Không coi các nguồn để trống là bằng không.")

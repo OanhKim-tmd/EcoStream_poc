@@ -81,6 +81,9 @@ class MarkItDownLoader:
         elif ext == ".docx":
             full_md = self._convert_docx(file_path)
             sheet_mds = {}
+        elif ext in (".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff"):
+            full_md = self._convert_image(file_path)
+            sheet_mds = {}
         else:
             # PPTX, HTML, etc.
             converter = self._get_converter()
@@ -94,8 +97,9 @@ class MarkItDownLoader:
                 full_md = f"MarkItDown not installed for {filename}."
             sheet_mds = {}
 
-        # Store in Cache
-        self.cache.store(sha256, full_md)
+        # Store in Cache (avoid caching failed/empty image OCR outputs)
+        if full_md and not full_md.startswith("Could not extract text from"):
+            self.cache.store(sha256, full_md)
 
         return ConvertedDocument(
             filename=filename,
@@ -105,6 +109,85 @@ class MarkItDownLoader:
             sheet_markdowns=sheet_mds,
             is_cache_hit=False,
         )
+
+    _easyocr_reader = None
+
+    @classmethod
+    def _get_easyocr_reader(cls):
+        if cls._easyocr_reader is None:
+            try:
+                import easyocr
+                cls._easyocr_reader = easyocr.Reader(["vi", "en"], gpu=False, verbose=False)
+            except Exception:
+                cls._easyocr_reader = False
+        return cls._easyocr_reader if cls._easyocr_reader is not False else None
+
+    @classmethod
+    def _ocr_image_to_lines(cls, image_input) -> str:
+        """Run EasyOCR (or pytesseract fallback) and cluster boxes into horizontal reading rows."""
+        reader = cls._get_easyocr_reader()
+        if reader is not None:
+            try:
+                import numpy as np
+                from PIL import Image
+
+                if isinstance(image_input, str):
+                    img_arr = np.array(Image.open(image_input).convert("RGB"))
+                else:
+                    img_arr = np.array(image_input.convert("RGB"))
+                detections = reader.readtext(img_arr, detail=1, paragraph=False)
+                if detections:
+                    boxes = []
+                    for pts, txt, _conf in detections:
+                        t = (txt or "").strip()
+                        if not t:
+                            continue
+                        ys = [p[1] for p in pts]
+                        xs = [p[0] for p in pts]
+                        cy = sum(ys) / 4.0
+                        h = max(ys) - min(ys)
+                        boxes.append((cy, min(xs), h, t))
+                    boxes.sort(key=lambda item: (item[0], item[1]))
+                    avg_h = sum(b[2] for b in boxes) / max(1, len(boxes))
+                    y_tol = max(10.0, avg_h * 0.55)
+
+                    rows: list[list[tuple[float, float, float, str]]] = []
+                    for item in boxes:
+                        if not rows or abs(item[0] - rows[-1][0][0]) > y_tol:
+                            rows.append([item])
+                        else:
+                            rows[-1].append(item)
+                    lines = ["  ".join(x[3] for x in sorted(row, key=lambda b: b[1])) for row in rows]
+                    return "\n".join(lines).strip()
+            except Exception:
+                pass
+
+        try:
+            import pytesseract
+            from PIL import Image
+            img = Image.open(image_input) if isinstance(image_input, str) else image_input
+            text = pytesseract.image_to_string(img, lang="vie+eng").strip()
+            if text:
+                return text
+        except Exception:
+            pass
+        return ""
+
+    def _convert_image(self, file_path: str) -> str:
+        """Extract text rows from an image (.png, .jpg, .jpeg) via local OCR."""
+        ocr_text = self._ocr_image_to_lines(file_path)
+        if ocr_text:
+            return ocr_text
+        converter = self._get_converter()
+        if converter:
+            try:
+                res = converter.convert(file_path)
+                text = (res.text_content or "").strip()
+                if text:
+                    return text
+            except Exception:
+                pass
+        return f"Could not extract text from {os.path.basename(file_path)}"
 
     def _convert_docx(self, file_path: str) -> str:
         """Convert DOCX to markdown using MarkItDown or python-docx fallback."""
@@ -164,20 +247,15 @@ class MarkItDownLoader:
         except Exception:
             pass
 
-        # Scanned PDF fallback: rasterize then OCR (vie+eng)
+        # Scanned PDF fallback: rasterize then OCR (EasyOCR / pytesseract)
         try:
-            import pytesseract
             from pdf2image import convert_from_path
-            from PIL import Image
             images = convert_from_path(file_path, dpi=200)
             pages = []
             for idx, img in enumerate(images, 1):
-                try:
-                    page_text = pytesseract.image_to_string(img, lang="vie+eng").strip()
-                except Exception:
-                    page_text = ""
+                page_text = self._ocr_image_to_lines(img)
                 if page_text:
-                    pages.append(f"<!-- page: {idx} -->\n{page_text}")
+                    pages.append(f"## Page {idx}\n{page_text}")
             if pages:
                 return "\n\n".join(pages)
         except Exception:
