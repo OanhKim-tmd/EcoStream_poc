@@ -612,26 +612,25 @@ def save_survey_workbook_data(run_id: str, payload: dict, base_runs_dir: str | N
                     parsed_months.append(parsed)
                 has_any = any(v is not None for v in parsed_months)
                 custom_name = _safe_str(entry.get("name"))
-                if kind:
-                    if row_idx == 7 and custom_name:
-                        # Row 7 supports anthracite or a custom coal name
-                        matched_coal = classify_fuel(custom_name)
-                        if matched_coal == "anthracite":
+                if row_idx in (7, 17, 23, 26) and custom_name:
+                    matched_kind = classify_fuel(custom_name)
+                    if matched_kind:
+                        if has_any:
+                            normalize_quantity(matched_kind, 1.0, unit, f"1.1!E{row_idx}")
+                        if matched_kind == "anthracite":
                             ws_1_1[f"C{row_idx}"] = "Than antraxit (theo chứng từ)"
-                            if has_any:
-                                normalize_quantity(kind, 1.0, unit, f"1.1!E{row_idx}")
                         else:
                             ws_1_1[f"C{row_idx}"] = _safe_excel_text(custom_name)
-                            if has_any:
-                                save_warnings.append(f"1.1!C7 ({custom_name}): chưa có hệ số phát thải tự động; đã lưu vào Excel")
                     else:
-                        if has_any:
-                            normalize_quantity(kind, 1.0, unit, f"1.1!E{row_idx}")
-                            if kind == "anthracite":
-                                ws_1_1[f"C{row_idx}"] = "Than antraxit (theo chứng từ)"
-                else:
-                    if row_idx in (7, 17, 23, 26) and custom_name:
                         ws_1_1[f"C{row_idx}"] = _safe_excel_text(custom_name)
+                        if has_any:
+                            save_warnings.append(f"1.1!C{row_idx} ({custom_name}): chưa có hệ số phát thải tự động; đã lưu vào Excel")
+                elif kind:
+                    if has_any:
+                        normalize_quantity(kind, 1.0, unit, f"1.1!E{row_idx}")
+                        if kind == "anthracite":
+                            ws_1_1[f"C{row_idx}"] = "Than antraxit (theo chứng từ)"
+                else:
                     if has_any:
                         lbl = custom_name or _safe_str(ws_1_1[f"C{row_idx}"].value)
                         save_warnings.append(f"1.1!C{row_idx} ({lbl}): chưa có hệ số phát thải tự động; đã lưu vào Excel")

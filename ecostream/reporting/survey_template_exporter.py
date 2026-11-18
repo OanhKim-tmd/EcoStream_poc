@@ -4,10 +4,6 @@ from __future__ import annotations
 from collections import defaultdict
 from copy import copy
 import re
-from openpyxl import load_workbook
-from collections import defaultdict
-from copy import copy
-import re
 
 from openpyxl import load_workbook
 from openpyxl.cell.cell import MergedCell
@@ -218,7 +214,6 @@ def export_survey(
 ) -> list[str]:
     book = load_workbook(TEMPLATES / SURVEY_NAME)
     warnings = list(data.warnings)
-    apply_general_info(book, facility, company, general_info)
     accumulated = defaultdict(float)
     mobile_rows = {}
     stationary_kinds_by_row = {}
@@ -292,13 +287,8 @@ def export_survey(
                         ws[coord] = val
                 except Exception:
                     continue
-        # Ensure facility and company arguments remain reflected on Thông tin chung
-        if "Thông tin chung" in data.extra_cells:
-            if "B8" not in data.extra_cells["Thông tin chung"]:
-                info["B8"] = f"1. Tên cơ sở: {facility}"
-            else:
-                info["B8"] = f"1. Tên cơ sở: {facility}"
-            info["B14"] = f"- Ngành nghề sản xuất/Loại hình kinh doanh: Sản xuất công nghiệp, dệt may & năng lượng — Đơn vị cung cấp: {company}"
+    # Apply user-entered general info (takes precedence over fallback extra_cells while preserving unfilled extra fields)
+    apply_general_info(book, facility, company, general_info)
     # Preserve the original template's formulas and presentation.
     for month in range(1, 13):
         row = month + 2

@@ -442,6 +442,34 @@ class SurveyWorkflowTests(unittest.TestCase):
             wb = load_workbook(Path(self.tmp.name) / run_id / "deliverables" / SURVEY_FILE)
             self.assertAlmostEqual(wb["1.1"]["F11"].value, 46.38, places=2)
 
+    def test_extra_cells_thong_tin_chung_does_not_crash_prepare(self):
+        from unittest.mock import patch
+        full_xlsx = ROOT / "data/samples/du_lieu_gia_lap_full_2026.xlsx"
+        pdf_06 = ROOT / "data/samples/pdf_invoices_2026/06_Ho_so_co_so_va_giam_nhe_KNK_2026.pdf"
+        if not full_xlsx.exists() or not pdf_06.exists():
+            self.skipTest("Full mock dataset not present")
+        client = TestClient(app)
+        with patch.object(server, "RUNS_DIR", self.tmp.name):
+            with full_xlsx.open("rb") as f1, pdf_06.open("rb") as f2:
+                resp = client.post(
+                    "/api/survey/prepare",
+                    data={
+                        "company": "Công ty Test Merge",
+                        "location": "Nhà máy Merge",
+                        "period": "2026",
+                        "industry_sector": "Dệt may thử nghiệm",
+                    },
+                    files=[
+                        ("files", ("du_lieu_gia_lap_full_2026.xlsx", f1, "application/octet-stream")),
+                        ("files", ("06_Ho_so_co_so_va_giam_nhe_KNK_2026.pdf", f2, "application/pdf")),
+                    ],
+                )
+            self.assertEqual(resp.status_code, 200, resp.text)
+            run_id = resp.json()["run_id"]
+            wb = load_workbook(Path(self.tmp.name) / run_id / "deliverables" / SURVEY_FILE)
+            self.assertEqual(wb["Thông tin chung"]["B8"].value, "1. Tên cơ sở: Nhà máy Merge")
+            self.assertIn("Dệt may thử nghiệm", wb["Thông tin chung"]["B14"].value)
+
 
 if __name__ == "__main__":
     unittest.main()

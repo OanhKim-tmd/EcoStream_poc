@@ -237,7 +237,6 @@ def classify_fuel(text: str) -> str | None:
         return "other_petroleum"
     if "diesel" in t or "dầu do" in t or "điêzen" in t or "diezen" in t:
         return "diesel"
-        return "diesel"
     if "mazut" in t or "dầu fo" in t:
         return "fo"
     if "xăng" in t or "xãng" in t or "gasoline" in t or "ron 95" in t or "ron 92" in t:
