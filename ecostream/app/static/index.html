@@ -851,7 +851,10 @@
                 name.className = 'font-bold break-all';
                 name.textContent = file.filename;
                 const status = document.createElement('span');
-                status.textContent = `${file.records} dòng · ${file.status}`;
+                const details = [];
+                if (file.records) details.push(`${file.records} dòng Scope 1/2 · ${file.status}`);
+                if (file.scope3_records) details.push(`${file.scope3_records} dòng Scope 3 đã đọc · chưa tính trong luồng này`);
+                status.textContent = details.join(' · ') || `${file.records} dòng · ${file.status}`;
                 li.append(name, status);
                 list.append(li);
             });

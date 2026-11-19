@@ -230,3 +230,6 @@ data/samples/test_input.xlsx
 
 # Trash
 .trash/
+
+# macOS Finder metadata
+.DS_Store

@@ -12,6 +12,8 @@ from ecostream.engine.advisor import CarbonAdvisor
 from ecostream.engine.calculator import CarbonCalculator
 from ecostream.engine.reliability import ReliabilityEngine
 from ecostream.factors.database import get_factor_database
+from ecostream.extraction.extractor import ExtractionEngine
+from ecostream.ingestion.loaders import DocumentIngestionLoader
 from ecostream.ingestion.survey_workbook import (
     FUEL_NAMES, SurveyData, SurveyItem, SurveyValidationError, extract_documents, read_survey,
 )
@@ -56,12 +58,30 @@ def prepare_survey(files: list[str], company: str, facility: str, year: int, bas
     workspace.save_state(state)
     data = extract_documents(files, year)
     manifest = []
+    csv_extractor = ExtractionEngine()
     for path in files:
         name = Path(path).name
         count = sum(1 for item in data.items if item.source_document == name)
         aux_used = any(w.startswith(f"{name}: đã trích xuất đầy đủ") for w in data.warnings)
+        scope3_count = 0
+        if Path(path).suffix.lower() == ".csv":
+            document = DocumentIngestionLoader.load_file(path)
+            scope3_count = sum(
+                1 for record in csv_extractor.extract_document(document)
+                if record.scope == EmissionScope.SCOPE_3
+            )
         status = "đã dùng để điền khảo sát" if (count or aux_used) else "chưa dùng — cần rà soát"
-        manifest.append({"filename": name, "records": count, "status": status})
+        manifest.append({
+            "filename": name,
+            "records": count,
+            "scope3_records": scope3_count,
+            "status": status,
+        })
+        if scope3_count:
+            data.warnings = [
+                warning for warning in data.warnings
+                if warning != f"{name}: chưa trích xuất được số liệu Scope 1/2 có tháng, số lượng và đơn vị; cần điền biểu khảo sát thủ công"
+            ]
         workspace.store_raw_input(path)
     if not data.items:
         data.warnings.append("Không có số liệu Scope 1/2 hợp lệ; tải biểu khảo sát về để điền thủ công trước khi tính")

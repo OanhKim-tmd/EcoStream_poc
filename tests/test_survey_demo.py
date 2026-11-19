@@ -17,6 +17,28 @@ from scripts.generate_survey_demo import generate
 
 
 class SurveyDemoTests(unittest.TestCase):
+    def test_scope3_csvs_are_reported_as_read_but_not_added_to_the_survey(self):
+        samples = Path(__file__).resolve().parents[1] / "data" / "samples"
+        with tempfile.TemporaryDirectory() as root:
+            paths = [
+                samples / "sample_freight_log.csv",
+                samples / "sample_supplier_spend.csv",
+            ]
+            prepared = prepare_survey(
+                [str(path) for path in paths],
+                "Doanh nghiệp DEMO",
+                "Cơ sở DEMO",
+                2026,
+                str(Path(root) / "runs"),
+            )
+
+        self.assertEqual(prepared["items"], [])
+        self.assertEqual(
+            [file["scope3_records"] for file in prepared["files"]],
+            [5, 5],
+        )
+        self.assertTrue(all(file["records"] == 0 for file in prepared["files"]))
+
     def test_kwh_in_mixed_ledger_header_does_not_reclassify_fuel(self):
         with tempfile.TemporaryDirectory() as root:
             source = Path(root) / "mixed.csv"
