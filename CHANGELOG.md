@@ -1,10 +1,57 @@
 # Changelog — EcoStream
 
-All notable changes to the EcoStream AI Carbon Accounting & Reliability Engine are documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Lịch sử thay đổi tính năng của EcoStream. Các mục cũ phản ánh trạng thái tại thời điểm ghi nhận, không phải cam kết phạm vi hiện hành. Xem [README.md](README.md) để biết luồng đang được ưu tiên.
 
 ---
+
+## [0.3.0] - 2026-11-25 — Chuẩn bị dự thi Cảm hứng Sáng tạo USTH
+
+### Sửa phương pháp tính
+- Nhiên liệu không có hệ số phát thải riêng (sinh khối, biogas, nhiên liệu sinh học lỏng, chất thải, than bùn, LNG, dầu hỏa, sản phẩm dầu mỏ khác) **không còn mượn hệ số** than/diesel/LPG/khí tự nhiên. Các dòng này được giữ trong biểu khảo sát, không cộng vào tổng, và được liệt kê "CHƯA TÍNH" trong cảnh báo và báo cáo.
+- Biểu khảo sát không còn tự điền mã vật tư, nhiệt trị, thiết bị và nhà cung cấp bằng giá trị mẫu (ví dụ "Petrolimex", "TKV").
+- Ghi rõ nguồn hệ số điện lưới 0,7221 tCO₂/MWh và yêu cầu đối chiếu công bố mới nhất.
+
+### Gỡ bản quyền / gói Pro
+- Xóa khóa PRO, watermark "FREE PREVIEW", mã dùng thử công khai và secret ký HMAC nằm trong mã nguồn.
+- Xóa `ecostream/privacy/licensing.py`, `scripts/generate_license_key.py`, `scripts/payment_webhook_server.py`, endpoint `/api/auth/login`, `/api/license/verify` và biến `ECOSTREAM_PRO_KEYS`.
+
+### AI và đọc chứng từ
+- Gỡ màn hình nhập khóa API Gemini/OpenAI và endpoint `/api/settings/ai`. Luồng khảo sát không gọi dịch vụ AI bên ngoài.
+- **Gỡ toàn bộ OCR** (EasyOCR, pytesseract, pdf2image, Pillow; Tesseract/Poppler trong Dockerfile). Chỉ đọc chứng từ có lớp chữ: Excel, Word, CSV, PDF có chữ. Ảnh bị từ chối khi tải lên; PDF scan sinh cảnh báo "PDF không có lớp chữ" để nhập thủ công. Xóa ảnh mẫu `data/hóa đơn xăng dầu.png`.
+
+### Một luồng duy nhất
+- Giao diện chỉ còn luồng khảo sát với 3 tệp kết quả (biểu khảo sát, workbook kiểm kê, báo cáo Word). Bỏ các nút HTML/PDF của pipeline cũ.
+- Ẩn các endpoint pipeline cũ (`/api/demo`, `/api/upload`, `/api/report/*`, `/api/export/*`) khỏi `/docs`. Mã vẫn giữ cho CLI và test.
+- Xóa `ecostream/app/static/workflow.html` và `ecostream_workflow_visualizer.html` (không còn route nào phục vụ).
+
+### Giao diện mới (bố cục dashboard, tone xanh lá)
+- Khung ứng dụng bo góc trên nền xanh đậm; thanh điều hướng bên trái chứa 4 bước, mục đang chọn nối liền vào vùng nội dung.
+- Thanh tiêu đề hiển thị bước hiện tại và tên cơ sở; thẻ chào có minh họa, lời hướng dẫn đổi theo từng bước.
+- Cột phải (màn hình rộng): timeline tiến trình 4 bước và các lưu ý quan trọng (PDF có chữ, nhiên liệu CHƯA TÍNH, bản dự thảo).
+- Bước kết quả có biểu đồ cột phát thải theo tháng (Scope 1/2 chồng) và biểu đồ vòng tỷ trọng Scope 1/2, vẽ bằng SVG/CSS nên vẫn chạy offline.
+
+### Chạy không cần Internet
+- Thay Tailwind Play CDN và Google Fonts bằng stylesheet build sẵn cùng phông Inter/JetBrains Mono lưu trong `ecostream/app/static/vendor/`.
+
+### Ứng dụng desktop và link tải
+- Workflow `build-desktop.yml` build bộ cài Windows (`EcoStream-Windows-Setup.exe`) và macOS (`EcoStream-Installer.dmg`), tự kiểm tra bằng `--headless-check`, và đăng lên GitHub Releases khi push tag `v*`.
+- Thêm chế độ `--headless-check` vào `scripts/desktop_launcher.py`. Trên Windows/macOS, chế độ này báo lỗi nếu bản build thiếu `pywebview`.
+- App desktop mở trong **cửa sổ ứng dụng riêng** bằng `pywebview` (thêm `requirements-desktop.txt`), không còn mở trình duyệt. Chỉ khi máy thiếu WebView2 mới quay về mở bằng trình duyệt.
+- Sửa `installer_windows.iss` (ký tự lỗi ở dòng đầu, tên tệp và phiên bản).
+- Gỡ `src-tauri/` và `build-tauri.yml`: bản Tauri không có máy chủ Python nên không chạy được.
+
+### Khác
+- Bỏ đường dẫn máy cá nhân hard-code trong `markitdown_normalizer.py`.
+- Khôi phục `data/samples/sample_evn_bill.pdf` mà test cần.
+
+### Nhật ký xử lý
+- Bỏ link `/monitor` khỏi giao diện người dùng cuối; README và hướng dẫn ghi rõ đây là công cụ kỹ thuật cho pipeline cũ.
+- Bảo vệ trang `/monitor`, script `/monitor.js` và API liệt kê phiên `/api/orchestrator/runs` bằng `ECOSTREAM_API_KEY` nếu cấu hình.
+
+## Ghi chú hiện trạng — 2026-11-25
+
+- Tài liệu hướng dẫn đã được đồng bộ theo luồng khảo sát hiện hành, đầu ra và giới hạn thực tế; các tuyên bố cũ về tuân thủ/đầu ra không áp dụng mặc nhiên.
+- Bỏ metadata hệ điều hành và các bản cache ingestion được commit nhầm; cache phát sinh được lưu trong `.cache/ecostream/ingestion/`.
 
 ## [0.2.0] - 2026-09-29
 

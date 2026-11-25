@@ -19,7 +19,7 @@ class TestCalculator(unittest.TestCase):
         self.calculator = CarbonCalculator(self.db)
 
     def test_scope2_evn_electricity_calculation(self):
-        # 10,000 kWh * 0.7221 kg CO2/kWh = 7,221 kg CO2e = 7.221 tonnes
+        # 10,000 kWh * 0.6187 kg CO2/kWh (năm 2024, CV 1232/BNNMT-BĐKH) = 6,187 kg CO2e = 6.187 tonnes
         rec = ActivityRecord(
             id="TEST-EVN",
             description="EVN Grid Power",
@@ -42,7 +42,7 @@ class TestCalculator(unittest.TestCase):
             ),
         )
         calc = self.calculator.calculate_single(rec)
-        self.assertAlmostEqual(calc.co2e_tonnes, 7.221, places=3)
+        self.assertAlmostEqual(calc.co2e_tonnes, 6.187, places=3)
         self.assertEqual(calc.scope, EmissionScope.SCOPE_2)
         self.assertLessEqual(calc.uncertainty_pct, 5.0)
 

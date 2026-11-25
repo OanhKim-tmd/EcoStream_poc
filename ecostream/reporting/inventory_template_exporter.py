@@ -7,7 +7,6 @@ verified Python calculation results separately rather than asserting equality.
 from __future__ import annotations
 
 from collections import defaultdict
-from pathlib import Path
 
 from openpyxl import load_workbook
 from openpyxl.cell.cell import MergedCell

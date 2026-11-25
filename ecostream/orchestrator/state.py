@@ -3,10 +3,9 @@
 import os
 import sys
 import json
-import shutil
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
-from ecostream.models.state import RunState, RunIndex, PipelinePhase, QueryLogEntry, AssumptionLogEntry
+from ecostream.models.state import RunState, RunIndex, PipelinePhase
 
 
 class BlackboardWorkspace:

@@ -1,6 +1,5 @@
-"""Orchestrator package for multi-agent pipeline and blackboard state."""
+"""Orchestrator: blackboard workspace (lưu trạng thái và artifact theo từng run)."""
 
 from ecostream.orchestrator.state import BlackboardWorkspace
-from ecostream.orchestrator.pipeline import WorkflowOrchestrator
 
-__all__ = ["BlackboardWorkspace", "WorkflowOrchestrator"]
+__all__ = ["BlackboardWorkspace"]

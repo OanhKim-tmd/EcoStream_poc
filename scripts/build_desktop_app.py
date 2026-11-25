@@ -1,7 +1,9 @@
 """One-Click Desktop Packaging Script for EcoStream (.app / .dmg on macOS, .exe on Windows).
 
-Usage:
-    .venv/bin/python scripts/build_desktop_app.py
+Build in a clean virtualenv so only EcoStream's dependencies are bundled:
+    python -m venv .venv-build
+    .venv-build/bin/pip install -r requirements-desktop.txt
+    .venv-build/bin/python scripts/build_desktop_app.py
 """
 from __future__ import annotations
 
@@ -51,9 +53,21 @@ def build() -> None:
         "--hidden-import=multipart",
         "--hidden-import=python_multipart",
         "--hidden-import=cryptography",
+        "--hidden-import=webview",
+        "--collect-submodules=webview",
+        "--collect-data=webview",
         "--collect-data=magika",
         "--copy-metadata=magika",
     ]
+
+    # EcoStream never uses these. They get pulled in only when building inside a
+    # shared environment (e.g. conda base) and would bloat the app to several GB.
+    excluded = [
+        "torch", "torchvision", "tensorflow", "tensorboard", "keras", "jax", "jaxlib",
+        "easyocr", "cv2", "pytesseract", "pdf2image", "transformers", "sklearn",
+        "scipy", "matplotlib", "IPython", "notebook", "pandas.tests", "nvidia",
+    ]
+    exclude_args = [f"--exclude-module={m}" for m in excluded]
 
     icon_path = ROOT / "scripts" / "ecostream.ico"
     icon_args = [f"--icon={icon_path}"] if icon_path.exists() else []
@@ -69,6 +83,7 @@ def build() -> None:
         *icon_args,
         *data_args,
         *hidden_imports,
+        *exclude_args,
         str(ROOT / "scripts" / "desktop_launcher.py"),
     ]
 

@@ -9,4 +9,9 @@ services:
         value: 8000
       - key: PYTHON_VERSION
         value: 3.11.0
+      # Bắt buộc: đặt giá trị trong Render dashboard (Environment), không ghi vào file này
+      - key: ECOSTREAM_API_KEY
+        sync: false
+      - key: ECOSTREAM_ENCRYPTION_KEY
+        sync: false
 

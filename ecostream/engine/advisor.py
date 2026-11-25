@@ -70,7 +70,7 @@ class CarbonAdvisor:
                         category="DECARBONIZATION_ROADMAP",
                         current_gap=(
                             f"Điện lưới quốc gia chiếm tới {elec_pct}% tổng phát thải doanh nghiệp ({elec_tonnes:.2f} tCO2e). "
-                            "Hệ số phát thải lưới điện Việt Nam (0.7221 kg CO2/kWh) là nguồn phát thải chủ chốt."
+                            "Hệ số phát thải lưới điện Việt Nam (0.6187 kg CO2/kWh, năm 2024) là nguồn phát thải chủ chốt."
                         ),
                         action_required=(
                             "1. Kiểm toán năng lượng hệ thống máy nén khí, động cơ công nghiệp và chiếu sáng LED.\n"

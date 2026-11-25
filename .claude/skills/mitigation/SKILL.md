@@ -1,26 +1,19 @@
 ---
 name: mitigation
-description: Generate Decree 06/2022/NĐ-CP Mẫu 02 GHG Mitigation Plan & Results and Quota Compliance Report.
+description: Báo cáo kế hoạch và kết quả giảm nhẹ phát thải KNK (Mẫu số 02 Phụ lục III NĐ 06/2022). Hiện chỉ có công thức, chưa có luồng nhập liệu trên CLI.
 user-invocable: true
 disable-model-invocation: false
 ---
 
-# Báo Cáo Kế Hoạch & Kết Quả Giảm Nhẹ Phát Thải KNK (Mẫu số 02 Phụ lục III NĐ 06/2022/NĐ-CP)
+# Mẫu số 02: giảm nhẹ phát thải KNK
 
-Evaluate facility-level mitigation projects, calculate baseline emissions ($PT_{CS}$), actual emissions ($PT$), emission reductions ($GPT = PT_{CS} - PT$), and compare against allocated carbon quotas.
+Công thức tính nằm trong `ecostream/engine/mitigation_math.py`: phát thải cơ sở (PT_CS), phát thải thực tế (PT), mức giảm (GPT = PT_CS − PT) và so sánh với hạn ngạch.
 
-## Usage
-- `/mitigation --demo`
-- `/mitigation --input data/samples/input.xlsx`
-- `/mitigation --run-id <run_id>`
+**Trạng thái hiện tại:** luồng khảo sát chưa nhập và tính biện pháp giảm nhẹ. Sheet "Biện pháp giảm thiểu" chỉ được đọc và ghi nguyên văn. Skill này không chạy được trên CLI, vì pipeline multi-agent đã bị gỡ.
 
-## Procedure
-1. Execute the pipeline:
-   ```bash
-   python -m ecostream.cli $ARGUMENTS
-   ```
-2. Display the Mẫu 02 table with columns:
-   - STT, Tên biện pháp giảm nhẹ, Lĩnh vực
-   - $PT_{CS}$ (Phát thải cơ sở), $PT$ (Phát thải thực tế), $GPT$ (Mức giảm phát thải)
-   - Tỷ lệ giảm (%), Phương pháp đo đếm giám sát
-3. Display the Quota balance profile ($Quota_{alloc}$, Net compliance emissions, Quota balance surplus/deficit).
+## Khi làm tiếp
+1. Thêm nguồn dữ liệu biện pháp giảm nhẹ vào biểu khảo sát.
+2. Gọi `MitigationMathEngine.calculate_measure` từ `survey_pipeline.py`.
+3. Đưa kết quả vào workbook và báo cáo Word theo Mẫu số 02.
+
+Không báo cáo số giảm nhẹ hay trạng thái hạn ngạch khi chưa có dữ liệu và phương pháp được xác nhận.

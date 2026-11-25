@@ -118,8 +118,44 @@ def _open_native_app_window(url: str) -> bool:
         return False
 
 
+def _headless_check(host: str = "127.0.0.1") -> int:
+    """CI smoke test for the frozen app: start the server, fetch the UI and its offline CSS, exit."""
+    port = find_available_port(8000, host)
+    threading.Thread(
+        target=lambda: uvicorn.run(app, host=host, port=port, log_level="warning"),
+        daemon=True,
+    ).start()
+    if not _wait_until_ready(host, port, timeout_sec=60.0):
+        print("[headless-check] server did not start")
+        return 1
+    try:
+        for path, marker in (("/", "EcoStream"), ("/static/vendor/app.css", "font-face"), ("/api/survey/template", None)):
+            with urllib.request.urlopen(f"http://{host}:{port}{path}", timeout=30) as resp:
+                body = resp.read()
+                if resp.status != 200 or (marker and marker.encode() not in body):
+                    print(f"[headless-check] unexpected response for {path}")
+                    return 1
+    except Exception as exc:
+        print(f"[headless-check] request failed: {exc}")
+        return 1
+    try:
+        import webview  # noqa: F401
+        webview_ok = True
+    except Exception as exc:
+        webview_ok = False
+        print(f"[headless-check] pywebview not bundled: {exc}")
+    # Windows/macOS builds must open a native window, never a browser.
+    if sys.platform in ("win32", "darwin") and not webview_ok:
+        return 1
+    print(f"[headless-check] OK (native window: {'yes' if webview_ok else 'no'})")
+    return 0
+
+
 def main() -> None:
     host = "127.0.0.1"
+
+    if "--headless-check" in sys.argv:
+        sys.exit(_headless_check(host))
 
     # When frozen as GUI app (.app / .exe without console), redirect stdout/stderr to log file
     if getattr(sys, "frozen", False) and (sys.stdout is None or sys.stderr is None):
@@ -137,8 +173,13 @@ def main() -> None:
     # 1. If EcoStream is already running on port 8000, bring window to front
     if _is_ecostream_running(host, 8000):
         url = f"http://{host}:8000"
-        print(f"[EcoStream Desktop] Existing instance running at {url}, bringing window to front...")
-        _open_native_app_window(url)
+        print(f"[EcoStream Desktop] Existing instance running at {url}, opening another app window...")
+        try:
+            import webview
+            webview.create_window(title="EcoStream — Kiểm kê khí nhà kính", url=url, width=1320, height=880, min_size=(1024, 700))
+            webview.start(private_mode=False)
+        except Exception:
+            _open_native_app_window(url)
         return
 
     # 2. Start local server
@@ -164,19 +205,25 @@ def main() -> None:
         # Wait until port accepts connections
         _wait_until_ready(host, port, timeout_sec=12.0)
 
-        # Open pure native desktop window
-        import webview
-        window = webview.create_window(
-            title="EcoStream AI Carbon Accounting",
-            url=url,
-            width=1320,
-            height=880,
-            min_size=(1024, 700),
-            confirm_close=False,
-        )
-        webview.start()
-        # When window is closed, cleanly exit process
-        sys.exit(0)
+        # Open the native app window (WebView2 on Windows, WKWebView on macOS); no browser involved.
+        try:
+            webview.create_window(
+                title="EcoStream — Kiểm kê khí nhà kính",
+                url=url,
+                width=1320,
+                height=880,
+                min_size=(1024, 700),
+                confirm_close=False,
+            )
+            webview.start(private_mode=False)
+            # Window closed by the user: exit cleanly (server thread is a daemon).
+            sys.exit(0)
+        except Exception as exc:
+            # Last resort (e.g. WebView2 runtime missing): keep the app usable in a browser window.
+            print(f"[EcoStream Desktop] Native window unavailable ({exc}); falling back to browser.")
+            _open_native_app_window(url)
+            while server_thread.is_alive():
+                time.sleep(1)
     else:
         # Fallback to Dedicated App Window Mode (Edge/Chrome Standalone App Window)
         def _launch_when_ready() -> None:

@@ -1,285 +1,196 @@
-# 🌱 EcoStream — AI Multi-Agent Carbon Accounting, Mẫu 02 Mitigation & Reliability Engine
+# EcoStream
 
-> **Dịch vụ tư vấn và phân tích phát thải carbon được hỗ trợ bởi nền tảng Multi-Agent AI**  
-> *Dự án tham dự Cuộc thi Sáng tạo USTH 2026 (Inno-Inspiration USTH 2026)*  
-> Tác giả: **Vũ Thị Kim Oanh** (Data Science, USTH)
+**EcoStream** là ứng dụng web thử nghiệm hỗ trợ thu thập chứng từ, điền biểu khảo sát kiểm kê khí nhà kính cấp cơ sở, tính toán một phần Scope 1/2 và xuất bản nháp đối soát. Dự án được xây dựng dựa trên các biểu mẫu và tài liệu tham khảo về kiểm kê KNK tại Việt Nam trong `data/test_documents/`.
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg)](https://fastapi.tiangolo.com)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-Subagents%20%26%20Workflows-6b46c1.svg)](https://code.claude.com)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+> Đây là công cụ hỗ trợ xử lý dữ liệu, không thay thế chuyên gia kiểm kê, quy trình MRV, thẩm định độc lập hay tư vấn pháp lý. Kết quả phải được cơ sở kiểm tra với chứng từ gốc, hệ số và phương pháp áp dụng cho kỳ báo cáo trước khi sử dụng chính thức.
 
----
+## Phạm vi hoạt động hiện tại
 
-## Luồng khảo sát trước khi tính (bản thử nghiệm)
+Luồng khảo sát chính:
 
-Trên giao diện web, doanh nghiệp tải chứng từ gốc lên → EcoStream điền **bản sao biểu khảo sát** và liệt kê nguồn đã dùng → người dùng xem/in/tải biểu và có thể sửa rồi nộp lại → tính Scope 1/2 từ **biểu khảo sát** → điền bản sao workbook kiểm kê và tạo **một** Word dự thảo. Chạy `python -m ecostream.app` rồi mở `http://127.0.0.1:8000/`. Hướng dẫn thao tác và giới hạn: [HUONG_DAN_SU_DUNG_WEB.md](HUONG_DAN_SU_DUNG_WEB.md).
+1. Tải chứng từ lên giao diện web và khai báo doanh nghiệp, cơ sở, năm báo cáo.
+2. EcoStream nhận dạng một số dòng dữ liệu hoạt động từ định dạng được hỗ trợ, tạo bản sao biểu khảo sát và ghi lại tệp đã/chưa dùng cùng cảnh báo.
+3. Người dùng rà soát, bổ sung hoặc sửa biểu khảo sát trong giao diện/tệp Excel.
+4. Chạy tính toán từ biểu đã rà soát và tải xuống workbook kiểm kê cùng báo cáo Word dự thảo.
 
-Chỉ các dòng chứng từ có tháng, số lượng, đơn vị và dạng bảng được hỗ trợ mới tự điền; chứng từ PDF không nhận được số liệu cần điền thủ công. Không tự bù tháng thiếu, không suy đoán lượng giảm nhẹ hoặc hạn ngạch. Hệ số phát thải EcoStream là niên độ 2023; bảng tính mẫu dùng phương pháp riêng và **chưa đối soát về cùng một kết quả**. Không coi báo cáo dự thảo là hồ sơ kiểm kê được thẩm tra. Các tính năng nội suy/Scope 3/Mẫu 02 bên dưới mô tả pipeline cũ, không áp dụng cho luồng khảo sát mới.
+Phạm vi tính hiện thực hiện là **một phần các nguồn Scope 1 và Scope 2 được ánh xạ giữa biểu khảo sát và workbook kiểm kê**. Không coi các ô không có dữ liệu là số 0; ứng dụng không tự suy diễn lượng tiêu thụ, không nội suy tháng thiếu và không tự tính mức giảm nhẹ/hạn ngạch khi thiếu dữ liệu, phương pháp và bằng chứng cần thiết.
 
-## 📌 Bối Cảnh & Vấn Đề Giải Quyết
+Toàn bộ tính năng là **miễn phí và mở hoàn toàn**: không có tài khoản, gói Pro, mã bản quyền hay watermark. Mọi tệp kết quả đều tải được ngay sau khi tính.
 
-Từ **01/01/2026**, Liên minh Châu Âu (EU) chính thức áp dụng cơ chế đánh thuế carbon qua biên giới **CBAM** (*Carbon Border Adjustment Mechanism*). Tại Việt Nam, hơn 3.000 cơ sở phát thải trọng điểm bắt buộc phải thực hiện kiểm kê khí nhà kính (KNK) và lập kế hoạch giảm nhẹ phát thải định kỳ theo **Nghị định 06/2022/NĐ-CP**, **Nghị định 119/2025/NĐ-CP**, và các Quyết định **01/2022/QĐ-TTg**, **13/2024/QĐ-TTg**.
+### Nhiên liệu được tính vào tổng phát thải
 
-### Thách Thức Thực Tế Của Doanh Nghiệp (SME / Nhà máy)
-1. **Dữ liệu thực tế phân tán, dị cấu trúc**: Hóa đơn tiền điện EVN, hóa đơn dầu Petrolimex, bảng kê vận chuyển logistics (tấn-km), bảng chi phí mua hàng SAP/MISA, chứng chỉ I-REC và phiếu đo đếm lò hơi không theo một biểu mẫu cố định.
-2. **Khoảng trống Scope 3 & Dữ liệu gián tiếp**: Thiếu dữ liệu đo đếm vật lý, phải sử dụng ước tính theo chi phí (*Spend-based proxy*) dẫn đến độ bất định cao ($\pm 40\%$).
-3. **Tuân thủ quy định giảm nhẹ phát thải Mẫu 02**: Tính toán giảm phát thải ($GPT = PT_{CS} - PT$) và hạn ngạch phát thải ($Quota_{\text{alloc}} - PT$) đòi hỏi phương pháp luận chặt chẽ, dễ bị kiểm toán truy vấn.
-4. **Thiếu khả năng giám sát quy trình xử lý**: Doanh nghiệp không thể theo dõi dữ liệu trung gian khi chạy các pipeline xử lý AI phức tạp.
+Chỉ nhiên liệu có **hệ số phát thải riêng** trong EcoStream mới được cộng vào tổng: than (antraxit, bitum, sub-bitum, than trộn), dầu DO, dầu FO, xăng, khí tự nhiên, LPG và điện lưới.
 
----
+Các nhiên liệu sau vẫn được ghi vào biểu khảo sát nhưng **chưa được cộng vào tổng** và được liệt kê "CHƯA TÍNH" trong cảnh báo và báo cáo:
 
-## 💡 Giải Pháp Đột Phá Của EcoStream
+- Sinh khối (gỗ, than củi, bã mía, trấu, rơm rạ, viên nén, biogas, nhiên liệu sinh học lỏng). Theo IPCC 2006, CO₂ từ sinh khối được báo cáo riêng, còn CH₄/N₂O cần hệ số riêng.
+- Chất thải dùng làm nhiên liệu, than bùn, LNG, dầu hỏa và các sản phẩm dầu mỏ khác. EcoStream chưa có hệ số riêng cho các loại này.
 
-EcoStream là nền tảng **Multi-Agent AI Orchestrator** kết hợp **Toán học Tất định 100% (Deterministic Math)** và **Bảng thông tin Trạng thái (Blackboard Architecture)**:
+Phiên bản trước mượn hệ số than, diesel hoặc LPG cho các nhiên liệu này, khiến kết quả sai. Cách làm đó đã bị bỏ: chuyên gia cần bổ sung hệ số trước khi các nguồn này được tính.
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                             ECOSTREAM MULTI-AGENT ARCHITECTURE                                │
-│                                                                                                │
-│  [ Input Business Files ] (Excel, PDF Invoices, Word, CSV)                                     │
-│            │                                                                                   │
-│            ▼                                                                                   │
-│  [ Microsoft MarkItDown + SHA-256 Ingestion Cache ] ──> Modular Markdown Inputs                │
-│            │                                                                                   │
-│            ▼                                                                                   │
-│  [ ag-discovery Agent ] ──> Schema Discovery & Task Routing (index.json)                       │
-│            │                                                                                   │
-│    ┌───────┴───────────────────────────────┬───────────────────────────────┐                   │
-│    ▼                                       ▼                               ▼                   │
-│ [ ag-scope1-fuel ]                [ ag-scope2-power ]             [ ag-scope3-supply ]         │
-│ Direct Combustion                 EVN Grid + Seasonal             Logistics & Spend-Based      │
-│ & LPG Cylinders                   Interpolation                   Procurement Proxies          │
-│    │                                       │                               │                   │
-│    └───────────────────────┬───────────────┴───────────────────────────────┘                   │
-│                            ▼                                                                   │
-│                 [ ag-mitigation-quota ]                                                        │
-│                 Decree 06/2022 Mẫu 02 Math ($GPT = PT_{CS} - PT$)                              │
-│                 Facility Mitigation & Emission Quota Surpluses/Deficits                        │
-│                            │                                                                   │
-│                            ▼                                                                   │
-│                 [ Non-blocking Dual-Logging Engine ]                                           │
-│                 ├── query_log.json      (Human Verification Flags)                             │
-│                 └── assumption_log.json (Audit Assumptions & Confidence Deductions)            │
-│                            │                                                                   │
-│                            ▼                                                                   │
-│                 [ Deterministic Python Math & Gaussian Uncertainty Engine ]                    │
-│                 $E = Q \times EF$   |   $\sigma_{\text{total}} = \sqrt{\sum \sigma_i^2}$       │
-│                            │                                                                   │
-│                            ▼                                                                   │
-│                 [ ag-synthesizer Agent ]                                                       │
-│                 Official Vietnamese Regulatory GHG Disclosures & Hotspot Roadmaps              │
-│                            │                                                                   │
-│                            ▼                                                                   │
-│  [ Deliverables ] ──> .MD, .HTML, .DOCX (Mẫu 02), .PDF, summary.json                           │
-│  [ Live Monitor ] ──> Real-time Polling Dashboard at /monitor                                  │
-└────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
+Cột mã vật tư, nhiệt trị, thiết bị và nhà cung cấp trong sheet 1.1 chỉ được điền từ chứng từ hoặc do người dùng nhập; ứng dụng không tự điền giá trị mẫu.
 
----
+### Cách EcoStream đọc chứng từ
 
-## 🌟 Các Tính Năng Cốt Lõi
+EcoStream chỉ đọc chứng từ **có lớp chữ**: Excel, Word, CSV, và **PDF có chữ** (ví dụ hóa đơn điện tử, bản xuất từ phần mềm kế toán). Mọi xử lý chạy trên máy:
 
-### 1. Ingestion Toàn Năng (Universal Ingestion & SHA-256 Cache)
-- Sử dụng **Microsoft MarkItDown** chuyển đổi mọi bảng tính Excel nhiều sheet (`.xlsx`), hóa đơn PDF, văn bản Word (`.docx`), và file `.csv` sang định dạng Markdown chuẩn.
-- Tự động tách từng sheet thành các file Markdown độc lập (`input_NhienLieu_Scope1.md`, `input_DienLuoi_EVN_Scope2.md`, v.v.).
-- Cơ chế **SHA-256 Fingerprint Caching** bỏ qua việc đọc lại các file đã xử lý, tối ưu hoá thời gian và tài nguyên.
+- **Microsoft MarkItDown** và **pypdf** chuyển Excel, Word, PDF thành văn bản có cấu trúc.
+- **Bộ nhận dạng theo quy tắc** xác định loại nhiên liệu, kỳ hóa đơn, lượng, đơn vị và loại bỏ hóa đơn trùng.
 
-### 2. Hệ Thống Subagent Chuyên Ngành (Specialized Domain Subagents)
-Các subagent được cấu hình độc lập với prompt chuyên sâu và hoạt động theo quy trình Blackboard:
-- **`ag-discovery`**: Nhận diện cấu trúc tài liệu, phân loại nguồn phát thải và lập bảng định tuyến `index.json`.
-- **`ag-scope1-fuel`**: Trích xuất dữ liệu đốt nhiên liệu trực tiếp (dầu DO/FO, xăng, than đá, khí LPG). Tự động quy đổi đơn vị đóng gói (bình LPG $12\text{kg}, 45\text{kg} \to \text{tấn}$).
-- **`ag-scope2-power`**: Trích xuất hóa đơn điện lưới EVN 3 giá (Cao điểm, Bình thường, Thấp điểm). Tự động áp dụng **Nội suy Tuyến tính Theo mùa (Seasonal Linear Interpolation)** khi phát hiện thiếu tháng hóa đơn.
-- **`ag-scope3-supply`**: Xử lý logistics chuỗi cung ứng (tấn-km theo loại xe tải/container) và phân tích chi phí mua hàng bằng hệ số phát thải theo ngành EXIOBASE.
-- **`ag-mitigation-quota`**: Chuyên trách kiểm kê giảm nhẹ phát thải theo **Nghị định 06/2022/NĐ-CP Mẫu 02**, tính toán lượng giảm phát thải so với đường cơ sở và cân đối hạn ngạch phát thải.
-- **`ag-synthesizer`**: Tổng hợp toàn bộ kết quả, đối chiếu quy chuẩn Việt Nam và lập báo cáo phát thải chính thức bằng tiếng Việt.
+EcoStream **không dùng OCR**. Ảnh (`.png`, `.jpg`…) bị từ chối ngay khi tải lên. PDF dạng scan (không có lớp chữ) vẫn tải lên được, nhưng ứng dụng sẽ cảnh báo "PDF không có lớp chữ", và người dùng nhập số liệu đó thủ công ở bước rà soát. Hóa đơn điện tử tại Việt Nam là PDF có chữ, nên trường hợp phổ biến không bị ảnh hưởng.
 
-### 3. Cơ Chế Nhật Ký Kép Bất Đồng Bộ (Query Log & Assumption Log)
-Để không làm gián đoạn pipeline khi dữ liệu thực tế bị thiếu hoặc có lỗi:
-- **`query_log.json`**: Ghi nhận các điểm nghi vấn dữ liệu (thiếu hóa đơn tháng, số liệu bất thường, áp dụng giả định ước tính) để kiểm toán viên hoặc quản lý nhà máy hậu kiểm.
-- **`assumption_log.json`**: Lưu trữ chi tiết các giả định bảo thủ (Conservative Assumptions) theo IPCC/TCVN được áp dụng, kèm theo mức trừ điểm tin cậy tương ứng.
+Phép tính phát thải (lượng × hệ số) là **tất định** bằng Python, không dùng mô hình ngôn ngữ, nên cùng dữ liệu luôn cho cùng kết quả và kiểm tra lại được từng dòng. Ứng dụng **không gửi chứng từ tới dịch vụ AI bên ngoài** (Gemini, OpenAI…) và không cần khóa API.
 
-### 4. Động Cơ Tính Toán Tất Định & Lan Truyền Sai Số Gaussian
-- **100% Deterministic Math**: Mọi phép tính phát thải $E = Q \times EF$ và giảm phát thải $GPT = PT_{CS} - PT$ được thực thi bằng mã Python thuần, không phụ thuộc vào suy luận số học của LLM.
-- **Hệ số phát thải chuẩn**: Tích hợp cơ sở dữ liệu hệ số phát thải từ Bộ TN&MT (Quyết định 2626/QĐ-BTNMT, Thông tư 17/2022/TT-BTNMT) và IPCC EFDB.
-- **Lan truyền sai số Gaussian 95% Confidence Interval**:
-  $$\sigma_{\text{total}} = \sqrt{\sum_{i=1}^n \sigma_i^2}$$
-  Xác định khoảng tin cậy phát thải $[E_{\text{total}} - 1.96\sigma_{\text{total}}, E_{\text{total}} + 1.96\sigma_{\text{total}}]$.
+### Đã gỡ: pipeline multi-agent cũ
 
-### 5. Giao Diện Giám Sát Quy Trình Trực Tiếp (Live Workflow Monitor)
-Truy cập tại **`http://localhost:8080/monitor`**:
-- **Bộ điều khiển Polling thời gian thực**: Tự động thăm dò trạng thái thư mục `runs/<run_id>/` mỗi $X$ giây (mặc định 3 giây), có nút Play/Pause và thanh đếm nhịp.
-- **Bộ chọn Run tương tác**: Danh sách dropdown hiển thị đầy đủ các lần chạy với ID, thời gian, trạng thái, tiến độ %.
-- **5-Phase Lifecycle Stepper**: Hiển thị trực quan từng giai đoạn (Ingestion $\to$ Discovery $\to$ Extraction $\to$ Math & Mitigation $\to$ Synthesis).
-- **Tabbed Intermediate JSON Inspector**: Khám phá trực tiếp dữ liệu trích xuất Scope 1, Scope 2, Scope 3, Mẫu 02, Query Log, Assumption Log, Index và State thô.
-- **Quản lý & Tải về Deliverables**: Xem trước và tải ngay các file , HTML, Word DOCX, PDF, JSON.
+Pipeline multi-agent cũ (`ecostream/agents/`, `ecostream/extraction/`, `orchestrator/pipeline.py`, `cli.py`, các endpoint `/api/demo`, `/api/upload`, `/api/export/*`, `/api/report/*`) đã được xóa khỏi mã nguồn. Sản phẩm hiện tại chỉ có **luồng khảo sát** mô tả trong tài liệu này. Trang `/monitor` vẫn đọc các run trong `runs/` qua `/api/orchestrator/runs`.
 
----
+## Cài đặt cho người dùng (ứng dụng desktop)
 
-## 📂 Cấu Trúc Dự Án
+Người dùng không cần cài Python. Tải bộ cài tại trang Releases của dự án:
 
-```
-ecostream-poc/
-├── .claude/                             # Claude Code Subagents, Skills & Workflows
-│   ├── agents/                          # Cấu hình Subagent chuyên ngành (.md)
-│   │   ├── ag-discovery.md
-│   │   ├── ag-scope1-fuel.md
-│   │   ├── ag-scope2-power.md
-│   │   ├── ag-scope3-supply.md
-│   │   ├── ag-mitigation-quota.md
-│   │   └── ag-synthesizer.md
-│   ├── skills/                          # Lệnh Claude Code Skill
-│   │   ├── ecostream/SKILL.md           # Lệnh /ecostream
-│   │   ├── mitigation/SKILL.md          # Lệnh /mitigation
-│   │   └── audit/SKILL.md               # Lệnh /audit
-│   ├── workflows/                       # Kịch bản Workflow động
-│   │   └── wf-ecostream.js              # Multi-agent dynamic pipeline script
-│   └── references/                      # Tài liệu pháp lý tham chiếu (NĐ 06, NĐ 119)
-├── ecostream/                           # Core Python Package
-│   ├── agents/                          # Logic thực thi Python Subagent
-│   │   ├── discovery.py
-│   │   ├── scope1.py
-│   │   ├── scope2.py
-│   │   ├── scope3.py
-│   │   ├── mitigation.py
-│   │   └── synthesizer.py
-│   ├── app/                             # FastAPI Web Server & Dashboard
-│   │   ├── server.py                    # Web API & Monitor endpoints
-│   │   └── static/
-│   │       ├── index.html               # Carbon & Reliability Dashboard
-│   │       ├── monitor.html             # Live Workflow Monitor HTML
-│   │       └── monitor.js               # Reactive Polling & UI Engine
-│   ├── engine/                          # Động cơ tính toán tất định
-│   │   ├── calculator.py                # Scope 1, 2, 3 & Uncertainty Math
-│   │   ├── mitigation_math.py           # NĐ 06/2022 Mẫu 02 Mitigation Math
-│   │   ├── reliability.py               # 5-Dimension Reliability Scoring
-│   │   └── advisor.py                   # Emission Hotspot & Action Roadmap
-│   ├── factors/                         # CSDL Hệ số phát thải
-│   │   ├── database.py                  # MONRE & IPCC Factor Database
-│   │   └── default_factors.json
-│   ├── ingestion/                       # Module tiếp nhận & chuyển đổi dữ liệu
-│   │   ├── markitdown_loader.py         # Microsoft MarkItDown Universal Loader
-│   │   └── cache.py                     # SHA-256 Fingerprint Cache
-│   ├── models/                          # Pydantic Schemas & State Models
-│   │   ├── state.py                     # Blackboard Workspace State & Index
-│   │   ├── mitigation.py                # Mẫu 02 Mitigation & Quota Schemas
-│   │   └── results.py                   # Carbon Inventory & Audit Schemas
-│   ├── orchestrator/                    # Bộ điều phối Pipeline
-│   │   ├── pipeline.py                  # WorkflowOrchestrator
-│   │   └── state.py                     # BlackboardWorkspace Manager
-│   ├── reporting/                       # Xuất báo cáo đa định dạng
-│   │   ├── export.py                    # Markdown, HTML, PDF, DOCX Exporter
-│   │   └── templates.py                 # Mẫu báo cáo quy chuẩn Việt Nam
-│   └── cli.py                           # Command-Line Interface
-├── data/samples/                        # Dữ liệu thử nghiệm mẫu (SME Benchmark)
-│   └── input.xlsx                       # Multi-tab Excel file benchmark
-├── runs/                                # Blackboard Run Workspaces (runs/<run_id>/)
-├── scripts/                             # Script sinh dữ liệu thử nghiệm
-│   └── generate_mock_excel.py
-├── tests/                               # Bộ kiểm thử tự động (35 tests)
-├── README.md
-├── CHANGELOG.md
-└── requirements.txt
-```
+**https://github.com/OanhKim-tmd/EcoStream_poc/releases/latest**
 
----
+| Hệ điều hành | Tệp | Cách cài |
+| --- | --- | --- |
+| Windows 10/11 | `EcoStream-Windows-Setup.exe` | Chạy bộ cài. Nếu hiện "Windows protected your PC": bấm **More info → Run anyway**. |
+| macOS | `EcoStream-Installer.dmg` | Mở tệp, kéo EcoStream vào Applications. Lần đầu mở: chuột phải → **Open** → **Open**. |
 
-## 🚀 Hướng Dẫn Cài Đặt & Sử Dụng
+Ứng dụng chưa được ký số, nên Windows và macOS sẽ cảnh báo ở lần chạy đầu. Khi mở, EcoStream hiện trong **cửa sổ ứng dụng riêng** (thư viện `pywebview`: WebView2 có sẵn trên Windows 10/11, WKWebView có sẵn trên macOS), không mở Chrome, Edge hay Safari. Bên trong, ứng dụng chạy một máy chủ cục bộ tại `127.0.0.1` mà người dùng không nhìn thấy. Đóng cửa sổ là thoát hẳn ứng dụng. Kết quả được lưu trong `%LOCALAPPDATA%\EcoStream\runs` (Windows) hoặc `~/Library/Application Support/EcoStream/runs` (macOS).
 
-### 1. Cài đặt Môi trường
-Yêu cầu: Python 3.10 trở lên.
+Bản desktop có đủ chức năng như bản chạy từ mã nguồn: đọc Excel, Word, CSV và PDF có chữ (không đọc ảnh hoặc PDF scan, xem mục "Cách EcoStream đọc chứng từ").
+
+### Phát hành phiên bản mới (dành cho nhóm phát triển)
+
+Workflow `.github/workflows/build-desktop.yml` tự build và tự kiểm tra (chạy thử server và giao diện) trên máy Windows và macOS của GitHub. Để đăng bản mới lên trang Releases:
+
 ```bash
-# Clone repository
-git clone https://github.com/tmdeptrai/ecostream-poc.git
-cd ecostream-poc
-
-# Cài đặt các thư viện phụ thuộc
-pip install -r requirements.txt
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
-### 2. Sử dụng Giao diện Web & Live Monitor
-Khởi động máy chủ web:
+Sau khoảng 10–15 phút, bộ cài xuất hiện tại link Releases ở trên. Repository cần ở chế độ **public** để người ngoài tải được. Muốn build thủ công trên máy, hãy dùng môi trường ảo sạch. Nếu build trong môi trường chung (như conda base), app có thể bị gom thêm các thư viện AI không dùng tới:
+
+```bash
+python -m venv .venv-build
+.venv-build/bin/pip install -r requirements-desktop.txt
+.venv-build/bin/python scripts/build_desktop_app.py
+dist/EcoStream/EcoStream --headless-check   # in ra "[headless-check] OK" nếu app chạy được
+```
+
+Kết quả nằm trong `dist/`. Trên Windows, thay `.venv-build/bin/` bằng `.venv-build\Scripts\`.
+
+## Cài đặt và chạy từ mã nguồn
+
+Yêu cầu: Python 3.10 trở lên. Từ thư mục gốc dự án:
+
+```bash
+python -m venv .venv
+# Linux/macOS
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m ecostream.app
+```
+
+Ứng dụng in địa chỉ máy chủ khi khởi động (thường là `http://127.0.0.1:8000`). Mở địa chỉ đó trong trình duyệt. Dừng máy chủ bằng `Ctrl+C`.
+
+- `/` — giao diện khảo sát và kết quả.
+- `/docs` — tài liệu API của luồng khảo sát.
+
+Trang monitor kỹ thuật `/monitor` vẫn có trong mã nguồn để debug pipeline cũ, nhưng không nằm trong luồng người dùng cuối.
+
+### Chạy không cần Internet
+
+Sau khi cài đặt xong, ứng dụng **chạy hoàn toàn offline**:
+
+- Giao diện dùng stylesheet và phông chữ lưu sẵn trong `ecostream/app/static/vendor/`, không tải gì từ CDN.
+- Đọc chứng từ, điền biểu, tính toán và xuất Excel/Word đều chạy trên máy.
+
+Chỉ cần mạng một lần khi `pip install`. Bản desktop không cần mạng chút nào.
+
+Mặc định API chạy không cần khóa trong môi trường phát triển cục bộ. Có thể đặt `ECOSTREAM_API_KEY` để yêu cầu khóa cho các endpoint được bảo vệ; gửi khóa qua header `X-API-Key`. Không mở máy chủ ra Internet nếu chưa thiết lập xác thực, phân quyền, HTTPS và chính sách lưu trữ phù hợp.
+
+## Chứng từ đầu vào
+
+Endpoint khảo sát hiện nhận tối đa 100 tệp (có thể đổi bằng `ECOSTREAM_MAX_SURVEY_FILES`), mỗi tệp tối đa 10 MB, với đuôi `.xlsx`, `.csv`, `.pdf`, `.docx`. Ảnh bị từ chối; PDF scan được nhận nhưng chỉ sinh cảnh báo nhập thủ công. Luôn xem trạng thái và cảnh báo trong giao diện.
+
+Việc tự điền phụ thuộc định dạng và cách trình bày chứng từ. Một số dòng nhiên liệu và điện có tháng, lượng, đơn vị rõ ràng có thể được nhận dạng; chứng từ bố cục khác, thiếu dữ liệu hoặc không được hỗ trợ cần nhập/rà soát thủ công. Không mặc định dữ liệu trong mọi tệp sẽ được trích xuất chính xác.
+
+Đầu ra của luồng khảo sát được lưu dưới `runs/<run_id>/deliverables/`:
+
+- `Bang_khao_sat_da_dien.xlsx` — bản khảo sát để rà soát.
+- `GHGs_inventory_da_tinh.xlsx` — workbook kiểm kê đã điền các trường được hỗ trợ.
+- `Bao_cao_kiem_ke_KNK.docx` — báo cáo Word dự thảo.
+
+Thư mục `runs/` là dữ liệu sinh ra khi chạy, không phải mã nguồn. Giữ lại hoặc sao lưu các phiên cần thiết; không chia sẻ chứng từ doanh nghiệp nếu chưa được phép.
+
+## Chạy thử
+
+Có thể dùng bộ dữ liệu giả lập đã có:
+
 ```bash
 python -m ecostream.app
 ```
-Mở trình duyệt:
-- **Dashboard Chính (Interactive Carbon Dashboard)**: `http://localhost:8080`
-  - Chạy Demo Benchmark (EcoGarment Vietnam JSC).
-  - Tải lên chứng từ tùy chỉnh (Excel, PDF, DOCX, CSV).
-  - Xem biểu đồ phát thải, độ tin cậy 5 chiều và lộ trình hành động.
-- **Live Workflow Monitor (Giám sát Tiến độ Trực tiếp)**: `http://localhost:8080/monitor`
-  - Theo dõi tiến trình 5 giai đoạn thời gian thực.
-  - Kiểm tra file trung gian `scope1_extracted.json`, `scope2_extracted.json`, `scope3_extracted.json`, `mitigation_extracted.json`, `query_log.json`, `assumption_log.json`.
-  - Xem và tải xuống các báo cáo hoàn chỉnh.
 
-### 3. Sử dụng Giao diện Dòng Lệnh (CLI)
-Chạy trực tiếp quy trình kiểm kê và giảm nhẹ phát thải:
+Mở giao diện, điền thông tin cơ sở rồi tải các tệp trong `data/demo_full_2026/` theo hướng dẫn tại `data/demo_full_2026/README.txt`. Dữ liệu này chỉ phục vụ thử nghiệm, không phải chứng từ thật hay kết quả đã thẩm định. Để tạo lại một số bộ demo, xem các script `scripts/generate_*.py` tương ứng.
+
+## Kiểm thử
+
 ```bash
-# Chạy bộ dữ liệu Benchmark
-python -m ecostream.cli --demo
-
-# Chạy với file hoặc thư mục dữ liệu tùy chỉnh
-python -m ecostream.cli --input data/samples/input.xlsx --company "Công ty CP May Mặc EcoGarment" --facility "Nhà máy Hà Nam" --year 2026
+python -m unittest discover -s tests
 ```
 
-### 4. Sử dụng trong Claude Code CLI (Skills & Workflows)
-Khi sử dụng Claude Code CLI trong thư mục dự án:
-- `/ecostream --demo` : Chạy toàn trình pipeline trên bộ dữ liệu mẫu benchmark.
-- `/ecostream --input <path>` : Chạy xử lý trên file/thư mục chứng từ chỉ định.
-- `/mitigation` : Tính toán bảng giảm nhẹ phát thải Mẫu 02 NĐ 06/2022/NĐ-CP và hạn ngạch.
-- `/audit` : Kiểm tra nhật ký nghi vấn dữ liệu (`query_log.json`) và nhật ký giả định (`assumption_log.json`).
-- `wf-ecostream` : Kịch bản workflow đa tác nhân điều phối đồng thời các subagents.
+### Sửa giao diện
 
----
+Giao diện dùng Tailwind CSS build sẵn (`ecostream/app/static/vendor/app.css`) và phông chữ trong `vendor/fonts/`. Nếu thêm class Tailwind mới vào `index.html`, `monitor.html` hoặc `monitor.js`, hãy build lại. Bước này cần Node.js và mạng một lần:
 
-## 📄 Các Sản Phẩm Đầu Ra (Deliverables)
-
-Mỗi lần chạy sẽ tạo ra thư mục độc lập `runs/<run_id>/deliverables/` chứa đầy đủ các tài liệu quy chuẩn:
-
-| Tên File | Định Dạng | Mô Tả |
-| :--- | :--- | :--- |
-| `Bao_cao_kiem_ke_va_giam_nhe_KNK.md` | Markdown | Báo cáo kiểm kê khí nhà kính & lộ trình giảm nhẹ toàn diện. |
-| `Bao_cao_kiem_ke_va_giam_nhe_KNK.html` | HTML | Báo cáo trình bày chuyên nghiệp, sẵn sàng in ấn hoặc lưu PDF. |
-| `Bao_cao_Mau02_ND06.docx` | Word DOCX | Báo cáo kết quả giảm nhẹ phát thải theo đúng **Mẫu 02 Phụ lục IV Nghị định 06/2022/NĐ-CP**. |
-| `Bao_cao_kiem_ke_va_giam_nhe_KNK.pdf` | PDF | Báo cáo định dạng PDF phục vụ kiểm toán độc lập. |
-| `final_inventory_summary.json` | JSON | Dữ liệu cấu trúc tổng hợp phục vụ tích hợp hệ thống ERP/ESG. |
-
----
-
-## 🧪 Kiểm Thử Tự Động (Automated Testing)
-
-Chạy toàn bộ 35 bài kiểm thử đơn vị và tích hợp:
 ```bash
-python -m unittest discover tests/ -v
+bash scripts/build_offline_assets.sh
 ```
 
-### Danh mục Test Suites:
-- `test_calculator.py`: Kiểm thử tính toán Scope 1, 2, 3 và lan truyền sai số thống kê.
-- `test_reliability.py`: Kiểm thử thuật toán chấm điểm độ tin cậy 5 chiều.
-- `test_extraction.py`: Kiểm thử trích xuất hóa đơn điện EVN, xăng dầu Petrolimex, bảng kê vận chuyển.
-- `test_markitdown_ingestion.py`: Kiểm thử Microsoft MarkItDown loader và SHA-256 cache.
-- `test_mitigation_math.py`: Kiểm thử công thức giảm nhẹ phát thải Mẫu 02 ($GPT = PT_{CS} - PT$) và thặng dư/thiếu hụt hạn ngạch.
-- `test_monitor_api.py`: Kiểm thử các API endpoint phục vụ Live Workflow Monitor (`/monitor`, `/runs`, `/files`, `/intermediate`).
-- `test_orchestrator_e2e.py`: Kiểm thử luồng tích hợp toàn trình của WorkflowOrchestrator.
-- `test_query_assumption_logs.py`: Kiểm thử ghi nhận bất thường, nội suy mùa vụ EVN, quy đổi bình LPG và trừ điểm tin cậy.
-- `test_subagents.py`: Kiểm thử hoạt động độc lập của 6 Domain Subagents.
-- `test_pipeline.py`: Kiểm thử tích hợp Web Server API và Export endpoints.
+## Tài liệu nguồn trong `data/test_documents/`
 
----
+Thư mục này lưu tài liệu tham khảo và mẫu nghiệp vụ để phát triển/đối chiếu, không phải thư mục đầu vào bắt buộc khi chạy ứng dụng:
 
-## 📜 Quy Chuẩn & Pháp Lý Tham Chiếu
+| Tệp | Nội dung nhận diện từ tài liệu |
+| --- | --- |
+| `06.01.2025.-Bang-khao-sat-SLHD-cap-co-so-VN.xlsx` | Biểu khảo sát số liệu hoạt động cấp cơ sở; ứng dụng dùng tệp này làm mẫu khảo sát. |
+| `17-btnmt.pdf` | Thông tư 17/2022/TT-BTNMT; tài liệu về kỹ thuật đo đạc, báo cáo, thẩm định giảm nhẹ phát thải và kiểm kê KNK trong lĩnh vực quản lý chất thải. |
+| `20.05.25.-IE.-QDPL-Viet-Nam-ve-KK-KNK-Ms.-Huyen.pdf` | Tài liệu trình bày các quy định pháp luật Việt Nam về kiểm kê KNK, do Viện Năng lượng trình bày (05/2025). |
+| `20.5.2025.-Dao-tao-KK-KNK-co-so-thuc-hanh.pdf` | Tài liệu hướng dẫn thực hành kiểm kê KNK cấp cơ sở cho nhà máy nhiệt điện than (05/2025). |
+| `20.5.2025.-Tong-quan-ppl-theo-IPCC.pdf` | Tài liệu tổng quan phương pháp luận kiểm kê KNK theo hướng dẫn quốc tế và quy định Việt Nam (05/2025). |
+| `2.-ND06._GHGs-Report-NS2PC_Final_VN (1).docx` | Báo cáo kiểm kê KNK của một cơ sở/doanh nghiệp; tài liệu tham khảo cấu trúc và nội dung báo cáo. |
+| `2. Pham_vi_cong_viec_Bao_cao_ket_qua_giam_nhe_KNK_NMND.docx` | Tài liệu phạm vi công việc báo cáo kết quả giảm nhẹ KNK cho nhà máy nhiệt điện. |
+| `Bao_cao_cụ_thể_theo_mau_ND06.docx` | Báo cáo mẫu/tham khảo theo cấu trúc Nghị định 06. |
+| `_GHGs-inventory.xlsx` | Workbook kiểm kê KNK mẫu, dùng tham khảo cấu trúc bảng tính. |
+| `USTH_Inn 2026_EcoStream - Dịch vụ kiểm kê phân tich phát thải carbon được hỗ trợ bởi nền tảng AI (4).docx` | Tài liệu giới thiệu/đề xuất EcoStream; không phải đặc tả xác nhận mọi tính năng đã triển khai. |
 
-1. **Nghị định 06/2022/NĐ-CP** (và NĐ 119/2025/NĐ-CP sửa đổi): Quy định giảm nhẹ phát thải KNK và bảo vệ tầng ô-dôn (Phụ lục IV Mẫu 02).
-2. **Quyết định 01/2022/QĐ-TTg & 13/2024/QĐ-TTg**: Danh mục lĩnh vực, cơ sở phát thải KNK phải thực hiện kiểm kê.
-3. **Thông tư 17/2022/TT-BTNMT & Quyết định 2626/QĐ-BTNMT**: Quy định kỹ thuật đo đạc, báo cáo, thẩm định (MRV) giảm nhẹ phát thải KNK.
-4. **GHG Protocol Corporate Standard & Scope 3 Guidance**: Tiêu chuẩn quốc tế về đo lường và báo cáo phát thải KNK doanh nghiệp.
-5. **IPCC 2006/2019 Guidelines for National Greenhouse Gas Inventories**: Hướng dẫn phương pháp luận và hệ số phát thải cơ bản.
+Danh mục trên chỉ mô tả nội dung nhận diện được từ tên và tài liệu; cần đọc bản gốc để xác minh điều khoản, hiệu lực, biểu mẫu và phương pháp. Phần mềm không tự bảo đảm tuân thủ chỉ vì tham chiếu các tài liệu này.
 
----
+## Cấu trúc chính
 
-## 👥 Tác Giả & Bản Quyền
+```text
+ecostream/                 Ứng dụng Python: web, khảo sát, tính toán, ingestion, báo cáo
+  app/                     FastAPI và giao diện tĩnh (static/vendor/: CSS và phông chữ offline)
+  ingestion/               Đọc/chuyển đổi chứng từ (MarkItDown, pypdf) và biểu mẫu khảo sát
+  orchestrator/            survey_pipeline.py: luồng khảo sát; state.py: workspace theo run
+  reporting/               Tạo workbook/báo cáo
+  factors/                  Cơ sở hệ số trong ứng dụng
+data/
+  test_documents/          Biểu mẫu và tài liệu nguồn tham khảo
+  samples/, demo_full_2026/ Dữ liệu mẫu và dữ liệu giả lập
+runs/                      Kết quả phát sinh (được bỏ qua khỏi Git)
+tests/                     Kiểm thử tự động
+scripts/                    Tiện ích tạo dữ liệu và đóng gói
+```
 
-- **Tác giả**: Vũ Thị Kim Oanh (Khoa Khoa học Dữ liệu, Trường Đại học Khoa học và Công nghệ Hà Nội - USTH)
-- **Đồ án**: Tham dự *Cuộc thi Sáng tạo USTH 2026 (Inno-Inspiration USTH 2026)*
-- **Bản quyền**: Phát hành theo giấy phép mã nguồn mở MIT License.
+## Ghi chú về phương pháp và pháp lý
+
+Tài liệu nguồn trong repository gồm Thông tư 17/2022/TT-BTNMT và tài liệu đào tạo/tổng quan được lưu trong `data/test_documents/`. Đây là nguồn tham khảo, không phải tư vấn pháp lý hoặc khẳng định về hiệu lực hiện hành. Trước khi lập báo cáo chính thức, cần đối chiếu văn bản pháp luật mới nhất, biểu mẫu có thẩm quyền, ranh giới kiểm kê, hệ số phát thải đúng kỳ và phương pháp áp dụng cho cơ sở.
+
+Các tổng hợp do phần mềm tạo là kết quả xử lý theo dữ liệu đầu vào và logic đang triển khai; không mặc định tương đương kết quả trong workbook tham khảo, không được xem là báo cáo đã thẩm định và không tự động xác nhận điều kiện giảm nhẹ phát thải/hạn ngạch.
+
+## Đóng góp
+
+Chạy test trước khi gửi thay đổi. Không đưa chứng từ, thông tin cá nhân, khóa API, khóa ký hoặc dữ liệu nội bộ của doanh nghiệp vào Git. Giấy phép dự án xem tại [LICENSE](LICENSE).

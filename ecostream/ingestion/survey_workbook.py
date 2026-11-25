@@ -347,19 +347,17 @@ _UNIT_TOKEN_RE = re.compile(
     re.I,
 )
 _NUMBER_TOKEN_RE = re.compile(r"^\d[\d.,]*$")
-_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff"}
 
 
-def _extract_fuel_pages(path: str, name: str, fallback_markdown: str, reporting_year: int | None, *, is_image: bool = False) -> tuple[list[SurveyItem], list[str]]:
-    """Extract fuel line items from Vietnamese VAT fuel invoice PDFs or OCR image text."""
+def _extract_fuel_pages(path: str, name: str, fallback_markdown: str, reporting_year: int | None) -> tuple[list[SurveyItem], list[str]]:
+    """Extract fuel line items from text-layer Vietnamese VAT fuel invoice PDFs."""
     pages_text: list[str] = []
-    if not is_image:
-        try:
-            import pypdf
-            reader = pypdf.PdfReader(path)
-            pages_text = [(p.extract_text() or "").strip() for p in reader.pages]
-        except Exception:
-            pages_text = []
+    try:
+        import pypdf
+        reader = pypdf.PdfReader(path)
+        pages_text = [(p.extract_text() or "").strip() for p in reader.pages]
+    except Exception:
+        pages_text = []
     if not any(pages_text):
         if re.search(r"^## Page \d+", fallback_markdown, flags=re.M):
             pages_text = [p for p in re.split(r"(?=^## Page \d+)", fallback_markdown, flags=re.M)[1:] if p.strip()]
@@ -415,7 +413,7 @@ def _extract_fuel_pages(path: str, name: str, fallback_markdown: str, reporting_
             raw_qty = None
             unit_text = None
 
-            # Case A: Same-line fuel + unit + quantity (supports OCR 'Lit' / 'Lít')
+            # Case A: Same-line fuel + unit + quantity ('Lit' / 'Lít')
             m_inline = re.search(
                 r"\b(l[íìi]t|l1t|lit|liter|litre|litres|kg|t[ấầa]n|tan|m3|m³)\b\s+(\d[\d.,]*)",
                 ln,
@@ -475,7 +473,13 @@ def extract_documents(paths: list[str], reporting_year: int | None = None) -> Su
         sources = converted.sheet_markdowns or {name: converted.full_markdown}
         initial = len(data.items)
         ext = Path(path).suffix.lower()
-        is_image = ext in _IMAGE_EXTS
+
+        if ext == ".pdf" and converted.full_markdown.startswith("Could not extract text from"):
+            data.warnings.append(
+                f"{name}: PDF không có lớp chữ (bản scan/ảnh); EcoStream không dùng OCR, "
+                "cần điền biểu khảo sát thủ công"
+            )
+            continue
 
         if ext == ".pdf":
             from ecostream.ingestion.pdf_survey_parser import extract_pdf_to_survey
@@ -493,12 +497,10 @@ def extract_documents(paths: list[str], reporting_year: int | None = None) -> Su
                     )
                 continue
 
-        if ext == ".pdf" or is_image:
+        if ext == ".pdf":
             upper_md = converted.full_markdown.upper()
 
-            if "TIỀN ĐIỆN" in upper_md or (
-                is_image and "ĐIỆN LỰC" in upper_md and "KWH" in upper_md
-            ):
+            if "TIỀN ĐIỆN" in upper_md:
                 # Match only an invoice's explicit billing period and active-energy
                 # TOTAL on the same page; do not sum tariff bands or currency figures.
                 pages = re.split(
@@ -588,24 +590,15 @@ def extract_documents(paths: list[str], reporting_year: int | None = None) -> Su
                     name,
                     converted.full_markdown,
                     reporting_year,
-                    is_image=is_image,
                 )
                 data.items.extend(fuel_items)
                 data.warnings.extend(fuel_warnings)
 
                 if len(data.items) == initial:
                     data.warnings.append(
-                        f"{name}: không trích xuất được số liệu nhiên liệu "
-                        f"từ {'ảnh' if is_image else 'PDF'}; "
+                        f"{name}: không trích xuất được số liệu nhiên liệu từ PDF; "
                         "cần điền biểu khảo sát thủ công"
                     )
-                continue
-
-            if is_image:
-                data.warnings.append(
-                    f"{name}: chưa trích xuất được số liệu Scope 1/2 từ ảnh; "
-                    "cần điền biểu khảo sát thủ công"
-                )
                 continue
         for sheet_name, markdown in sources.items():
             s_lower = sheet_name.casefold()

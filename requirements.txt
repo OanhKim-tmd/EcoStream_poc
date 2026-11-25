@@ -5,11 +5,8 @@ pydantic>=2.0.0
 rich>=13.0.0
 reportlab>=4.0.0
 
-# Document Ingestion & MarkItDown Universal Processing
+# Document ingestion (text-layer documents only; no OCR)
 markitdown>=0.0.1
-pytesseract>=0.3.10
-pdf2image>=1.17.0
-Pillow>=10.0.0
 openpyxl>=3.1.0
 python-docx>=1.1.0
 pypdf>=5.0.0

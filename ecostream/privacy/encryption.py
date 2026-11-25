@@ -7,7 +7,7 @@ documents (PDF invoices, XML e-invoices, Excel sheets) stored in the workspace.
 import os
 import base64
 import hashlib
-from typing import Optional, Tuple
+from typing import Optional
 from cryptography.fernet import Fernet
 
 
@@ -30,7 +30,8 @@ class StorageEncryption:
             derived = hashlib.sha256(key_bytes).digest()
             return base64.urlsafe_b64encode(derived)
 
-        # 2. Per-run isolated key derived from run_id and machine secret
+        # Local fallback only. Network deployments are blocked at startup without a key.
+        # Keep compatibility for desktop/dev use; never use this for exposed services.
         salt = run_id or "ecostream_default_salt"
         machine_seed = os.environ.get("HOSTNAME", "local_ecostream_node").encode("utf-8")
         derived = hashlib.sha256(salt.encode("utf-8") + machine_seed).digest()

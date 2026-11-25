@@ -9,50 +9,22 @@
     <link rel="alternate icon" href="/static/favicon.ico">
     <link rel="apple-touch-icon" href="/static/icon-192.png">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#edf5e9',
-                            100: '#dff4cc',
-                            200: '#cce5c0',
-                            500: '#2a5c47',
-                            600: '#184e42',
-                            700: '#003c33',
-                            800: '#002820',
-                            900: '#091710',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Offline stylesheet (Tailwind build + bundled fonts); no CDN, works without Internet -->
+    <link rel="stylesheet" href="/static/vendor/app.css">
 
     <style>
         :root {
-            --forest: #003c33;
-            --forest-deep: #002820;
-            --forest-mid: #2a5c47;
-            --leaf: #9fe870;
-            --canvas: #f5f9f4;
-            --surface-soft: #edf5e9;
-            --hairline: #cce5c0;
-            --hairline-soft: #e2f0db;
-            --ink: #091710;
-            --body: #2c4a3c;
-            --muted: #6a8978;
+            --forest: #2f7a4a;
+            --forest-deep: #235f3a;
+            --forest-mid: #4b9b60;
+            --leaf: #b9e5a2;
+            --canvas: #fbfdfb;
+            --surface-soft: #eff7ef;
+            --hairline: #d4e7d6;
+            --hairline-soft: #e7f0e7;
+            --ink: #173126;
+            --body: #426451;
+            --muted: #698574;
         }
         body {
             font-family: 'Inter', system-ui, sans-serif;
@@ -82,67 +54,151 @@
             border-color: var(--forest) !important;
             box-shadow: 0 0 0 3px rgba(0, 60, 51, 0.08);
         }
+
+        /* Sidebar step navigation (dashboard style: the active item merges into the canvas) */
+        .step-nav {
+            display: flex; align-items: center; gap: .75rem; flex-shrink: 0;
+            padding: .7rem 1rem; border-radius: 14px; text-align: left;
+            font-size: .875rem; font-weight: 600; color: #426451;
+            transition: background-color .15s, color .15s, box-shadow .15s;
+        }
+        .step-nav:not(:disabled):hover { background: #d8eadb; color: #123b2b; }
+        .step-nav:disabled { opacity: .55; cursor: not-allowed; }
+        .step-num {
+            width: 1.6rem; height: 1.6rem; border-radius: 9px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .75rem; font-weight: 700; background: #d3e7d5; color: #315b43;
+        }
+        .step-nav.is-done .step-num { background: #b9e5a2; color: #174329; }
+        .step-nav.is-active { background: #fff; color: #174b32; box-shadow: 0 4px 14px rgba(26,77,47,.08); }
+        .step-nav.is-active .step-num { background: #2f7a4a; color: #fff; }
+        @media (min-width: 1024px) {
+            .step-nav { border-radius: 16px 0 0 16px; padding-right: 1.25rem; }
+            .step-nav.is-active { position: relative; }
+            .step-nav.is-active::before, .step-nav.is-active::after {
+                content: ""; position: absolute; right: 0; width: 18px; height: 18px; background: transparent;
+            }
+            .step-nav.is-active::before { top: -18px; border-bottom-right-radius: 18px; box-shadow: 6px 6px 0 6px #fbfdfb; }
+            .step-nav.is-active::after { bottom: -18px; border-top-right-radius: 18px; box-shadow: 6px -6px 0 6px #fbfdfb; }
+        }
+
+        /* Right-panel timeline */
+        .timeline-item { position: relative; padding-left: 1.1rem; }
+        .timeline-dot {
+            position: absolute; left: -7px; top: .9rem; width: 12px; height: 12px; border-radius: 999px;
+            background: #fff; border: 2px solid #cce5c0;
+        }
+        .timeline-card { border-radius: 14px; padding: .65rem .8rem; font-size: .8rem; color: #2c4a3c; background: #f5f9f4; }
+        .timeline-sub { font-size: .7rem; color: #6a8978; margin-top: .1rem; }
+        .timeline-item.is-done .timeline-dot { background: #b9e5a2; border-color: #4b9b60; }
+        .timeline-item.is-active .timeline-dot { background: #2f7a4a; border-color: #2f7a4a; }
+        .timeline-item.is-active .timeline-card { background: #e7f2e8; color: #174b32; box-shadow: inset 3px 0 #4b9b60; }
+        .timeline-item.is-active .timeline-sub { color: #527861; }
+
+        /* Results charts */
+        .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: .3rem; flex: 1; min-width: 0; height: 100%; }
+        .bar-stack { width: 70%; max-width: 26px; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column-reverse; background: #edf5e9; }
     </style>
 </head>
-<body class="flex flex-col antialiased selection:bg-[#9fe870] selection:text-[#091710]">
+<body class="antialiased bg-[#eaf3eb] lg:p-5 selection:bg-[#d2f0b7] selection:text-[#123b2b]">
 
-    <!-- Clean B2B Header -->
-    <header class="border-b border-[#e2f0db] bg-white sticky top-0 z-30">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-[#003c33] flex items-center justify-center text-[#9fe870] shrink-0">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
-                        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-                    </svg>
-                </div>
-                <div class="flex items-baseline gap-2.5">
-                    <span class="font-bold text-base tracking-tight text-[#091710]">EcoStream</span>
-                    <span class="text-xs text-[#6a8978] hidden sm:inline">Kiểm kê khí nhà kính cấp cơ sở</span>
-                </div>
+<!-- App frame: bright, airy canvas on a soft green backdrop -->
+<div class="max-w-[1480px] mx-auto min-h-screen lg:min-h-[calc(100vh-2.5rem)] flex flex-col lg:flex-row bg-[#fbfdfb] lg:rounded-[28px] overflow-hidden shadow-[0_24px_70px_rgba(27,69,44,.12)]">
+
+    <!-- ── Sidebar: light botanical palette + 4 workflow steps ── -->
+    <aside class="bg-[#e7f2e8] text-[#173f2f] border-b lg:border-b-0 lg:border-r border-[#d4e7d6] lg:w-64 shrink-0 flex flex-col">
+        <div class="flex items-center gap-2.5 px-5 h-16 lg:h-20">
+            <div class="w-9 h-9 rounded-xl bg-[#b9e5a2] flex items-center justify-center text-[#174b32] shrink-0">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+                </svg>
             </div>
-
-            <div class="flex items-center gap-2">
-                <a href="/monitor" id="linkMonitor" class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#2c4a3c] hover:text-[#091710] hover:bg-[#edf5e9] border border-[#e2f0db] transition hidden sm:inline-flex items-center">
-                    Nhật ký xử lý
-                </a>
-                <button type="button" onclick="openAccountModal()" id="btnAccountBadge" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#f5f9f4] hover:bg-[#edf5e9] text-[#183026] border border-[#cce5c0] transition inline-flex items-center gap-1.5" title="Tài khoản doanh nghiệp & cấu hình">
-                    <span id="headerTierIcon" class="w-2 h-2 rounded-full bg-[#6a8978]"></span>
-                    <span id="headerOrgText" class="hidden md:inline font-mono text-[11px]">ecogarment-vn</span>
-                    <span id="headerTierBadge" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#2c4a3c]">Free</span>
-                </button>
+            <div class="leading-tight">
+                <div class="font-bold text-lg tracking-tight text-[#173f2f]">EcoStream</div>
+                <div class="text-[11px] text-[#527861]">Kiểm kê KNK cấp cơ sở</div>
             </div>
         </div>
-    </header>
 
-    <!-- Main Content: 4-Step Guided Flow -->
-    <main class="max-w-4xl w-full mx-auto px-4 sm:px-6 py-7 space-y-5 flex-1">
-
-        <!-- Progress Stepper -->
-        <nav id="flowStepper" aria-label="Tiến trình kiểm kê" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button type="button" id="stepBadge1" onclick="goToStepIfAllowed(1)" class="px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-[#003c33] text-white border-[#003c33] cursor-pointer">
-                <span class="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center text-[11px] font-bold shrink-0">1</span>
+        <nav id="flowStepper" aria-label="Tiến trình kiểm kê" class="flex lg:flex-col gap-1 px-3 lg:pl-3 lg:pr-0 pb-3 lg:pb-0 lg:mt-4 overflow-x-auto">
+            <button type="button" id="stepBadge1" onclick="goToStepIfAllowed(1)" class="step-nav">
+                <span class="step-num">1</span>
                 <span class="truncate">Thông tin cơ sở</span>
             </button>
-            <button type="button" id="stepBadge2" onclick="goToStepIfAllowed(2)" disabled class="px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-white text-[#6a8978] border-[#e2f0db] cursor-not-allowed opacity-70">
-                <span class="w-5 h-5 rounded-full bg-[#f5f9f4] text-[#6a8978] flex items-center justify-center text-[11px] font-bold shrink-0">2</span>
-                <span class="truncate">Đưa dữ liệu vào</span>
+            <button type="button" id="stepBadge2" onclick="goToStepIfAllowed(2)" disabled class="step-nav">
+                <span class="step-num">2</span>
+                <span class="truncate">Nạp chứng từ</span>
             </button>
-            <button type="button" id="stepBadge3" onclick="goToStepIfAllowed(3)" disabled class="px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-white text-[#6a8978] border-[#e2f0db] cursor-not-allowed opacity-70">
-                <span class="w-5 h-5 rounded-full bg-[#f5f9f4] text-[#6a8978] flex items-center justify-center text-[11px] font-bold shrink-0">3</span>
+            <button type="button" id="stepBadge3" onclick="goToStepIfAllowed(3)" disabled class="step-nav">
+                <span class="step-num">3</span>
                 <span class="truncate">Rà soát biểu Excel</span>
             </button>
-            <button type="button" id="stepBadge4" onclick="goToStepIfAllowed(4)" disabled class="px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-white text-[#6a8978] border-[#e2f0db] cursor-not-allowed opacity-70">
-                <span class="w-5 h-5 rounded-full bg-[#f5f9f4] text-[#6a8978] flex items-center justify-center text-[11px] font-bold shrink-0">4</span>
-                <span class="truncate">Kết quả & Báo cáo</span>
+            <button type="button" id="stepBadge4" onclick="goToStepIfAllowed(4)" disabled class="step-nav">
+                <span class="step-num">4</span>
+                <span class="truncate">Kết quả & báo cáo</span>
             </button>
         </nav>
+
+        <div class="hidden lg:block mt-auto p-5 space-y-3">
+            <div class="rounded-2xl bg-white/75 border border-[#d4e7d6] p-4 text-xs leading-relaxed">
+                <div class="flex items-center gap-2 font-semibold text-[#2f7a4a]">
+                    <span class="w-2 h-2 rounded-full bg-[#4b9b60]"></span>
+                    Chạy cục bộ
+                </div>
+                <p class="mt-1.5 text-[#527861]">Chứng từ được xử lý ngay trên máy này, không gửi ra Internet.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Main area ── -->
+    <div class="flex-1 min-w-0 flex flex-col">
+
+        <!-- Top bar -->
+        <header class="h-16 lg:h-20 px-4 sm:px-8 flex items-center justify-between gap-4 border-b border-[#e2f0db]/80">
+            <div class="min-w-0">
+                <p id="topbarStep" class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Bước 1 / 4</p>
+                <h1 id="topbarTitle" class="text-lg sm:text-xl font-bold tracking-tight text-[#091710] truncate">Thông tin cơ sở</h1>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <span id="topbarFacility" class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#d4e7d6] text-xs font-medium text-[#315b43] max-w-[280px] truncate">Chưa có cơ sở</span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#e5f2e5] text-[11px] font-semibold text-[#2f7a4a]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#4b9b60]"></span>Offline
+                </span>
+            </div>
+        </header>
+
+        <div class="flex-1 grid xl:grid-cols-[minmax(0,1fr)_300px] gap-6 p-4 sm:p-8">
+
+    <!-- Main Content: 4-Step Guided Flow -->
+    <main class="min-w-0 space-y-5">
+
+        <!-- Welcome hero (text follows the current step) -->
+        <section class="relative overflow-hidden rounded-3xl bg-white border border-[#e2f0db] p-6 sm:p-7 flex items-center gap-6">
+            <div class="flex-1 min-w-0 space-y-2 relative z-10">
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#091710]">Xin chào! 🌱</h2>
+                <p id="heroHint" class="text-sm text-[#2c4a3c] max-w-md">Bắt đầu bằng thông tin cơ sở. Sau đó nạp chứng từ, EcoStream sẽ tự điền biểu khảo sát để bạn rà soát.</p>
+                <p class="text-xs text-[#6a8978]">Biểu mẫu theo CV 1790/VNL-P16 · Nghị định 06/2022/NĐ-CP</p>
+            </div>
+            <svg class="hidden sm:block w-44 h-32 shrink-0" viewBox="0 0 220 160" fill="none" aria-hidden="true">
+                <circle cx="150" cy="70" r="62" fill="#edf5e9"/>
+                <rect x="40" y="88" width="120" height="52" rx="6" fill="#003c33"/>
+                <rect x="58" y="60" width="16" height="40" rx="3" fill="#2a5c47"/>
+                <rect x="84" y="48" width="16" height="52" rx="3" fill="#2a5c47"/>
+                <path d="M66 52c-6-10 4-18 10-12 2-10 16-8 14 2" stroke="#cce5c0" stroke-width="4" stroke-linecap="round"/>
+                <rect x="56" y="104" width="18" height="14" rx="2" fill="#9fe870"/>
+                <rect x="84" y="104" width="18" height="14" rx="2" fill="#9fe870"/>
+                <rect x="112" y="104" width="18" height="14" rx="2" fill="#9fe870" opacity=".6"/>
+                <path d="M176 120c0-26 14-44 34-50-2 24-14 44-34 50Z" fill="#9fe870"/>
+                <path d="M176 120c6-16 14-28 26-38" stroke="#2a5c47" stroke-width="3" stroke-linecap="round"/>
+                <rect x="20" y="138" width="190" height="6" rx="3" fill="#cce5c0"/>
+            </svg>
+        </section>
 
         <!-- STEP 1: FACILITY SURVEY GENERAL INFO (CV 1790/VNL-P16) -->
         <section id="sectionFacilityInfo" class="bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5" aria-labelledby="facilityFormTitle">
             <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#e2f0db] pb-4">
                 <div class="space-y-1">
-                    <p class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Bước 1 / 4 · Phiếu thu thập (CV 1790/VNL-P16)</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Bước 1 / 4 · Phiếu thu thập (CV 1790/VNL-P16)</p>
                     <h1 id="facilityFormTitle" class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">
                         Thông tin cơ sở trước khi nạp chứng từ
                     </h1>
@@ -151,7 +207,7 @@
                     </p>
                 </div>
 
-                <button type="button" onclick="clearFacilityInfo()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition whitespace-nowrap self-start">
+                <button type="button" onclick="clearFacilityInfo()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition whitespace-nowrap self-start">
                     Xóa trắng
                 </button>
             </div>
@@ -267,7 +323,7 @@
         <!-- STEP 2: UPLOAD & READ DOCUMENTS -->
         <section id="sectionInput" class="hidden bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5">
             <div class="space-y-1 border-b border-[#e2f0db] pb-4">
-                <p class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Bước 2 / 4 · Nạp chứng từ</p>
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Bước 2 / 4 · Nạp chứng từ</p>
                 <h2 class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">Tải chứng từ để tạo biểu khảo sát</h2>
                 <p class="text-xs text-[#6a8978]">Hóa đơn điện EVN (.pdf), bảng kê nhiên liệu (.xlsx, .csv, .docx). Dữ liệu thiếu giữ trống để rà soát.</p>
             </div>
@@ -275,7 +331,7 @@
             <!-- Summary of Step 1 Facility Info -->
             <div class="rounded-xl border border-[#cce5c0] bg-[#f5f9f4] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div id="facilitySummaryStrip" class="text-xs text-[#183026] space-y-0.5"></div>
-                <button type="button" onclick="backToFacilityInfo()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#003c33] bg-white hover:bg-[#edf5e9] border border-[#cce5c0] transition shrink-0">
+                <button type="button" onclick="backToFacilityInfo()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#235f3a] bg-white hover:bg-[#edf5e9] border border-[#cce5c0] transition shrink-0">
                     Sửa thông tin
                 </button>
             </div>
@@ -288,29 +344,29 @@
                      ondragleave="handleDragLeave(event)"
                      ondrop="handleDrop(event)">
 
-                    <input type="file" id="fileInput" multiple accept=".pdf,.xlsx,.docx,.csv,.png,.jpg,.jpeg" class="hidden" onchange="handleFilesSelected(this.files)">
+                    <input type="file" id="fileInput" multiple accept=".pdf,.xlsx,.docx,.csv" class="hidden" onchange="handleFilesSelected(this.files)">
 
-                    <div class="w-10 h-10 rounded-lg bg-white border border-[#e2f0db] flex items-center justify-center text-[#003c33] mb-2.5">
+                    <div class="w-10 h-10 rounded-lg bg-white border border-[#e2f0db] flex items-center justify-center text-[#235f3a] mb-2.5">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
                     </div>
-                    <p class="text-sm font-semibold text-[#091710]" id="dropzoneText">Kéo thả tệp vào đây, hoặc <span class="text-[#003c33] underline">chọn từ máy tính</span></p>
-                    <p class="text-xs text-[#6a8978] mt-1">PDF, XLSX, CSV, DOCX, PNG · Tối đa 100 tệp, 10 MB/tệp</p>
+                    <p class="text-sm font-semibold text-[#091710]" id="dropzoneText">Kéo thả tệp vào đây, hoặc <span class="text-[#235f3a] underline">chọn từ máy tính</span></p>
+                    <p class="text-xs text-[#6a8978] mt-1">PDF có chữ, XLSX, CSV, DOCX · Tối đa 100 tệp, 10 MB/tệp</p>
                 </div>
 
-                <div id="selectedFilesBox" class="hidden bg-[#f5f9f4] border border-[#e2f0db] rounded-xl p-3.5">
+                <div id="selectedFilesBox" class="hidden bg-[#f7faf7] border border-[#e0ece0] rounded-xl p-3.5">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-semibold text-[#183026]">Chứng từ đã chọn</span>
-                        <span id="fileCountText" class="text-xs font-mono font-semibold text-[#003c33]">0 tệp</span>
+                        <span id="fileCountText" class="text-xs font-mono font-semibold text-[#235f3a]">0 tệp</span>
                     </div>
                     <div id="selectedFilesList" class="flex flex-wrap gap-2"></div>
                 </div>
 
                 <div class="pt-1 flex flex-wrap items-center justify-between gap-3">
-                    <button type="button" onclick="backToFacilityInfo()" class="px-4 py-2.5 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">
+                    <button type="button" onclick="backToFacilityInfo()" class="px-4 py-2.5 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">
                         ← Bước 1: Thông tin cơ sở
                     </button>
                     <button type="submit" id="btnCalculate" class="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-semibold text-white gradient-brand transition inline-flex items-center justify-center gap-2">
@@ -325,7 +381,7 @@
         <section id="sectionReview" class="hidden bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5" aria-labelledby="reviewTitle">
             <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#e2f0db] pb-4">
                 <div class="space-y-1">
-                    <p class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Bước 3 / 4 · Kiểm tra & điền file Excel khảo sát</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Bước 3 / 4 · Kiểm tra & điền file Excel khảo sát</p>
                     <h2 id="reviewTitle" class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">Kiểm tra & chỉnh sửa trực tiếp trong biểu khảo sát</h2>
                     <p class="text-xs text-[#6a8978]">Xem dữ liệu đã bóc tách theo từng sheet Excel; điền thêm hoặc sửa trực tiếp vào ô trống và lưu thẳng vào file <span class="font-mono text-[#183026]">.xlsx</span>.</p>
                 </div>
@@ -342,7 +398,7 @@
             <!-- Excel Toolbar & Sheet Tabs -->
             <div class="flex flex-wrap items-center justify-between gap-2.5">
                 <div id="excelTabBar" class="flex flex-wrap gap-1.5" role="tablist" aria-label="Sheet biểu khảo sát">
-                    <button type="button" onclick="switchExcelTab('info')" id="excelTabBtn-info" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-[#003c33] text-white border-[#003c33]">Thông tin chung</button>
+                    <button type="button" onclick="switchExcelTab('info')" id="excelTabBtn-info" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-[#2f7a4a] text-white border-[#003c33]">Thông tin chung</button>
                     <button type="button" onclick="switchExcelTab('11')" id="excelTabBtn-11" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">1.1 Cố định</button>
                     <button type="button" onclick="switchExcelTab('12')" id="excelTabBtn-12" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">1.2 Di động</button>
                     <button type="button" onclick="switchExcelTab('21')" id="excelTabBtn-21" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">2.1 Điện EVN</button>
@@ -350,7 +406,7 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    <button type="button" id="btnSaveSurveyExcel" onclick="saveSurveyEdits(false)" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[#003c33] bg-[#edf5e9] hover:bg-[#dff4cc] border border-[#cce5c0] transition">
+                    <button type="button" id="btnSaveSurveyExcel" onclick="saveSurveyEdits(false)" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[#235f3a] bg-[#edf5e9] hover:bg-[#dff4cc] border border-[#cce5c0] transition">
                         Lưu vào Excel
                     </button>
                     <a id="surveyDownload" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white gradient-brand transition" download>Tải file Excel (.xlsx)</a>
@@ -485,13 +541,13 @@
                 <details class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/50 p-3 text-xs">
                     <summary class="cursor-pointer font-semibold text-[#2c4a3c] select-none">Hoặc tải lên file .xlsx đã sửa trên máy tính (tùy chọn)</summary>
                     <div class="mt-3">
-                        <input type="file" id="reviewedInput" name="reviewed" accept=".xlsx" class="block w-full text-xs text-[#2c4a3c] file:mr-3 file:rounded-lg file:border file:border-[#cce5c0] file:bg-white file:px-3.5 file:py-1.5 file:font-semibold file:text-[#003c33] hover:file:bg-[#edf5e9]">
+                        <input type="file" id="reviewedInput" name="reviewed" accept=".xlsx" class="block w-full text-xs text-[#2c4a3c] file:mr-3 file:rounded-lg file:border file:border-[#cce5c0] file:bg-white file:px-3.5 file:py-1.5 file:font-semibold file:text-[#235f3a] hover:file:bg-[#edf5e9]">
                     </div>
                 </details>
                 <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
                     <div class="flex flex-wrap items-center gap-2">
-                        <button type="button" onclick="goToStepIfAllowed(1)" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">← Bước 1: Thông tin</button>
-                        <button type="button" onclick="goToStepIfAllowed(2)" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">← Bước 2: Chứng từ</button>
+                        <button type="button" onclick="goToStepIfAllowed(1)" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">← Bước 1: Thông tin</button>
+                        <button type="button" onclick="goToStepIfAllowed(2)" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">← Bước 2: Chứng từ</button>
                     </div>
                     <button id="btnSurveyCalculate" type="submit" class="px-6 py-2.5 rounded-lg text-sm font-semibold text-white gradient-brand transition">Tính phát thải & xuất kết quả →</button>
                 </div>
@@ -519,7 +575,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-[#e2f0db]">
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0]">
                                 Hoàn tất kiểm kê
                             </span>
                             <span id="resSector" class="text-xs text-[#6a8978] font-medium">Chưa xác nhận</span>
@@ -538,17 +594,17 @@
 
                 <!-- 4 Clean Metric Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                    <div class="p-4 rounded-xl bg-[#003c33] text-white flex flex-col justify-between">
-                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#9fe870]">Tổng phát thải</span>
+                    <div class="p-4 rounded-xl bg-[#e8f4e8] border border-[#cfe4d0] text-[#173f2f] flex flex-col justify-between">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#2f7a4a]">Tổng phát thải</span>
                         <div class="my-2">
                             <span id="resTotal" class="text-2xl sm:text-3xl font-bold font-mono">0.00</span>
-                            <span class="text-xs text-[#c5edab]">tCO₂e</span>
+                            <span class="text-xs text-[#527861]">tCO₂e</span>
                         </div>
-                        <span id="resUncertainty" class="text-[11px] font-mono text-[#c5edab]/90 truncate">Khoảng bất định</span>
+                        <span id="resUncertainty" class="text-[11px] font-mono text-[#527861] truncate">Khoảng bất định</span>
                     </div>
 
                     <div class="p-4 rounded-xl bg-[#f5f9f4] border border-[#cce5c0] flex flex-col justify-between">
-                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Phạm vi 1 · Trực tiếp</span>
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Phạm vi 1 · Trực tiếp</span>
                         <div class="my-2">
                             <span id="resScope1" class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">0.00</span>
                             <span class="text-xs text-[#2c4a3c]">tCO₂e</span>
@@ -557,7 +613,7 @@
                     </div>
 
                     <div class="p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
-                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Phạm vi 2 · Gián tiếp</span>
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Phạm vi 2 · Gián tiếp</span>
                         <div class="my-2">
                             <span id="resScope2" class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">0.00</span>
                             <span class="text-xs text-[#2c4a3c]">tCO₂e</span>
@@ -568,12 +624,31 @@
                     <div class="p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-[11px] font-semibold uppercase tracking-wider text-[#6a8978]">Độ tin cậy</span>
-                            <span id="resGradeBadge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#003c33] text-white">A</span>
+                            <span id="resGradeBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#dff0d9] text-[#235f3a]">A</span>
                         </div>
                         <div class="my-2">
                             <span id="resScore" class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">0.0%</span>
                         </div>
                         <span id="resVerdict" class="text-[11px] text-[#6a8978] truncate">Chỉ số nội bộ</span>
+                    </div>
+                </div>
+
+                <!-- Charts: monthly emissions + scope share -->
+                <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_240px] gap-4">
+                    <div class="rounded-2xl bg-[#f7faf7] border border-[#e0ece0] p-4">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="text-sm font-bold text-[#091710]">Phát thải theo tháng</h3>
+                            <div class="flex items-center gap-3 text-[11px] text-[#2c4a3c]">
+                                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#2f7a4a]"></span>Scope 1</span>
+                                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#a8d987]"></span>Scope 2</span>
+                            </div>
+                        </div>
+                        <div id="monthlyChart" class="mt-3 h-44 flex items-end gap-1.5" role="img" aria-label="Biểu đồ phát thải theo tháng"></div>
+                    </div>
+                    <div class="rounded-2xl bg-[#f7faf7] border border-[#e0ece0] p-4 flex flex-col items-center justify-center gap-3">
+                        <h3 class="text-sm font-bold text-[#091710] self-start">Tỷ trọng phạm vi</h3>
+                        <div id="scopeDonut" class="relative w-36 h-36" role="img" aria-label="Tỷ trọng Scope 1 và Scope 2"></div>
+                        <div id="scopeDonutLegend" class="w-full space-y-1 text-[11px] text-[#2c4a3c]"></div>
                     </div>
                 </div>
 
@@ -583,62 +658,39 @@
                         <h3 id="downloadHeading" class="text-xs font-bold uppercase tracking-wider text-[#183026]">
                             4. Tải hồ sơ & báo cáo
                         </h3>
-                        <button type="button" onclick="openAccountModal()" id="tierNoticeBanner" class="text-left sm:text-right text-[11px] font-medium text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] px-3 py-1 rounded-lg border border-[#cce5c0] transition">
-                            Bản xem trước (Free) · <span class="underline font-semibold text-[#003c33]">Mở khóa bản đầy đủ</span>
-                        </button>
+                        <span class="text-[11px] text-[#6a8978]">Bản dự thảo — cần rà soát trước khi nộp</span>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-                        <!-- Survey Workbook -->
-                        <a id="btnDlSurvey" href="/api/survey/template" download class="hidden p-3.5 rounded-xl bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition text-left flex flex-col justify-between gap-1.5">
-                            <div class="text-xs font-bold text-[#003c33] flex items-center justify-between gap-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <a id="btnDlSurvey" href="#" download class="p-3.5 rounded-xl bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition text-left flex flex-col justify-between gap-1.5">
+                            <div class="text-xs font-bold text-[#235f3a] flex items-center justify-between gap-1">
                                 <span>Biểu khảo sát</span>
                                 <span aria-hidden="true">↓</span>
                             </div>
-                            <div class="text-[11px] text-[#2c4a3c] truncate">Đã xác nhận (.xlsx)</div>
+                            <div class="text-[11px] text-[#2c4a3c] truncate">Bang_khao_sat_da_dien.xlsx</div>
                         </a>
 
-                        <!-- HTML Report -->
-                        <a id="btnDlHtml" href="/api/report/html" target="_blank" class="p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#e2f0db] transition text-left flex flex-col justify-between gap-1.5">
+                        <a id="btnDlExcel" href="#" download class="p-3.5 rounded-xl bg-white hover:bg-[#f7faf7] border border-[#e0ece0] transition text-left flex flex-col justify-between gap-1.5">
                             <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
-                                <span>Báo cáo HTML</span>
-                                <span aria-hidden="true">↗</span>
+                                <span>Workbook kiểm kê</span>
+                                <span aria-hidden="true">↓</span>
                             </div>
-                            <div id="subDlHtml" class="text-[11px] text-[#6a8978] truncate">Xem trên trình duyệt</div>
+                            <div class="text-[11px] text-[#6a8978] truncate">GHGs_inventory_da_tinh.xlsx</div>
                         </a>
 
-                        <!-- Word DOCX -->
-                        <a id="btnDlDocx" href="/api/report/docx" onclick="return handleProDownload(event, 'docx')" download="Bao_cao_Mau02_ND06.docx" class="p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#e2f0db] transition text-left flex flex-col justify-between gap-1.5">
+                        <a id="btnDlDocx" href="#" download class="p-3.5 rounded-xl bg-white hover:bg-[#f7faf7] border border-[#e0ece0] transition text-left flex flex-col justify-between gap-1.5">
                             <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
                                 <span>Báo cáo Word</span>
-                                <span id="badgeLockDocx" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#2c4a3c] border border-[#cce5c0]">PRO</span>
+                                <span aria-hidden="true">↓</span>
                             </div>
-                            <div class="text-[11px] text-[#6a8978] truncate">Hồ sơ (.docx)</div>
-                        </a>
-
-                        <!-- PDF Audit -->
-                        <a id="btnDlPdf" href="/api/report/pdf" target="_blank" class="p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#e2f0db] transition text-left flex flex-col justify-between gap-1.5">
-                            <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
-                                <span>Báo cáo PDF</span>
-                                <span aria-hidden="true">↗</span>
-                            </div>
-                            <div id="subDlPdf" class="text-[11px] text-[#6a8978] truncate">Xem trước PDF</div>
-                        </a>
-
-                        <!-- Excel QA -->
-                        <a id="btnDlExcel" href="/api/report/excel" onclick="return handleProDownload(event, 'excel')" download="Ho_so_ket_qua_CO2_EcoStream.xlsx" class="p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#e2f0db] transition text-left flex flex-col justify-between gap-1.5">
-                            <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
-                                <span>Bảng kiểm kê Excel</span>
-                                <span id="badgeLockExcel" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#2c4a3c] border border-[#cce5c0]">PRO</span>
-                            </div>
-                            <div class="text-[11px] text-[#6a8978] truncate">Đối soát từng dòng (.xlsx)</div>
+                            <div class="text-[11px] text-[#6a8978] truncate">Bao_cao_kiem_ke_KNK.docx</div>
                         </a>
                     </div>
                 </div>
 
                 <!-- Collapsible Clean Details Table -->
                 <div class="pt-4 border-t border-[#e2f0db]">
-                    <button type="button" onclick="toggleDetailsTable()" class="w-full flex items-center justify-between text-xs font-semibold text-[#183026] hover:text-[#003c33] py-1.5">
+                    <button type="button" onclick="toggleDetailsTable()" class="w-full flex items-center justify-between text-xs font-semibold text-[#183026] hover:text-[#235f3a] py-1.5">
                         <span>Chi tiết hoạt động đã tính (<span id="calcCountBadge">0</span> dòng)</span>
                         <span id="detailsToggleIcon" class="text-[#6a8978]">▼ Xem chi tiết</span>
                     </button>
@@ -665,13 +717,13 @@
                 <!-- Step 4 Bottom Action Bar: Review Previous Steps & Start New Run -->
                 <div class="pt-4 border-t border-[#e2f0db] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                     <div class="flex flex-wrap items-center gap-2">
-                        <button type="button" onclick="goToStepIfAllowed(1)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">
+                        <button type="button" onclick="goToStepIfAllowed(1)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">
                             ← Bước 1: Thông tin
                         </button>
-                        <button type="button" onclick="goToStepIfAllowed(2)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">
+                        <button type="button" onclick="goToStepIfAllowed(2)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">
                             ← Bước 2: Chứng từ
                         </button>
-                        <button type="button" onclick="goToStepIfAllowed(3)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">
+                        <button type="button" onclick="goToStepIfAllowed(3)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">
                             ← Bước 3: Rà soát
                         </button>
                     </div>
@@ -687,79 +739,51 @@
 
     </main>
 
-    <!-- Modal: Enterprise Account & AI Settings -->
-    <div id="accountLicenseModal" class="fixed inset-0 z-50 bg-[#091710]/50 backdrop-blur-xs hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-[#e2f0db] space-y-4">
-            <div class="flex items-start justify-between border-b border-[#e2f0db] pb-3.5">
-                <div>
-                    <h3 class="text-base font-bold text-[#091710]">Tài khoản & cấu hình</h3>
-                    <p class="text-xs text-[#6a8978] mt-0.5">Phân tách phiên chạy theo mã tổ chức và mở khóa xuất bản</p>
-                </div>
-                <button type="button" onclick="closeAccountModal()" class="w-7 h-7 rounded-lg bg-[#f5f9f4] hover:bg-[#edf5e9] text-[#2c4a3c] font-bold flex items-center justify-center border border-[#e2f0db]">✕</button>
+    <!-- ── Right panel: progress timeline + reminders (like the calendar column) ── -->
+    <aside class="hidden xl:flex flex-col gap-5">
+        <section class="rounded-3xl bg-white border border-[#e2f0db] p-5">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-[#091710]">Tiến trình kiểm kê</h3>
+                <span id="sideProgressText" class="text-[11px] font-semibold text-[#2a5c47] bg-[#edf5e9] px-2 py-0.5 rounded-full">1/4</span>
             </div>
+            <ol class="mt-4 relative border-l-2 border-dashed border-[#cce5c0] ml-2 space-y-4">
+                <li id="timelineStep1" class="timeline-item"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold">Thông tin cơ sở</div><div class="timeline-sub">Phiếu thông tin chung</div></div></li>
+                <li id="timelineStep2" class="timeline-item"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold">Nạp chứng từ</div><div class="timeline-sub">PDF có chữ, Excel, Word, CSV</div></div></li>
+                <li id="timelineStep3" class="timeline-item"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold">Rà soát biểu Excel</div><div class="timeline-sub">Sửa, bổ sung ô còn trống</div></div></li>
+                <li id="timelineStep4" class="timeline-item"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold">Kết quả & báo cáo</div><div class="timeline-sub">Scope 1/2, tải 3 tệp</div></div></li>
+            </ol>
+        </section>
 
-            <form onsubmit="handleEnterpriseLogin(event)" class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-medium text-[#2c4a3c] mb-1">Email phụ trách</label>
-                    <input type="email" id="modalEmailInput" value="hse@ecogarment.vn" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden" required>
-                </div>
+        <section class="rounded-3xl bg-white border border-[#e2f0db] p-5 space-y-3">
+            <h3 class="text-sm font-bold text-[#091710]">Lưu ý khi dùng</h3>
+            <div class="flex gap-3 text-xs text-[#2c4a3c]">
+                <span class="w-8 h-8 rounded-xl bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0 font-bold">PDF</span>
+                <p>Chỉ đọc <b>PDF có chữ</b> (hóa đơn điện tử). PDF scan cần nhập tay ở bước 3.</p>
+            </div>
+            <div class="flex gap-3 text-xs text-[#2c4a3c]">
+                <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center shrink-0 font-bold">!</span>
+                <p>Sinh khối, chất thải, LNG… chưa có hệ số riêng nên được ghi <b>CHƯA TÍNH</b>, không cộng vào tổng.</p>
+            </div>
+            <div class="flex gap-3 text-xs text-[#2c4a3c]">
+                <span class="w-8 h-8 rounded-xl bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0 font-bold">✓</span>
+                <p>Kết quả là <b>bản dự thảo</b>, cần đối chiếu chứng từ gốc trước khi nộp.</p>
+            </div>
+        </section>
+    </aside>
 
-                <div>
-                    <label class="block text-xs font-medium text-[#2c4a3c] mb-1">Mã tổ chức (Org ID)</label>
-                    <input type="text" id="modalOrgInput" value="ecogarment-vn" placeholder="ecogarment-vn" class="w-full text-xs font-mono font-semibold px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden" required>
-                </div>
+        </div><!-- /grid -->
 
-                <div class="p-3.5 rounded-xl bg-[#f5f9f4] border border-[#cce5c0] space-y-2">
-                    <div class="flex items-center justify-between">
-                        <label class="block text-xs font-semibold text-[#183026]">Mã bản quyền (Pro / Enterprise)</label>
-                        <button type="button" onclick="fillDemoProKey()" class="text-[11px] font-semibold text-[#003c33] hover:underline">Điền mã dùng thử</button>
-                    </div>
-                    <input type="text" id="modalLicenseInput" placeholder="ECO-PRO-2026" class="w-full text-xs font-mono font-semibold px-3 py-2 bg-white border border-[#cce5c0] rounded-lg outline-hidden">
-                    <p class="text-[11px] text-[#6a8978]">Bản Pro mở khóa tải Word và bảng kiểm kê Excel không watermark.</p>
-                </div>
-
-                <div class="p-3.5 rounded-xl bg-white border border-[#e2f0db] space-y-2">
-                    <div class="flex items-center justify-between">
-                        <label class="block text-xs font-semibold text-[#183026]">API bóc tách (tùy chọn)</label>
-                        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] font-medium text-[#003c33] hover:underline">Lấy Gemini Key ↗</a>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <select id="modalAiProviderSelect" onchange="toggleAiKeyInput()" class="text-xs font-medium px-2 py-2 bg-white border border-[#cce5c0] rounded-lg outline-hidden">
-                            <option value="gemini">Gemini</option>
-                            <option value="openai">OpenAI</option>
-                            <option value="ollama">Ollama (Local)</option>
-                            <option value="offline">Offline</option>
-                        </select>
-                        <input type="password" id="modalAiKeyInput" placeholder="API Key" class="col-span-2 text-xs font-mono px-3 py-2 bg-white border border-[#cce5c0] rounded-lg outline-hidden">
-                    </div>
-                </div>
-
-                <div id="modalStatusMsg" class="hidden text-xs font-semibold p-2.5 rounded-lg text-center"></div>
-
-                <div class="flex items-center justify-end gap-2 pt-2">
-                    <button type="button" onclick="switchToFreeTier()" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">Chuyển về Free</button>
-                    <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold text-white gradient-brand transition">Lưu cấu hình</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="border-t border-[#e2f0db] bg-white py-4 text-center text-xs text-[#6a8978]">
-        EcoStream · Kiểm kê khí nhà kính cấp cơ sở (NĐ 06/2022/NĐ-CP)
-    </footer>
+        <footer class="px-8 py-4 text-center text-xs text-[#6a8978]">
+            EcoStream · Kiểm kê khí nhà kính cấp cơ sở (NĐ 06/2022/NĐ-CP)
+        </footer>
+    </div><!-- /main area -->
+</div><!-- /app frame -->
 
     <!-- Direct & Clean Logic Script -->
     <script>
         let selectedFiles = [];
-        let latestRunId = 'benchmark';
-        let isSurveyRun = false;
+        let latestRunId = null;
         let activeRequest = false;
-        let currentOrgId = localStorage.getItem('ecostream_org_id') || 'ecogarment-vn';
-        let currentUserId = localStorage.getItem('ecostream_user_id') || 'anonymous';
-        let currentEmail = localStorage.getItem('ecostream_email') || 'hse@ecogarment.vn';
-        let currentTier = localStorage.getItem('ecostream_tier') || 'FREE';
-        let currentLicenseKey = localStorage.getItem('ecostream_license_key') || '';
         const byId = id => document.getElementById(id);
         const surveyPath = (runId, suffix) => `/api/survey/runs/${encodeURIComponent(runId)}/${suffix}`;
         const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
@@ -811,22 +835,41 @@
                 maxReachedStep = Math.max(maxReachedStep, step);
             }
             for (let i = 1; i <= 4; i++) {
-                const badge = byId(`stepBadge${i}`);
-                if (!badge) continue;
-                const num = badge.querySelector('span');
                 const reachable = i <= maxReachedStep;
-                badge.disabled = !reachable;
-                if (i === step) {
-                    badge.className = 'px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-[#003c33] text-white border-[#003c33] cursor-pointer';
-                    if (num) num.className = 'w-5 h-5 rounded-full bg-white/15 text-white flex items-center justify-center text-[11px] font-bold shrink-0';
-                } else if (reachable) {
-                    badge.className = 'px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-[#edf5e9] hover:bg-[#dff4cc] text-[#091710] border-[#cce5c0] cursor-pointer';
-                    if (num) num.className = 'w-5 h-5 rounded-full bg-[#2a5c47] text-white flex items-center justify-center text-[11px] font-bold shrink-0';
-                } else {
-                    badge.className = 'px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-white text-[#6a8978] border-[#e2f0db] cursor-not-allowed opacity-70';
-                    if (num) num.className = 'w-5 h-5 rounded-full bg-[#f5f9f4] text-[#6a8978] flex items-center justify-center text-[11px] font-bold shrink-0';
+                const badge = byId(`stepBadge${i}`);
+                if (badge) {
+                    badge.disabled = !reachable;
+                    badge.classList.toggle('is-active', i === step);
+                    badge.classList.toggle('is-done', i < step);
+                }
+                const item = byId(`timelineStep${i}`);
+                if (item) {
+                    item.classList.toggle('is-active', i === step);
+                    item.classList.toggle('is-done', i < step);
                 }
             }
+            const titles = ['Thông tin cơ sở', 'Nạp chứng từ', 'Rà soát biểu khảo sát', 'Kết quả & báo cáo'];
+            const hints = [
+                'Bắt đầu bằng thông tin cơ sở. Sau đó nạp chứng từ, EcoStream sẽ tự điền biểu khảo sát để bạn rà soát.',
+                'Kéo thả hóa đơn điện EVN, bảng kê nhiên liệu (PDF có chữ, Excel, Word, CSV). Dữ liệu thiếu được giữ trống.',
+                'Kiểm tra từng sheet, sửa hoặc bổ sung số liệu còn thiếu. Ô trống không được coi là số 0.',
+                'Xem phát thải Scope 1/2 theo tháng và tải biểu khảo sát, workbook kiểm kê, báo cáo Word dự thảo.',
+            ];
+            byId('topbarStep').textContent = `Bước ${step} / 4`;
+            byId('topbarTitle').textContent = titles[step - 1];
+            byId('heroHint').textContent = hints[step - 1];
+            const progress = byId('sideProgressText');
+            if (progress) progress.textContent = `${step}/4`;
+            updateTopbarFacility();
+        }
+
+        function updateTopbarFacility() {
+            const chip = byId('topbarFacility');
+            if (!chip) return;
+            const name = (byId('locationInput')?.value || '').trim();
+            const year = (byId('periodInput')?.value || '').trim();
+            chip.textContent = name ? `${name} · ${year}` : 'Chưa có cơ sở';
+            chip.title = chip.textContent;
         }
 
         function showStep(step, resetMax = false) {
@@ -936,236 +979,21 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            updateAccountAndTierUI();
             restoreFacilityDraft();
             FACILITY_FIELD_IDS.forEach(id => {
                 const el = byId(id);
-                if (el) el.addEventListener('input', saveFacilityDraft);
+                if (el) el.addEventListener('input', () => { saveFacilityDraft(); updateTopbarFacility(); });
             });
             setActiveStep(1, true);
         });
 
-        function toggleAiKeyInput() {
-            const provider = document.getElementById('modalAiProviderSelect').value;
-            const keyInput = document.getElementById('modalAiKeyInput');
-            if (provider === 'offline' || provider === 'ollama') {
-                keyInput.disabled = true;
-                keyInput.placeholder = provider === 'ollama' ? 'Ollama chạy tại http://127.0.0.1:11434' : 'Chế độ tính toán Offline thuần túy';
-            } else {
-                keyInput.disabled = false;
-                keyInput.placeholder = provider === 'gemini' ? 'Dán Google Gemini API Key (AIzaSy...)' : 'Dán OpenAI API Key (sk-...)';
-            }
-        }
-
-        async function openAccountModal() {
-            document.getElementById('modalEmailInput').value = currentEmail;
-            document.getElementById('modalOrgInput').value = currentOrgId;
-            document.getElementById('modalLicenseInput').value = currentLicenseKey;
-            document.getElementById('modalStatusMsg').classList.add('hidden');
-
-            try {
-                const res = await fetch('/api/settings/ai');
-                if (res.ok) {
-                    const cfg = await res.json();
-                    if (cfg.provider) {
-                        document.getElementById('modalAiProviderSelect').value = cfg.provider;
-                    }
-                    if (cfg.configured && cfg.masked_key) {
-                        document.getElementById('modalAiKeyInput').placeholder = 'Đang dùng key: ' + cfg.masked_key;
-                    }
-                    toggleAiKeyInput();
-                }
-            } catch (err) {
-                console.warn('Cannot load AI settings:', err);
-            }
-
-            const modal = document.getElementById('accountLicenseModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeAccountModal() {
-            const modal = document.getElementById('accountLicenseModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function fillDemoProKey() {
-            document.getElementById('modalLicenseInput').value = 'ECO-PRO-2026';
-        }
-
-        function switchToFreeTier() {
-            document.getElementById('modalLicenseInput').value = '';
-            currentTier = 'FREE';
-            currentLicenseKey = '';
-            localStorage.setItem('ecostream_tier', 'FREE');
-            localStorage.setItem('ecostream_license_key', '');
-            updateAccountAndTierUI();
-            refreshDownloadLinks();
-            closeAccountModal();
-        }
-
-        async function handleEnterpriseLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('modalEmailInput').value.trim();
-            const orgId = document.getElementById('modalOrgInput').value.trim();
-            const licenseKey = document.getElementById('modalLicenseInput').value.trim();
-            const aiProvider = document.getElementById('modalAiProviderSelect').value;
-            const aiKey = document.getElementById('modalAiKeyInput').value.trim();
-            const msgBox = document.getElementById('modalStatusMsg');
-
-            try {
-                // Save AI Settings if provided
-                if (aiProvider) {
-                    await fetch('/api/settings/ai', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            provider: aiProvider,
-                            api_key: aiKey || undefined
-                        })
-                    });
-                }
-
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, org_id: orgId, license_key: licenseKey || null })
-                });
-                const data = await res.json();
-                if (licenseKey && !data.is_pro) {
-                    msgBox.className = "text-xs font-bold p-2.5 rounded-xl text-center bg-rose-50 text-rose-700 border border-rose-200";
-                    msgBox.innerText = "Mã không hợp lệ. Hãy bấm 'Điền mã dùng thử' (ECO-PRO-2026) để kiểm tra.";
-                    msgBox.classList.remove('hidden');
-                    return;
-                }
-
-                currentEmail = data.email;
-                currentOrgId = data.org_id;
-                currentUserId = data.user_id;
-                currentTier = data.tier;
-                currentLicenseKey = data.is_pro ? (licenseKey.startsWith('ECO2.') ? licenseKey : licenseKey.toUpperCase()) : '';
-
-                localStorage.setItem('ecostream_email', currentEmail);
-                localStorage.setItem('ecostream_org_id', currentOrgId);
-                localStorage.setItem('ecostream_user_id', currentUserId);
-                localStorage.setItem('ecostream_tier', currentTier);
-                localStorage.setItem('ecostream_license_key', currentLicenseKey);
-
-                updateAccountAndTierUI();
-                refreshDownloadLinks();
-                closeAccountModal();
-            } catch (err) {
-                alert('Lỗi xác thực tài khoản: ' + err);
-            }
-        }
-
-        function updateAccountAndTierUI() {
-            const btn = document.getElementById('btnAccountBadge');
-            const icon = document.getElementById('headerTierIcon');
-            const orgText = document.getElementById('headerOrgText');
-            const badge = document.getElementById('headerTierBadge');
-            const monLink = document.getElementById('linkMonitor');
-
-            if (monLink && currentOrgId) {
-                monLink.href = `/monitor?org_id=${encodeURIComponent(currentOrgId)}`;
-            }
-            if (orgText) {
-                orgText.innerText = currentOrgId || 'Khách';
-            }
-
-            const isPro = (currentTier === 'PRO');
-            if (isPro) {
-                btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#edf5e9] hover:bg-[#dff4cc] text-[#003c33] border border-[#cce5c0] transition inline-flex items-center gap-1.5";
-                icon.className = "w-2 h-2 rounded-full bg-[#003c33]";
-                badge.className = "px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#003c33] text-[#9fe870]";
-                badge.innerText = "PRO";
-            } else {
-                btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#f5f9f4] hover:bg-[#edf5e9] text-[#183026] border border-[#cce5c0] transition inline-flex items-center gap-1.5";
-                icon.className = "w-2 h-2 rounded-full bg-[#6a8978]";
-                badge.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#2c4a3c]";
-                badge.innerText = "FREE";
-            }
-        }
-
         function refreshDownloadLinks() {
-            const isPro = (currentTier === 'PRO');
-            const tierParam = isPro ? 'pro' : 'free';
-            const runParam = latestRunId || 'benchmark';
-            const qs = `?run_id=${encodeURIComponent(runParam)}&tier=${tierParam}` + (currentLicenseKey ? `&license_key=${encodeURIComponent(currentLicenseKey)}` : '');
-
-            const runBadge = document.getElementById('resRunIdBadge');
-            if (runBadge) runBadge.innerText = `run: ${runParam}`;
-
-            document.getElementById('btnDlHtml').href = `/api/report/html${qs}`;
-            document.getElementById('btnDlPdf').href = `/api/report/pdf${qs}`;
-
-            const surveyBtn = document.getElementById('btnDlSurvey');
-            if (isSurveyRun && latestRunId) {
-                if (surveyBtn) {
-                    surveyBtn.classList.remove('hidden');
-                    surveyBtn.href = surveyPath(latestRunId, 'files/survey');
-                }
-                document.getElementById('btnDlDocx').href = surveyPath(latestRunId, 'files/report');
-                document.getElementById('btnDlExcel').href = surveyPath(latestRunId, 'files/inventory');
-            } else {
-                if (surveyBtn) surveyBtn.classList.add('hidden');
-                document.getElementById('btnDlDocx').href = `/api/report/docx${qs}`;
-                document.getElementById('btnDlExcel').href = `/api/report/excel${qs}`;
-            }
-
-            const notice = document.getElementById('tierNoticeBanner');
-            const subHtml = document.getElementById('subDlHtml');
-            const subPdf = document.getElementById('subDlPdf');
-            const lockDocx = document.getElementById('badgeLockDocx');
-            const lockExcel = document.getElementById('badgeLockExcel');
-
-            if (isPro) {
-                if (notice) {
-                    notice.className = "text-left sm:text-right text-[11px] font-medium text-[#003c33] bg-[#edf5e9] hover:bg-[#dff4cc] px-3 py-1 rounded-lg border border-[#cce5c0] transition";
-                    notice.textContent = `Gói Pro (${currentOrgId}) · Đã mở khóa đầy đủ`;
-                }
-                if (subHtml) subHtml.innerText = "Bản chính thức";
-                if (subPdf) subPdf.innerText = "Bản chính thức (.pdf)";
-                if (lockDocx) {
-                    lockDocx.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#003c33] text-white";
-                    lockDocx.innerText = "↓";
-                }
-                if (lockExcel) {
-                    lockExcel.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#003c33] text-white";
-                    lockExcel.innerText = "↓";
-                }
-            } else {
-                if (notice) {
-                    notice.className = "text-left sm:text-right text-[11px] font-medium text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] px-3 py-1 rounded-lg border border-[#cce5c0] transition";
-                    notice.innerHTML = `Bản xem trước (Free) · <span class="underline font-semibold text-[#003c33]">Mở khóa bản đầy đủ</span>`;
-                }
-                if (subHtml) subHtml.innerText = "Xem trước (Watermark)";
-                if (subPdf) subPdf.innerText = "Xem trước (Watermark)";
-                if (lockDocx) {
-                    lockDocx.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#2c4a3c] border border-[#cce5c0]";
-                    lockDocx.innerText = "PRO";
-                }
-                if (lockExcel) {
-                    lockExcel.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#2c4a3c] border border-[#cce5c0]";
-                    lockExcel.innerText = "PRO";
-                }
-            }
-        }
-
-        function handleProDownload(e, docType) {
-            if (currentTier !== 'PRO') {
-                e.preventDefault();
-                openAccountModal();
-                const msgBox = document.getElementById('modalStatusMsg');
-                msgBox.className = "text-xs font-semibold p-2.5 rounded-lg text-center bg-[#f5f9f4] text-[#003c33] border border-[#cce5c0]";
-                msgBox.innerText = docType === 'docx'
-                    ? "Tải báo cáo Word yêu cầu mã Pro. Bấm 'Điền mã dùng thử' để mở khóa."
-                    : "Tải bảng kiểm kê Excel yêu cầu mã Pro. Bấm 'Điền mã dùng thử' để mở khóa.";
-                msgBox.classList.remove('hidden');
-                return false;
-            }
-            return true;
+            const runBadge = byId('resRunIdBadge');
+            if (runBadge) runBadge.innerText = latestRunId ? `run: ${latestRunId}` : 'run';
+            if (!latestRunId) return;
+            byId('btnDlSurvey').href = surveyPath(latestRunId, 'files/survey');
+            byId('btnDlExcel').href = surveyPath(latestRunId, 'files/inventory');
+            byId('btnDlDocx').href = surveyPath(latestRunId, 'files/report');
         }
 
         // 1. File Selection & Drag-and-Drop
@@ -1187,10 +1015,10 @@
         const MAX_SURVEY_FILES = 100;
         function handleFilesSelected(files) {
             if (!files || files.length === 0) return;
-            const allowed = ['.pdf', '.xlsx', '.docx', '.csv', '.png', '.jpg', '.jpeg'];
+            const allowed = ['.pdf', '.xlsx', '.docx', '.csv'];
             const additions = Array.from(files);
             const invalid = additions.find(f => !allowed.some(ext => f.name.toLowerCase().endsWith(ext)) || f.name.includes('..') || f.name.includes('/') || f.name.includes('\\') || f.size > 10 * 1024 * 1024);
-            if (invalid) { alert('Tệp không hợp lệ: ' + invalid.name + '. Chỉ hỗ trợ PDF, XLSX, DOCX, CSV, PNG/JPG và tối đa 10 MB mỗi tệp.'); return; }
+            if (invalid) { alert('Tệp không hợp lệ: ' + invalid.name + '. Chỉ hỗ trợ PDF có chữ (không phải bản scan), XLSX, DOCX, CSV, tối đa 10 MB mỗi tệp.'); return; }
             const uniqueAdditions = additions.filter(f => !selectedFiles.some(existing => existing.name === f.name));
             if (selectedFiles.length + uniqueAdditions.length > MAX_SURVEY_FILES) { alert(`Chỉ được chọn tối đa ${MAX_SURVEY_FILES} chứng từ.`); return; }
             uniqueAdditions.forEach(f => selectedFiles.push(f));
@@ -1211,13 +1039,13 @@
 
             if (selectedFiles.length === 0) {
                 box.classList.add('hidden');
-                dropzoneText.innerHTML = 'Kéo thả tệp vào đây, hoặc <span class="text-[#003c33] underline">chọn từ máy tính</span>';
+                dropzoneText.innerHTML = 'Kéo thả tệp vào đây, hoặc <span class="text-[#235f3a] underline">chọn từ máy tính</span>';
                 return;
             }
 
             box.classList.remove('hidden');
             countText.innerText = `${selectedFiles.length} tệp`;
-            dropzoneText.innerHTML = `Đã chọn <strong class="text-[#003c33]">${selectedFiles.length} tệp</strong>. Bấm để thêm tệp.`;
+            dropzoneText.innerHTML = `Đã chọn <strong class="text-[#235f3a]">${selectedFiles.length} tệp</strong>. Bấm để thêm tệp.`;
 
             list.innerHTML = selectedFiles.map((f, i) => `
                 <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-[#cce5c0] rounded-lg text-xs font-medium text-[#183026]">
@@ -1243,13 +1071,10 @@
             formData.set('location', locationVal);
             formData.set('company', companyVal || locationVal);
             selectedFiles.forEach(f => formData.append('files', f));
-            formData.append('org_id', currentOrgId);
-            formData.append('user_id', currentUserId);
             showLoading('Đang đọc dữ liệu & tạo biểu khảo sát...', 'Thông tin cơ sở (CV 1790/VNL-P16) và số liệu chứng từ sẽ được ghi vào Excel.');
             try {
                 const data = await readApiResponse(await fetch('/api/survey/prepare', { method: 'POST', body: formData }));
                 latestRunId = data.run_id;
-                isSurveyRun = true;
                 displayReview(data);
             } catch (err) {
                 alert('Không thể tạo biểu khảo sát: ' + err.message);
@@ -1298,7 +1123,7 @@
                 if (!btn) return;
                 const active = key === tab;
                 btn.className = active
-                    ? 'excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-[#003c33] text-white border-[#003c33]'
+                    ? 'excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-[#2f7a4a] text-white border-[#003c33]'
                     : 'excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]';
             });
             byId('excelSheetPanel-info').classList.toggle('hidden', tab !== 'info');
@@ -1418,7 +1243,7 @@
                 tr.append(tdStt, tdName, tdCode, tdUnit);
 
                 const tdSum = document.createElement('td');
-                tdSum.className = 'p-2 text-right font-mono font-semibold text-[#003c33] bg-[#edf5e9]/40';
+                tdSum.className = 'p-2 text-right font-mono font-semibold text-[#235f3a] bg-[#edf5e9]/40';
                 tdSum.textContent = formatSumCell(row.months || []);
 
                 for (let m = 0; m < 12; m++) {
@@ -1505,7 +1330,7 @@
                 tr.append(tdStt, tdFuel, tdCode, tdUnit);
 
                 const tdSum = document.createElement('td');
-                tdSum.className = 'p-2 text-right font-mono font-semibold text-[#003c33] bg-[#edf5e9]/40';
+                tdSum.className = 'p-2 text-right font-mono font-semibold text-[#235f3a] bg-[#edf5e9]/40';
                 tdSum.textContent = formatSumCell(row.months || []);
 
                 for (let m = 0; m < 12; m++) {
@@ -1639,7 +1464,7 @@
             tbody.replaceChildren();
             const rows = surveyWorkbookState.sheet_2_1 || [];
             const totalCell = document.createElement('td');
-            totalCell.className = 'p-2.5 text-right font-mono font-bold text-[#003c33] bg-[#edf5e9]';
+            totalCell.className = 'p-2.5 text-right font-mono font-bold text-[#235f3a] bg-[#edf5e9]';
 
             const updateGrandTotal = () => {
                 const gridSum = rows.reduce((a, r) => a + (Number.isFinite(Number(r.grid_kwh)) && r.grid_kwh !== null && r.grid_kwh !== '' ? Number(r.grid_kwh) : 0), 0);
@@ -1663,7 +1488,7 @@
                 tdUnit.textContent = row.unit || 'kWh';
 
                 const tdRowSum = document.createElement('td');
-                tdRowSum.className = 'p-2.5 text-right font-mono font-semibold text-[#003c33] bg-[#edf5e9]/40';
+                tdRowSum.className = 'p-2.5 text-right font-mono font-semibold text-[#235f3a] bg-[#edf5e9]/40';
                 const updateRowSum = () => {
                     tdRowSum.textContent = formatSumCell([row.grid_kwh, row.self_kwh]);
                     updateGrandTotal();
@@ -1791,7 +1616,7 @@
                     box.className = 'rounded-lg px-3 py-2 text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200';
                     box.textContent = 'Đã lưu vào file Excel (Bang_khao_sat_da_dien.xlsx). Lưu ý: ' + warns.join(' · ');
                 } else {
-                    box.className = 'rounded-lg px-3 py-2 text-xs font-medium bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]';
+                    box.className = 'rounded-lg px-3 py-2 text-xs font-medium bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0]';
                     box.textContent = 'Đã lưu trực tiếp vào file Excel khảo sát (Bang_khao_sat_da_dien.xlsx).';
                 }
                 box.classList.remove('hidden');
@@ -1863,7 +1688,6 @@
 
         function resetToInput() {
             latestRunId = null;
-            isSurveyRun = false;
             surveyWorkbookState = null;
             surveyDirty = false;
             extraCellsEdits = {};
@@ -1904,13 +1728,14 @@
             const grade = rel.grade || '—';
             const gradeBadge = document.getElementById('resGradeBadge');
             gradeBadge.innerText = `Hạng ${grade}`;
-            gradeBadge.className = `px-2 py-0.5 rounded text-[10px] font-bold ${grade === 'A' ? 'bg-[#003c33] text-[#9fe870]' : grade === 'B' ? 'bg-[#2a5c47] text-white' : 'bg-amber-100 text-amber-900'}`;
-            document.getElementById('resVerdict').innerText = isSurveyRun ? 'Chỉ số nội bộ theo nguồn dữ liệu' : (rel.summary_verdict || 'Đạt chuẩn đối soát');
+            gradeBadge.className = `px-2 py-0.5 rounded-full text-[10px] font-bold ${grade === 'A' ? 'bg-[#dff0d9] text-[#235f3a]' : grade === 'B' ? 'bg-[#e7f2e8] text-[#2f7a4a]' : 'bg-amber-100 text-amber-900'}`;
+            document.getElementById('resVerdict').innerText = 'Chỉ số nội bộ theo nguồn dữ liệu';
             showWarnings('resultWarnings', data.warnings);
-            byId('downloadHeading').textContent = isSurveyRun ? '4. Tải hồ sơ & báo cáo' : 'Tải hồ sơ & báo cáo';
 
             // Update per-run & tier-aware download links
             refreshDownloadLinks();
+
+            renderResultCharts(data.calculations || [], Number(s.scope_1_tonnes || 0), Number(s.scope_2_tonnes || 0));
 
             // Calculations Table
             const calcs = data.calculations || [];
@@ -1920,16 +1745,61 @@
                 <tr class="border-b border-[#e2f0db] last:border-b-0 hover:bg-[#f5f9f4] transition">
                     <td class="py-2.5 px-3 font-mono text-[#6a8978]">${i + 1}</td>
                     <td class="py-2.5 px-3 font-semibold text-[#091710]">${escapeHtml(c.description)}</td>
-                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${c.scope === 'Scope 1' ? 'bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]' : 'bg-slate-100 text-slate-700 border border-slate-200'}">${escapeHtml(c.scope)}</span></td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${c.scope === 'Scope 1' ? 'bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0]' : 'bg-slate-100 text-slate-700 border border-slate-200'}">${escapeHtml(c.scope)}</span></td>
                     <td class="py-2.5 px-3 text-right font-mono">${formatNumber(c.activity_value)} <span class="text-[#6a8978] text-[10px]">${escapeHtml(c.activity_unit)}</span></td>
                     <td class="py-2.5 px-3 text-right font-mono text-[#2c4a3c]">${escapeHtml(c.emission_factor_value)}</td>
                     <td class="py-2.5 px-3 text-right font-mono font-bold text-[#091710]">${Number(c.co2e_tonnes || 0).toFixed(3)}</td>
                     <td class="py-2.5 px-3 font-mono text-[11px] text-[#6a8978] text-right truncate max-w-[140px]">${escapeHtml(c.evidence?.source_document || '-')}</td>
-                    <td class="py-2.5 px-3 text-right font-mono font-semibold ${Number(c.quality_composite_score) >= 85 ? 'text-[#003c33]' : 'text-amber-700'}">${escapeHtml(c.quality_composite_score ?? '—')}%</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-semibold ${Number(c.quality_composite_score) >= 85 ? 'text-[#235f3a]' : 'text-amber-700'}">${escapeHtml(c.quality_composite_score ?? '—')}%</td>
                 </tr>
             `).join('');
 
             byId('sectionResults').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderResultCharts(calcs, scope1, scope2) {
+            // Monthly stacked bars (month parsed from "... tháng MM/YYYY" descriptions).
+            const months = Array.from({ length: 12 }, () => ({ s1: 0, s2: 0 }));
+            calcs.forEach(c => {
+                const m = /tháng\s*(\d{1,2})\//.exec(c.description || '');
+                if (!m) return;
+                const idx = Number(m[1]) - 1;
+                if (idx < 0 || idx > 11) return;
+                const t = Number(c.co2e_tonnes || 0);
+                if (c.scope === 'Scope 2') months[idx].s2 += t; else months[idx].s1 += t;
+            });
+            const max = Math.max(...months.map(m => m.s1 + m.s2), 0);
+            byId('monthlyChart').innerHTML = months.map((m, i) => {
+                const total = m.s1 + m.s2;
+                const h = max > 0 ? Math.max(total / max * 100, total > 0 ? 3 : 0) : 0;
+                const s1h = total > 0 ? m.s1 / total * 100 : 0;
+                return `<div class="bar-col" title="Tháng ${i + 1}: ${total.toFixed(2)} tCO₂e">
+                    <span class="text-[10px] font-mono text-[#2c4a3c]">${total > 0 ? (total >= 100 ? total.toFixed(0) : total.toFixed(1)) : '–'}</span>
+                    <div class="bar-stack" style="height:${h}%">
+                        <div style="height:${s1h}%;background:#003c33"></div>
+                        <div style="flex:1;background:#a8d987"></div>
+                    </div>
+                    <span class="text-[10px] text-[#6a8978]">T${i + 1}</span>
+                </div>`;
+            }).join('');
+
+            // Scope share donut (SVG, no chart library: works offline).
+            const total = scope1 + scope2;
+            const r = 52, circ = 2 * Math.PI * r;
+            const p1 = total > 0 ? scope1 / total : 0;
+            byId('scopeDonut').innerHTML = `
+                <svg viewBox="0 0 128 128" class="w-full h-full -rotate-90">
+                    <circle cx="64" cy="64" r="${r}" fill="none" stroke="#a8d987" stroke-width="16"/>
+                    <circle cx="64" cy="64" r="${r}" fill="none" stroke="#2f7a4a" stroke-width="16"
+                        stroke-dasharray="${(p1 * circ).toFixed(2)} ${circ.toFixed(2)}" stroke-linecap="${p1 > 0 && p1 < 1 ? 'round' : 'butt'}"/>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-xl font-bold text-[#091710]">${total > 0 ? Math.round(p1 * 100) : 0}%</span>
+                    <span class="text-[10px] text-[#6a8978]">Scope 1</span>
+                </div>`;
+            byId('scopeDonutLegend').innerHTML = `
+                <div class="flex justify-between"><span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#2f7a4a]"></span>Scope 1</span><span class="font-mono">${formatNumber(scope1)} t</span></div>
+                <div class="flex justify-between"><span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[#a8d987]"></span>Scope 2</span><span class="font-mono">${formatNumber(scope2)} t</span></div>`;
         }
 
         function toggleDetailsTable() {

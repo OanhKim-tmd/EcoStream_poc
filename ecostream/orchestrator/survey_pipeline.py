@@ -16,7 +16,7 @@ from ecostream.engine.reliability import ReliabilityEngine
 from ecostream.factors.database import get_factor_database
 from ecostream.ingestion.survey_workbook import (
     FUEL_NAMES, FUEL_ROWS, SURVEY_NAME, TEMPLATES, SurveyData, SurveyGeneralInfo,
-    SurveyItem, SurveyValidationError, classify_fuel, extract_documents,
+    SurveyValidationError, classify_fuel, extract_documents,
     normalize_quantity, parse_number, read_general_info, read_survey,
 )
 from ecostream.models.activity import (
@@ -107,37 +107,45 @@ def prepare_survey(
             "items": [item.__dict__ for item in data.items], "survey_url": f"/api/survey/runs/{run_id}/survey"}
 
 
+# Only fuels with their own emission factor are calculated. Biomass (biogenic CO2
+# is reported separately under IPCC 2006), wastes, peat, LNG, kerosene and other
+# petroleum products must NOT borrow coal/diesel/LPG factors: that would silently
+# misstate emissions. They stay in the survey and are listed as not calculated.
+FACTOR_IDS = {
+    "mixed_coal": "EF-SCOPE1-COAL",
+    "bituminous": "EF-SCOPE1-COAL",
+    "subbituminous": "EF-SCOPE1-COAL",
+    "anthracite": "EF-SCOPE1-COAL",
+    "diesel": "EF-SCOPE1-DIESEL",
+    "fo": "EF-SCOPE1-FO",
+    "petrol": "EF-SCOPE1-PETROL",
+    "naturalgas": "EF-SCOPE1-NATURAL-GAS",
+    "lpg": "EF-SCOPE1-LPG",
+    "electricity": "EF-SCOPE2-VN-GRID",
+}
+BIOMASS_KINDS = {"wood", "charcoal", "bagasse", "rice_husk", "straw", "other_solid_biomass", "biogas", "liquid_biofuel"}
+
+
+def _uncalculated_warnings(data: SurveyData) -> list[str]:
+    skipped: dict[str, int] = {}
+    for item in data.items:
+        if item.kind not in FACTOR_IDS:
+            skipped[item.kind] = skipped.get(item.kind, 0) + 1
+    warnings = []
+    for kind, count in sorted(skipped.items()):
+        reason = ("nhiên liệu sinh khối: CO₂ sinh học báo cáo riêng, CH₄/N₂O cần hệ số IPCC riêng"
+                  if kind in BIOMASS_KINDS else "chưa có hệ số phát thải riêng trong EcoStream")
+        warnings.append(f"{FUEL_NAMES.get(kind, kind)} ({count} ô): CHƯA TÍNH vào tổng — {reason}; cần chuyên gia bổ sung hệ số")
+    return warnings
+
+
 def _records(data: SurveyData, year: int) -> list[ActivityRecord]:
     db = get_factor_database()
-    factor_ids = {
-        "mixed_coal": "EF-SCOPE1-COAL",
-        "bituminous": "EF-SCOPE1-COAL",
-        "subbituminous": "EF-SCOPE1-COAL",
-        "anthracite": "EF-SCOPE1-COAL",
-        "diesel": "EF-SCOPE1-DIESEL",
-        "fo": "EF-SCOPE1-FO",
-        "kerosene": "EF-SCOPE1-DIESEL",
-        "petrol": "EF-SCOPE1-PETROL",
-        "naturalgas": "EF-SCOPE1-NATURAL-GAS",
-        "lpg": "EF-SCOPE1-LPG",
-        "lng": "EF-SCOPE1-LPG",
-        "biogas": "EF-SCOPE1-NATURAL-GAS",
-        "liquid_biofuel": "EF-SCOPE1-PETROL",
-        "other_petroleum": "EF-SCOPE1-FO",
-        "wood": "EF-SCOPE1-COAL",
-        "charcoal": "EF-SCOPE1-COAL",
-        "bagasse": "EF-SCOPE1-COAL",
-        "rice_husk": "EF-SCOPE1-COAL",
-        "straw": "EF-SCOPE1-COAL",
-        "other_solid_biomass": "EF-SCOPE1-COAL",
-        "industrial_waste": "EF-SCOPE1-COAL",
-        "municipal_waste": "EF-SCOPE1-COAL",
-        "peat": "EF-SCOPE1-COAL",
-        "electricity": "EF-SCOPE2-VN-GRID",
-    }
     records = []
     for i, item in enumerate(data.items, 1):
-        factor = db.get(factor_ids[item.kind])
+        if item.kind not in FACTOR_IDS:
+            continue
+        factor = db.get(FACTOR_IDS[item.kind])
         if factor is None or factor.unit != item.unit:
             raise SurveyValidationError(f"{item.sheet}!{item.coordinate}: không có hệ số phù hợp")
         if item.kind == "electricity":
@@ -191,11 +199,11 @@ def calculate_survey(run_id: str, reviewed_file: str | None = None, base_runs_di
     summary.uncalculated_sources = [
         "Các nguồn Scope 1/2 ngoài nhiên liệu đã ánh xạ và điện lưới (môi chất lạnh, quá trình công nghiệp, nước thải, nhiệt/hơi mua ngoài) chưa được xử lý từ biểu khảo sát",
         "Scope 3 không nằm trong phạm vi luồng này",
-    ]
+    ] + _uncalculated_warnings(data)
     report = AuditReport(report_id="SURVEY-" + run_id, generated_at=datetime.now(timezone.utc).isoformat(),
         summary=summary, calculations=calculations)
     target = Path(workspace.deliverables_dir)
-    warnings = list(metadata["warnings"]) + data.warnings
+    warnings = list(metadata["warnings"]) + data.warnings + _uncalculated_warnings(data)
     factor_years = {get_factor_database().get(fid).year for fid in (
         "EF-SCOPE1-DIESEL", "EF-SCOPE1-PETROL", "EF-SCOPE1-LPG", "EF-SCOPE1-COAL",
         "EF-SCOPE1-FO", "EF-SCOPE1-NATURAL-GAS", "EF-SCOPE2-VN-GRID")}
