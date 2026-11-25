@@ -120,7 +120,23 @@ class MarkItDownNormalizer:
             except Exception:
                 pass
 
-        # 3. Scanned PDF fallback (when MarkItDown is unavailable or produced nothing)
+        # 3. Image OCR (.png, .jpg, .jpeg, .bmp, .webp) via MarkItDownLoader EasyOCR/pytesseract
+        if ext in [".png", ".jpg", ".jpeg", ".bmp", ".webp", ".tif", ".tiff"] and self.enable_ocr:
+            try:
+                from ecostream.ingestion.markitdown_loader import MarkItDownLoader
+                ocr_text = MarkItDownLoader._ocr_image_to_lines(filepath)
+                if ocr_text:
+                    return NormalizedDocumentContent(
+                        markdown_content=ocr_text,
+                        converter_used="LOCAL_IMAGE_OCR",
+                        ocr_applied=True,
+                        page_count=1,
+                        raw_metadata={"source_path": filepath, "original_filename": filename},
+                    )
+            except Exception:
+                pass
+
+        # 4. Scanned PDF fallback (when MarkItDown is unavailable or produced nothing)
         if ext == ".pdf" and self.enable_ocr and _OCR_LIBS_AVAILABLE:
             ocr_text, pages = self._perform_pdf_ocr(filepath)
             if ocr_text:

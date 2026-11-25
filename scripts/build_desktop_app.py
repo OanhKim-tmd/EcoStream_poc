@@ -55,6 +55,9 @@ def build() -> None:
         "--copy-metadata=magika",
     ]
 
+    icon_path = ROOT / "scripts" / "ecostream.ico"
+    icon_args = [f"--icon={icon_path}"] if icon_path.exists() else []
+
     cmd = [
         sys.executable,
         "-m",
@@ -63,6 +66,7 @@ def build() -> None:
         "--clean",
         "--windowed",
         "--name=EcoStream",
+        *icon_args,
         *data_args,
         *hidden_imports,
         str(ROOT / "scripts" / "desktop_launcher.py"),

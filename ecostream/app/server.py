@@ -34,9 +34,12 @@ from ecostream.reporting.export import ReportExporter
 from ecostream.factors.database import get_factor_database
 from ecostream.orchestrator.survey_pipeline import (
     prepare_survey, calculate_survey, get_survey_status,
+    get_survey_workbook_data, save_survey_workbook_data,
     SURVEY_FILE, INVENTORY_FILE, REPORT_FILE,
 )
-from ecostream.ingestion.survey_workbook import SurveyValidationError, SURVEY_NAME, TEMPLATES
+from ecostream.ingestion.survey_workbook import (
+    SurveyGeneralInfo, SurveyValidationError, SURVEY_NAME, TEMPLATES,
+)
 
 app = FastAPI(
     title="EcoStream Multi-Agent AI Carbon Engine",
@@ -73,6 +76,20 @@ def _validate_safe_identifier(name: str, field_name: str = "identifier") -> str:
     if not name or not re.match(r"^[a-zA-Z0-9_\-\.]+$", name) or ".." in name or "/" in name or "\\" in name:
         raise HTTPException(status_code=400, detail=f"Invalid {field_name}: Path traversal detected.")
     return name
+
+def _sanitize_upload_filename(raw_filename: str) -> str:
+    """Normalize uploaded filename (supporting Vietnamese/spaces) while blocking traversal."""
+    import unicodedata
+    raw = (raw_filename or "").strip()
+    if not raw or "/" in raw or "\\" in raw or ".." in raw or "\x00" in raw:
+        raise HTTPException(status_code=400, detail="Invalid filename: Path traversal detected.")
+    stem, ext = os.path.splitext(raw)
+    stem_ascii = unicodedata.normalize("NFKD", stem.replace("đ", "d").replace("Đ", "D"))
+    stem_ascii = "".join(ch for ch in stem_ascii if not unicodedata.combining(ch))
+    stem_clean = re.sub(r"[^a-zA-Z0-9_\-]+", "_", stem_ascii).strip("_") or "upload"
+    ext_clean = re.sub(r"[^a-zA-Z0-9.]+", "", ext.lower())
+    return _validate_safe_identifier(f"{stem_clean}{ext_clean}", "filename")
+
 
 def _verify_safe_path(base_dir: str, filename: str) -> str:
     """Ensure target path resides strictly inside base_dir using os.path.commonpath."""
@@ -388,23 +405,55 @@ def run_demo(
 
 
 # Survey-first workflow. Legacy /api/upload remains available for older clients.
+MAX_SURVEY_FILES = max(1, int(os.environ.get("ECOSTREAM_MAX_SURVEY_FILES", "100")))
+
+
 @app.post("/api/survey/prepare", dependencies=[Depends(verify_api_key)])
 async def prepare_survey_from_documents(
     files: List[UploadFile] = File(...),
     company: str = Form(...),
     location: str = Form(...),
     period: int = Form(...),
+    contact_name: str = Form(""),
+    contact_role: str = Form(""),
+    contact_phone: str = Form(""),
+    contact_email: str = Form(""),
+    facility_address: str = Form(""),
+    facility_phone: str = Form(""),
+    facility_email: str = Form(""),
+    legal_representative: str = Form(""),
+    legal_rep_title: str = Form(""),
+    industry_sector: str = Form(""),
+    operating_status: str = Form(""),
+    start_year: str = Form(""),
+    facility_representative: str = Form(""),
 ):
     if not company.strip() or not location.strip():
         raise HTTPException(status_code=422, detail="Tên doanh nghiệp và cơ sở không được để trống")
-    if not files or len(files) > 20:
-        raise HTTPException(status_code=422, detail="Chọn 1–20 chứng từ")
+    if not files or len(files) > MAX_SURVEY_FILES:
+        raise HTTPException(status_code=422, detail=f"Chọn 1–{MAX_SURVEY_FILES} chứng từ")
+    general_info = SurveyGeneralInfo(
+        contact_name=contact_name.strip(),
+        contact_role=contact_role.strip(),
+        contact_phone=contact_phone.strip(),
+        contact_email=contact_email.strip(),
+        facility_name=location.strip(),
+        facility_address=facility_address.strip(),
+        facility_phone=facility_phone.strip(),
+        facility_email=facility_email.strip(),
+        legal_representative=legal_representative.strip(),
+        legal_rep_title=legal_rep_title.strip(),
+        industry_sector=industry_sector.strip(),
+        operating_status=operating_status.strip(),
+        start_year=start_year.strip(),
+        facility_representative=facility_representative.strip(),
+    )
     with tempfile.TemporaryDirectory() as temp_dir:
         paths = []
         try:
             for file in files:
-                name = _validate_safe_identifier(os.path.basename(file.filename or ""), "filename")
-                if os.path.splitext(name)[1].lower() not in (".xlsx", ".csv", ".pdf", ".docx"):
+                name = _sanitize_upload_filename(file.filename or "")
+                if os.path.splitext(name)[1].lower() not in (".xlsx", ".csv", ".pdf", ".docx", ".png", ".jpg", ".jpeg", ".bmp", ".webp"):
                     raise HTTPException(status_code=422, detail=f"Không hỗ trợ định dạng tệp: {name}")
                 destination = _verify_safe_path(temp_dir, name)
                 if os.path.exists(destination):
@@ -415,7 +464,7 @@ async def prepare_survey_from_documents(
                 with open(destination, "wb") as stream:
                     stream.write(content)
                 paths.append(destination)
-            return prepare_survey(paths, company.strip(), location.strip(), period, RUNS_DIR)
+            return prepare_survey(paths, company.strip(), location.strip(), period, RUNS_DIR, general_info=general_info)
         except SurveyValidationError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -436,6 +485,7 @@ def survey_run_status(run_id: str):
 @app.get("/api/survey/runs/{run_id}/survey/preview", dependencies=[Depends(verify_api_key)])
 def preview_survey(run_id: str):
     """Printable overview without serving arbitrary workbook markup."""
+    from dataclasses import asdict
     from html import escape
     from ecostream.ingestion.survey_workbook import read_survey
     _validate_safe_identifier(run_id, "run_id")
@@ -447,14 +497,64 @@ def preview_survey(run_id: str):
     survey = os.path.join(workspace.deliverables_dir, SURVEY_FILE)
     if not os.path.isfile(survey):
         raise HTTPException(status_code=404, detail="Chưa có biểu khảo sát")
+    gi = dict(metadata.get("general_info") or {})
     try:
         data = read_survey(survey)
+        if data.general_info:
+            for k, v in asdict(data.general_info).items():
+                if v:
+                    gi[k] = v
         rows = "".join(f"<tr><td>{escape(item.sheet)}!{escape(item.coordinate)}</td><td>{escape(item.kind)}</td><td>{item.month}</td><td>{item.quantity:g}</td><td>{escape(item.unit)}</td></tr>" for item in data.items)
     except SurveyValidationError as exc:
         rows = f"<tr><td colspan='5'>{escape(str(exc))}</td></tr>"
+    info_lines = [
+        ("Người cung cấp thông tin", gi.get("contact_name", "")),
+        ("Chức vụ/Bộ phận", gi.get("contact_role", "")),
+        ("Điện thoại (người cung cấp)", gi.get("contact_phone", "")),
+        ("Email (người cung cấp)", gi.get("contact_email", "")),
+        ("1. Tên cơ sở", gi.get("facility_name") or metadata.get("facility", "")),
+        ("Địa chỉ", gi.get("facility_address", "")),
+        ("Điện thoại cơ sở", gi.get("facility_phone", "")),
+        ("Email cơ sở", gi.get("facility_email", "")),
+        ("Người đại diện pháp luật", f"{gi.get('legal_representative', '')}{' — ' + gi.get('legal_rep_title', '') if gi.get('legal_rep_title') else ''}".strip(" —")),
+        ("Ngành nghề SX/KD", gi.get("industry_sector", "")),
+        ("Tình trạng / Năm bắt đầu", f"{gi.get('operating_status', '')}{' / ' + gi.get('start_year', '') if gi.get('start_year') else ''}".strip(" /")),
+        ("Đại diện cơ sở", gi.get("facility_representative", "")),
+    ]
+    empty_badge = '<span style="color:#94a3b8">Chưa điền</span>'
+    info_rows = "".join(
+        f"<tr><th style='text-align:left;width:32%;background:#f8fafc'>{escape(label)}</th><td>{escape(val) if val else empty_badge}</td></tr>"
+        for label, val in info_lines
+    )
     provenance = "".join(f"<li>{escape(str(entry['filename']))}: {escape(str(entry['status']))} — {entry['records']} dòng</li>" for entry in metadata['files'])
     warnings = "".join(f"<li>{escape(str(message))}</li>" for message in metadata['warnings'])
-    return HTMLResponse("<!doctype html><html lang='vi'><meta charset='utf-8'><title>Biểu khảo sát</title><style>body{font:16px Arial;margin:2rem}td,th{border:1px solid #aaa;padding:.5rem}table{border-collapse:collapse}button{margin:1rem 0}@media print{button{display:none}}</style><h1>Biểu khảo sát số liệu hoạt động — bản xem để in</h1><p>Kiểm tra lại số liệu và nguồn trước khi tính. Bản xem này chỉ gồm dữ liệu Scope 1/2 được hỗ trợ; tải Excel để xem toàn bộ mẫu.</p><button onclick='window.print()'>In trang</button><table><thead><tr><th>Ô khảo sát</th><th>Nguồn</th><th>Tháng</th><th>Số lượng</th><th>Đơn vị</th></tr></thead><tbody>" + rows + "</tbody></table><h2>Chứng từ</h2><ul>" + provenance + "</ul><h2>Cần rà soát</h2><ul>" + warnings + "</ul></html>")
+    return HTMLResponse("<!doctype html><html lang='vi'><meta charset='utf-8'><title>Biểu khảo sát</title><style>body{font:15px Arial,sans-serif;margin:1.5rem;color:#0f172a}td,th{border:1px solid #cbd5e1;padding:.45rem .6rem}table{border-collapse:collapse;width:100%;margin-bottom:1.25rem}button{margin:.75rem 0;padding:.45rem .9rem;cursor:pointer}h2{margin:1.25rem 0 .5rem;font-size:1.05rem}@media print{button{display:none}}</style><h1>Biểu khảo sát số liệu hoạt động — bản xem để in</h1><p>Kiểm tra lại thông tin cơ sở, số liệu và nguồn trước khi tính. Bản xem này gồm thông tin chung (CV 1790/VNL-P16) và dữ liệu Scope 1/2 được hỗ trợ; tải Excel để xem toàn bộ mẫu.</p><button onclick='window.print()'>In trang</button><h2>Thông tin chung của cơ sở (CV 1790/VNL-P16)</h2><table><tbody>" + info_rows + "</tbody></table><h2>Số liệu hoạt động Scope 1/2</h2><table><thead><tr><th>Ô khảo sát</th><th>Nguồn</th><th>Tháng</th><th>Số lượng</th><th>Đơn vị</th></tr></thead><tbody>" + rows + "</tbody></table><h2>Chứng từ</h2><ul>" + provenance + "</ul><h2>Cần rà soát</h2><ul>" + warnings + "</ul></html>")
+
+
+class SurveyWorkbookSaveRequest(BaseModel):
+    general_info: Optional[dict] = None
+    sheet_1_1: Optional[list] = None
+    sheet_1_2: Optional[list] = None
+    sheet_2_1: Optional[list] = None
+    extra_cells: Optional[dict] = None
+
+
+@app.get("/api/survey/runs/{run_id}/survey/data", dependencies=[Depends(verify_api_key)])
+def read_survey_workbook_data(run_id: str):
+    _validate_safe_identifier(run_id, "run_id")
+    try:
+        return get_survey_workbook_data(run_id, RUNS_DIR)
+    except SurveyValidationError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/survey/runs/{run_id}/survey/save", dependencies=[Depends(verify_api_key)])
+def write_survey_workbook_data(run_id: str, payload: SurveyWorkbookSaveRequest):
+    _validate_safe_identifier(run_id, "run_id")
+    try:
+        return save_survey_workbook_data(run_id, payload.model_dump(exclude_none=True), RUNS_DIR)
+    except SurveyValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @app.post("/api/survey/runs/{run_id}/calculate", dependencies=[Depends(verify_api_key)])

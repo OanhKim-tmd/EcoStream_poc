@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoStream — Hệ Thống AI Kiểm Kê & Báo Cáo Khí Nhà Kính</title>
-    
-    <!-- Google Fonts -->
+    <title>EcoStream — Kiểm kê Khí nhà kính</title>
+
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="alternate icon" href="/static/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
@@ -18,18 +20,19 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
                         mono: ['"JetBrains Mono"', 'monospace'],
                     },
                     colors: {
                         brand: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
+                            50: '#edf5e9',
+                            100: '#dff4cc',
+                            200: '#cce5c0',
+                            500: '#2a5c47',
+                            600: '#184e42',
+                            700: '#003c33',
+                            800: '#002820',
+                            900: '#091710',
                         }
                     }
                 }
@@ -38,360 +41,645 @@
     </script>
 
     <style>
+        :root {
+            --forest: #003c33;
+            --forest-deep: #002820;
+            --forest-mid: #2a5c47;
+            --leaf: #9fe870;
+            --canvas: #f5f9f4;
+            --surface-soft: #edf5e9;
+            --hairline: #cce5c0;
+            --hairline-soft: #e2f0db;
+            --ink: #091710;
+            --body: #2c4a3c;
+            --muted: #6a8978;
+        }
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-            color: #0f172a;
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--canvas);
+            color: var(--ink);
             min-height: 100vh;
         }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
         .gradient-brand {
-            background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+            background-color: var(--forest);
+        }
+        .gradient-brand:hover {
+            background-color: var(--forest-deep);
         }
         .dropzone-active {
-            border-color: #059669 !important;
-            background-color: #ecfdf5 !important;
+            border-color: var(--forest) !important;
+            background-color: var(--surface-soft) !important;
         }
-        @keyframes pulseDot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(0.9); }
+        .survey-preview {
+            width: 100%;
+            min-height: 360px;
+            border: 1px solid var(--hairline-soft);
+            border-radius: 0.75rem;
+            background: #ffffff;
         }
-        .pulse-dot {
-            animation: pulseDot 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        input:focus, select:focus {
+            border-color: var(--forest) !important;
+            box-shadow: 0 0 0 3px rgba(0, 60, 51, 0.08);
         }
-        .survey-preview { width: 100%; min-height: 320px; border: 1px solid #e2e8f0; border-radius: 1rem; background: white; }
     </style>
 </head>
-<body class="flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+<body class="flex flex-col antialiased selection:bg-[#9fe870] selection:text-[#091710]">
 
-    <!-- Simple, Clean Header -->
-    <header class="border-b border-slate-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-30">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center text-white text-lg shadow-sm shadow-emerald-900/20">
-                    🌱
+    <!-- Clean B2B Header -->
+    <header class="border-b border-[#e2f0db] bg-white sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-[#003c33] flex items-center justify-center text-[#9fe870] shrink-0">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+                        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+                    </svg>
                 </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-extrabold text-lg tracking-tight text-slate-900">EcoStream</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider bg-brand-100 text-brand-900 border border-brand-200">AI ORCHESTRATOR</span>
-                    </div>
-                    <p class="text-[11px] text-slate-500 hidden sm:block">Kiểm kê KNK & Báo cáo Mẫu 02 NĐ 06/2022/NĐ-CP</p>
+                <div class="flex items-baseline gap-2.5">
+                    <span class="font-bold text-base tracking-tight text-[#091710]">EcoStream</span>
+                    <span class="text-xs text-[#6a8978] hidden sm:inline">Kiểm kê khí nhà kính cấp cơ sở</span>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 sm:gap-2.5">
-                <button type="button" onclick="openAccountModal()" id="btnAccountBadge" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition flex items-center gap-1.5 shadow-2xs" title="Đăng nhập Doanh nghiệp & Kích hoạt License Pro">
-                    <span id="headerTierIcon">🔒</span>
-                    <span id="headerOrgText" class="hidden md:inline font-mono text-[11px]">Khách (Free)</span>
-                    <span id="headerTierBadge" class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950">FREE PREVIEW</span>
-                </button>
-                <a href="/monitor" id="linkMonitor" class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 transition hidden sm:flex items-center gap-1.5">
-                    <span>📡</span>
-                    <span>Live Monitor</span>
+            <div class="flex items-center gap-2">
+                <a href="/monitor" id="linkMonitor" class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#2c4a3c] hover:text-[#091710] hover:bg-[#edf5e9] border border-[#e2f0db] transition hidden sm:inline-flex items-center">
+                    Nhật ký xử lý
                 </a>
-                <button type="button" onclick="runDemoQuick()" id="btnDemoQuick" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center gap-1.5">
-                    <span>⚡</span>
-                    <span>Thử Dữ Liệu Mẫu</span>
+                <button type="button" onclick="openAccountModal()" id="btnAccountBadge" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#f5f9f4] hover:bg-[#edf5e9] text-[#183026] border border-[#cce5c0] transition inline-flex items-center gap-1.5" title="Tài khoản doanh nghiệp & cấu hình">
+                    <span id="headerTierIcon" class="w-2 h-2 rounded-full bg-[#6a8978]"></span>
+                    <span id="headerOrgText" class="hidden md:inline font-mono text-[11px]">ecogarment-vn</span>
+                    <span id="headerTierBadge" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#2c4a3c]">Free</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content: Simple Direct Flow -->
-    <main class="max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8 flex-1">
+    <!-- Main Content: 4-Step Guided Flow -->
+    <main class="max-w-4xl w-full mx-auto px-4 sm:px-6 py-7 space-y-5 flex-1">
 
-        <!-- STEP 1: UPLOAD & SETUP (Nạp chứng từ) -->
-        <section id="sectionInput" class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
-            <div class="text-center max-w-xl mx-auto space-y-2">
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    1. Nạp chứng từ & tạo biểu khảo sát
-                </h1>
-                <p class="text-xs sm:text-sm text-slate-500">
-                    Tải hóa đơn điện, phiếu cấp phát xăng dầu hoặc bảng kê nhiên liệu. Kiểm tra biểu khảo sát được điền từ chứng từ trước khi tính phát thải và xuất báo cáo. Dòng không nhận diện được để trống để người dùng điền thủ công.
-                </p>
+        <!-- Progress Stepper -->
+        <nav id="flowStepper" aria-label="Tiến trình kiểm kê" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button type="button" id="stepBadge1" onclick="goToStepIfAllowed(1)" class="px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-[#003c33] text-white border-[#003c33] cursor-pointer">
+                <span class="w-5 h-5 rounded-full bg-white/15 flex items-center justify-center text-[11px] font-bold shrink-0">1</span>
+                <span class="truncate">Thông tin cơ sở</span>
+            </button>
+            <button type="button" id="stepBadge2" onclick="goToStepIfAllowed(2)" disabled class="px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-white text-[#6a8978] border-[#e2f0db] cursor-not-allowed opacity-70">
+                <span class="w-5 h-5 rounded-full bg-[#f5f9f4] text-[#6a8978] flex items-center justify-center text-[11px] font-bold shrink-0">2</span>
+                <span class="truncate">Đưa dữ liệu vào</span>
+            </button>
+            <button type="button" id="stepBadge3" onclick="goToStepIfAllowed(3)" disabled class="px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-white text-[#6a8978] border-[#e2f0db] cursor-not-allowed opacity-70">
+                <span class="w-5 h-5 rounded-full bg-[#f5f9f4] text-[#6a8978] flex items-center justify-center text-[11px] font-bold shrink-0">3</span>
+                <span class="truncate">Rà soát biểu Excel</span>
+            </button>
+            <button type="button" id="stepBadge4" onclick="goToStepIfAllowed(4)" disabled class="px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-white text-[#6a8978] border-[#e2f0db] cursor-not-allowed opacity-70">
+                <span class="w-5 h-5 rounded-full bg-[#f5f9f4] text-[#6a8978] flex items-center justify-center text-[11px] font-bold shrink-0">4</span>
+                <span class="truncate">Kết quả & Báo cáo</span>
+            </button>
+        </nav>
+
+        <!-- STEP 1: FACILITY SURVEY GENERAL INFO (CV 1790/VNL-P16) -->
+        <section id="sectionFacilityInfo" class="bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5" aria-labelledby="facilityFormTitle">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#e2f0db] pb-4">
+                <div class="space-y-1">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Bước 1 / 4 · Phiếu thu thập (CV 1790/VNL-P16)</p>
+                    <h1 id="facilityFormTitle" class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">
+                        Thông tin cơ sở trước khi nạp chứng từ
+                    </h1>
+                    <p class="text-xs text-[#6a8978]">
+                        Dữ liệu tự động điền vào sheet <span class="font-mono text-[#183026]">Thông tin chung</span> của file khảo sát.
+                    </p>
+                </div>
+
+                <button type="button" onclick="clearFacilityInfo()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition whitespace-nowrap self-start">
+                    Xóa trắng
+                </button>
             </div>
 
-            <form id="calcForm" onsubmit="handleCalculate(event)" class="space-y-5">
-                <!-- Dropzone Area -->
-                <div id="dropzone" 
-                     class="border-2 border-dashed border-slate-300 hover:border-brand-500 bg-slate-50/70 hover:bg-brand-50/30 rounded-2xl p-8 text-center transition cursor-pointer flex flex-col items-center justify-center min-h-[160px]" 
+            <form id="facilityInfoForm" onsubmit="proceedToUploadStep(event)" class="space-y-5">
+                <!-- Contact Person Info -->
+                <div class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/60 p-4 space-y-3">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-[#183026]">Người cung cấp thông tin</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="contactNameInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Họ và tên</label>
+                            <input type="text" id="contactNameInput" name="contact_name" placeholder="Nguyễn Thu Trang" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                        <div>
+                            <label for="contactRoleInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Chức vụ / Bộ phận</label>
+                            <input type="text" id="contactRoleInput" name="contact_role" placeholder="Phụ trách HSE / Kỹ thuật" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                        <div>
+                            <label for="contactPhoneInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Điện thoại</label>
+                            <input type="text" id="contactPhoneInput" name="contact_phone" placeholder="0912 345 678" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                        <div>
+                            <label for="contactEmailInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Email</label>
+                            <input type="email" id="contactEmailInput" name="contact_email" placeholder="hse@doanhnghiep.vn" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PART I: GENERAL FACILITY INFO -->
+                <div class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/60 p-4 space-y-3">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-[#183026]">Phần I. Thông tin chung của cơ sở</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2">
+                            <label for="locationInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">1. Tên cơ sở <span class="text-red-600">*</span></label>
+                            <input type="text" id="locationInput" name="location" placeholder="Nhà máy May & Năng lượng Hà Nam" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white" required>
+                        </div>
+                        <div>
+                            <label for="periodInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Năm kiểm kê <span class="text-red-600">*</span></label>
+                            <input type="number" id="periodInput" name="period" min="2000" max="2100" step="1" value="2026" class="w-full text-xs font-mono px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="companyInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Đơn vị chủ quản <span class="text-[#6a8978] font-normal">(để trống nếu trùng Tên cơ sở)</span></label>
+                        <input type="text" id="companyInput" name="company" placeholder="Công ty Cổ phần..." class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                    </div>
+                    <div>
+                        <label for="facilityAddressInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Địa chỉ</label>
+                        <input type="text" id="facilityAddressInput" name="facility_address" placeholder="Lô CN-08, KCN..." class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="facilityPhoneInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Điện thoại cơ sở</label>
+                            <input type="text" id="facilityPhoneInput" name="facility_phone" placeholder="024 3888 9999" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                        <div>
+                            <label for="facilityEmailInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Email cơ sở</label>
+                            <input type="email" id="facilityEmailInput" name="facility_email" placeholder="info@doanhnghiep.vn" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                        <div>
+                            <label for="legalRepInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Người đại diện pháp luật</label>
+                            <input type="text" id="legalRepInput" name="legal_representative" placeholder="Trần Đình Minh" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                        <div>
+                            <label for="legalRepTitleInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Chức danh</label>
+                            <input type="text" id="legalRepTitleInput" name="legal_rep_title" placeholder="Tổng Giám đốc" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PART II: INDUSTRY & OPERATIONS -->
+                <div class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/60 p-4 space-y-3">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-[#183026]">Phần II. Ngành nghề & hoạt động</h2>
+                    <div>
+                        <label for="industrySectorInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Ngành nghề sản xuất / Loại hình kinh doanh</label>
+                        <input type="text" id="industrySectorInput" name="industry_sector" placeholder="Sản xuất hàng may mặc..." class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="operatingStatusInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Tình trạng hoạt động</label>
+                            <input type="text" id="operatingStatusInput" name="operating_status" list="operatingStatusOptions" placeholder="Đang hoạt động" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                            <datalist id="operatingStatusOptions">
+                                <option value="Đang hoạt động">
+                                <option value="Hoạt động ổn định 3 ca">
+                                <option value="Hoạt động một phần công suất">
+                                <option value="Tạm ngừng hoạt động">
+                                <option value="Mới đi vào hoạt động">
+                            </datalist>
+                        </div>
+                        <div>
+                            <label for="startYearInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Năm bắt đầu hoạt động</label>
+                            <input type="text" id="startYearInput" name="start_year" maxlength="20" placeholder="2018" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FACILITY REPRESENTATIVE SIGNATURE -->
+                <div class="rounded-xl border border-[#e2f0db] bg-white p-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                    <div class="flex-1">
+                        <label for="facilityRepInput" class="block text-xs font-medium text-[#2c4a3c] mb-1">Đại diện cơ sở <span class="text-[#6a8978] font-normal">(tùy chọn — để trống nếu ký tay khi in)</span></label>
+                        <input type="text" id="facilityRepInput" name="facility_representative" placeholder="Họ tên đại diện cơ sở" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden bg-white">
+                    </div>
+                </div>
+
+                <div class="pt-1 flex justify-end">
+                    <button type="submit" id="btnProceedUpload" class="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-semibold text-white gradient-brand transition inline-flex items-center justify-center gap-2">
+                        <span>Tiếp tục: Nạp chứng từ</span>
+                        <span aria-hidden="true">→</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- STEP 2: UPLOAD & READ DOCUMENTS -->
+        <section id="sectionInput" class="hidden bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5">
+            <div class="space-y-1 border-b border-[#e2f0db] pb-4">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Bước 2 / 4 · Nạp chứng từ</p>
+                <h2 class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">Tải chứng từ để tạo biểu khảo sát</h2>
+                <p class="text-xs text-[#6a8978]">Hóa đơn điện EVN (.pdf), bảng kê nhiên liệu (.xlsx, .csv, .docx). Dữ liệu thiếu giữ trống để rà soát.</p>
+            </div>
+
+            <!-- Summary of Step 1 Facility Info -->
+            <div class="rounded-xl border border-[#cce5c0] bg-[#f5f9f4] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div id="facilitySummaryStrip" class="text-xs text-[#183026] space-y-0.5"></div>
+                <button type="button" onclick="backToFacilityInfo()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#003c33] bg-white hover:bg-[#edf5e9] border border-[#cce5c0] transition shrink-0">
+                    Sửa thông tin
+                </button>
+            </div>
+
+            <form id="calcForm" onsubmit="handleCalculate(event)" class="space-y-4">
+                <div id="dropzone"
+                     class="border-2 border-dashed border-[#cce5c0] hover:border-[#003c33] bg-[#f5f9f4]/50 hover:bg-[#edf5e9]/60 rounded-xl p-7 text-center transition cursor-pointer flex flex-col items-center justify-center min-h-[140px]"
                      onclick="document.getElementById('fileInput').click()"
                      ondragover="handleDragOver(event)"
                      ondragleave="handleDragLeave(event)"
                      ondrop="handleDrop(event)">
-                    
-                    <input type="file" id="fileInput" multiple accept=".pdf,.xlsx,.docx,.csv" class="hidden" onchange="handleFilesSelected(this.files)">
-                    
-                    <div class="w-12 h-12 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-center justify-center text-2xl mb-3">
-                        📁
+
+                    <input type="file" id="fileInput" multiple accept=".pdf,.xlsx,.docx,.csv,.png,.jpg,.jpeg" class="hidden" onchange="handleFilesSelected(this.files)">
+
+                    <div class="w-10 h-10 rounded-lg bg-white border border-[#e2f0db] flex items-center justify-center text-[#003c33] mb-2.5">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
                     </div>
-                    <p class="text-sm font-bold text-slate-800" id="dropzoneText">Kéo & Thả chứng từ vào đây, hoặc <span class="text-brand-700 underline">chọn tệp từ máy tính</span></p>
-                    <p class="text-xs text-slate-400 mt-1">Hỗ trợ: Hóa đơn điện EVN (.pdf), Bảng kê Excel (.xlsx, .csv), Chứng từ (.docx)</p>
+                    <p class="text-sm font-semibold text-[#091710]" id="dropzoneText">Kéo thả tệp vào đây, hoặc <span class="text-[#003c33] underline">chọn từ máy tính</span></p>
+                    <p class="text-xs text-[#6a8978] mt-1">PDF, XLSX, CSV, DOCX, PNG · Tối đa 100 tệp, 10 MB/tệp</p>
                 </div>
 
-                <!-- Selected Files List -->
-                <div id="selectedFilesBox" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                    <div class="flex items-center justify-between mb-2.5">
-                        <span class="text-xs font-bold text-slate-700">Chứng từ sẽ dùng để điền khảo sát:</span>
-                        <span id="fileCountText" class="text-xs font-mono font-bold text-brand-700">0 tệp</span>
+                <div id="selectedFilesBox" class="hidden bg-[#f5f9f4] border border-[#e2f0db] rounded-xl p-3.5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-[#183026]">Chứng từ đã chọn</span>
+                        <span id="fileCountText" class="text-xs font-mono font-semibold text-[#003c33]">0 tệp</span>
                     </div>
                     <div id="selectedFilesList" class="flex flex-wrap gap-2"></div>
                 </div>
 
-                <!-- Facility Metadata (Minimal 3 Fields) -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Tên Doanh Nghiệp <span class="text-red-500">*</span></label>
-                        <input type="text" id="companyInput" name="company" value="EcoGarment Vietnam JSC" class="w-full text-xs font-medium px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-hidden bg-white" required>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Cơ Sở / Nhà Máy <span class="text-red-500">*</span></label>
-                        <input type="text" id="locationInput" name="location" value="Nhà máy May & Năng lượng Hà Nam" class="w-full text-xs font-medium px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-hidden bg-white" required>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Kỳ Báo Cáo <span class="text-red-500">*</span></label>
-                        <input type="number" id="periodInput" name="period" min="2000" max="2100" step="1" value="2026" class="w-full text-xs font-medium px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-hidden bg-white" required>
-                    </div>
-                </div>
-
-                <!-- Action Button -->
-                <div class="pt-2 text-center">
-                    <button type="submit" id="btnCalculate" class="w-full sm:w-auto min-w-[280px] px-8 py-3.5 rounded-2xl text-sm font-bold text-white gradient-brand hover:opacity-95 transition shadow-md shadow-emerald-900/20 inline-flex items-center justify-center gap-2">
-                        <span>Tạo biểu khảo sát từ chứng từ</span>
+                <div class="pt-1 flex flex-wrap items-center justify-between gap-3">
+                    <button type="button" onclick="backToFacilityInfo()" class="px-4 py-2.5 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">
+                        ← Bước 1: Thông tin cơ sở
+                    </button>
+                    <button type="submit" id="btnCalculate" class="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-semibold text-white gradient-brand transition inline-flex items-center justify-center gap-2">
+                        <span>Đọc chứng từ & tạo biểu khảo sát</span>
+                        <span aria-hidden="true">→</span>
                     </button>
                 </div>
             </form>
         </section>
 
-        <!-- STEP 2: Review extracted evidence and the generated workbook -->
-        <section id="sectionReview" class="hidden bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6" aria-labelledby="reviewTitle">
-            <div class="space-y-2">
-                <p class="text-xs font-bold uppercase tracking-wider text-brand-700">Bước 2 / 3 · Rà soát</p>
-                <h2 id="reviewTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900">Kiểm tra biểu khảo sát</h2>
-                <p class="text-sm text-slate-600">Đối chiếu số liệu với chứng từ gốc. Bản xem trước chỉ gồm các nguồn Scope 1/2 đã đọc; tải Excel để xem toàn bộ biểu mẫu và sửa số liệu nếu cần. Có thể tính ngay mà không tải lại nếu đã rà soát.</p>
-                <p id="reviewRunId" class="text-xs font-mono text-slate-500 break-all"></p>
-            </div>
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <h3 class="text-sm font-bold text-slate-800 mb-3">Chứng từ đã nạp</h3>
-                <ul id="evidenceList" class="space-y-2 text-xs text-slate-700"></ul>
-            </div>
-            <div id="reviewWarnings" class="hidden rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-950" role="status"></div>
-            <div class="flex flex-wrap gap-3">
-                <a id="surveyDownload" class="px-4 py-2.5 rounded-xl text-xs font-bold text-white gradient-brand" download>Tải biểu khảo sát Excel</a>
-                <a id="surveyOpen" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 rounded-xl text-xs font-bold text-brand-800 bg-brand-50 border border-brand-200">Mở bản xem trước</a>
-                <button id="surveyPrint" type="button" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 border border-slate-300">In bản xem trước</button>
-            </div>
-            <iframe id="surveyFrame" class="survey-preview" title="Bản xem trước biểu khảo sát" loading="lazy"></iframe>
-            <form id="reviewForm" class="space-y-4" onsubmit="handleSurveyCalculate(event)">
-                <div>
-                    <label for="reviewedInput" class="block text-sm font-bold text-slate-800 mb-1">Biểu khảo sát đã chỉnh sửa (.xlsx) — tùy chọn</label>
-                    <input type="file" id="reviewedInput" name="reviewed" accept=".xlsx" class="block w-full text-xs text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:font-bold file:text-brand-800">
-                    <p class="text-xs text-slate-500 mt-1">Để trống nếu số liệu đã điền chính xác. Chỉ cập nhật các ô dữ liệu được hỗ trợ trong biểu mẫu.</p>
+        <!-- STEP 3: Interactive Survey Excel Editor -->
+        <section id="sectionReview" class="hidden bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5" aria-labelledby="reviewTitle">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#e2f0db] pb-4">
+                <div class="space-y-1">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Bước 3 / 4 · Kiểm tra & điền file Excel khảo sát</p>
+                    <h2 id="reviewTitle" class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">Kiểm tra & chỉnh sửa trực tiếp trong biểu khảo sát</h2>
+                    <p class="text-xs text-[#6a8978]">Xem dữ liệu đã bóc tách theo từng sheet Excel; điền thêm hoặc sửa trực tiếp vào ô trống và lưu thẳng vào file <span class="font-mono text-[#183026]">.xlsx</span>.</p>
                 </div>
-                <button id="btnSurveyCalculate" type="submit" class="px-8 py-3.5 rounded-2xl text-sm font-bold text-white gradient-brand hover:opacity-95 shadow-md shadow-emerald-900/20">3. Tính phát thải & xuất báo cáo</button>
-                <button type="button" onclick="resetToInput()" class="px-4 py-3 text-xs font-bold text-slate-600">Nạp chứng từ khác</button>
+                <p id="reviewRunId" class="text-[11px] font-mono text-[#6a8978]"></p>
+            </div>
+
+            <div class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4] p-3.5">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[#183026] mb-2">Chứng từ đã nạp</h3>
+                <ul id="evidenceList" class="space-y-1 text-xs text-[#2c4a3c]"></ul>
+            </div>
+
+            <div id="reviewWarnings" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-950" role="status"></div>
+
+            <!-- Excel Toolbar & Sheet Tabs -->
+            <div class="flex flex-wrap items-center justify-between gap-2.5">
+                <div id="excelTabBar" class="flex flex-wrap gap-1.5" role="tablist" aria-label="Sheet biểu khảo sát">
+                    <button type="button" onclick="switchExcelTab('info')" id="excelTabBtn-info" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-[#003c33] text-white border-[#003c33]">Thông tin chung</button>
+                    <button type="button" onclick="switchExcelTab('11')" id="excelTabBtn-11" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">1.1 Cố định</button>
+                    <button type="button" onclick="switchExcelTab('12')" id="excelTabBtn-12" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">1.2 Di động</button>
+                    <button type="button" onclick="switchExcelTab('21')" id="excelTabBtn-21" class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">2.1 Điện EVN</button>
+                    <span id="excelExtraTabMount" class="contents"></span>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" id="btnSaveSurveyExcel" onclick="saveSurveyEdits(false)" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[#003c33] bg-[#edf5e9] hover:bg-[#dff4cc] border border-[#cce5c0] transition">
+                        Lưu vào Excel
+                    </button>
+                    <a id="surveyDownload" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white gradient-brand transition" download>Tải file Excel (.xlsx)</a>
+                    <a id="surveyOpen" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#6a8978] hover:text-[#091710] border border-[#e2f0db] transition">Bản in</a>
+                </div>
+            </div>
+
+            <div id="surveySaveStatus" class="hidden rounded-lg px-3 py-2 text-xs font-medium"></div>
+
+            <datalist id="mobileFuelOptionsList">
+                <option value="Dầu DO (Diesel)">
+                <option value="Xăng">
+                <option value="Khí hóa lỏng (LPG)">
+                <option value="Khí tự nhiên (Natural Gas)">
+            </datalist>
+            <datalist id="surveyUnitOptionsList">
+                <option value="lít">
+                <option value="liter">
+                <option value="kg">
+                <option value="tấn">
+                <option value="m3">
+            </datalist>
+            <datalist id="coalOtherOptionsList">
+                <option value="Than antraxit (theo chứng từ)">
+                <option value="Than cám">
+            </datalist>
+
+            <!-- Interactive Sheet Panels -->
+            <div class="rounded-xl border border-[#cce5c0] bg-white overflow-hidden">
+                <!-- Sheet: Thông tin chung -->
+                <div id="excelSheetPanel-info" class="excel-sheet-panel p-4 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="excelInfoGrid"></div>
+                </div>
+
+                <!-- Sheet: 1.1 Đốt cố định (23 rows + all columns B..U) -->
+                <div id="excelSheetPanel-11" class="excel-sheet-panel hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
+                                    <th class="p-2 text-center w-10">STT</th>
+                                    <th class="p-2.5 sticky left-0 bg-[#f5f9f4] min-w-[240px] border-r border-[#e2f0db]">Loại nhiên liệu</th>
+                                    <th class="p-1.5 min-w-[76px]">Mã VT</th>
+                                    <th class="p-1.5 min-w-[74px]">Đơn vị</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T1</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T2</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T3</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T4</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T5</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T6</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T7</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T8</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T9</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T10</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T11</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T12</th>
+                                    <th class="p-2 text-right min-w-[82px] bg-[#edf5e9]/70">Tổng</th>
+                                    <th class="p-1.5 min-w-[96px]">Nhiệt trị</th>
+                                    <th class="p-1.5 min-w-[190px]">Thiết bị sử dụng</th>
+                                    <th class="p-1.5 min-w-[165px]">Đơn vị cung cấp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excelBody11" class="divide-y divide-[#e2f0db]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sheet: 1.2 Di động (18 rows + all columns B..W) -->
+                <div id="excelSheetPanel-12" class="excel-sheet-panel hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
+                                    <th class="p-2 text-center w-10">STT</th>
+                                    <th class="p-2.5 sticky left-0 bg-[#f5f9f4] min-w-[220px] border-r border-[#e2f0db]">Loại nhiên liệu (chọn hoặc tự nhập)</th>
+                                    <th class="p-1.5 min-w-[76px]">Mã VT</th>
+                                    <th class="p-1.5 min-w-[74px]">Đơn vị</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T1</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T2</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T3</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T4</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T5</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T6</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T7</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T8</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T9</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T10</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T11</th>
+                                    <th class="p-1.5 text-right min-w-[66px]">T12</th>
+                                    <th class="p-2 text-right min-w-[82px] bg-[#edf5e9]/70">Tổng</th>
+                                    <th class="p-1.5 min-w-[96px]">Nhiệt trị</th>
+                                    <th class="p-1.5 min-w-[150px]">Loại phương tiện</th>
+                                    <th class="p-1.5 min-w-[190px]">Thông tin phương tiện</th>
+                                    <th class="p-1.5 text-right min-w-[92px]">Quãng đường (km)</th>
+                                    <th class="p-1.5 min-w-[165px]">Đơn vị cung cấp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excelBody12" class="divide-y divide-[#e2f0db]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sheet: 2.1 Điện EVN -->
+                <div id="excelSheetPanel-21" class="excel-sheet-panel hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
+                                    <th class="p-2.5 min-w-[100px]">Tháng</th>
+                                    <th class="p-2 min-w-[110px]">Mã vật tư</th>
+                                    <th class="p-2 min-w-[80px]">Đơn vị</th>
+                                    <th class="p-2 text-right min-w-[160px]">Điện mua lưới EVN (kWh)</th>
+                                    <th class="p-2 text-right min-w-[160px]">Điện tự sản xuất (kWh)</th>
+                                    <th class="p-2.5 text-right min-w-[130px] bg-[#edf5e9]/70">Tổng (kWh)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excelBody21" class="divide-y divide-[#e2f0db]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Dynamic Panel for ALL Extra Sheets (Phạm vi 1, 1.3, 1.4, 1.5, 1.6, Phạm vi 2, 2.2, Thông tin bổ sung, Biện pháp giảm thiểu, Khai khoáng) -->
+                <div id="excelSheetPanel-extra" class="excel-sheet-panel hidden">
+                    <div id="excelExtraSheetHeader" class="px-3.5 py-2 bg-[#f5f9f4]/70 border-b border-[#e2f0db] text-xs font-semibold text-[#183026]"></div>
+                    <div class="overflow-x-auto">
+                        <table id="excelExtraTable" class="w-full text-left border-collapse text-xs"></table>
+                    </div>
+                </div>
+            </div>
+
+            <form id="reviewForm" class="space-y-4 pt-1" onsubmit="handleSurveyCalculate(event)">
+                <details class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/50 p-3 text-xs">
+                    <summary class="cursor-pointer font-semibold text-[#2c4a3c] select-none">Hoặc tải lên file .xlsx đã sửa trên máy tính (tùy chọn)</summary>
+                    <div class="mt-3">
+                        <input type="file" id="reviewedInput" name="reviewed" accept=".xlsx" class="block w-full text-xs text-[#2c4a3c] file:mr-3 file:rounded-lg file:border file:border-[#cce5c0] file:bg-white file:px-3.5 file:py-1.5 file:font-semibold file:text-[#003c33] hover:file:bg-[#edf5e9]">
+                    </div>
+                </details>
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="goToStepIfAllowed(1)" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">← Bước 1: Thông tin</button>
+                        <button type="button" onclick="goToStepIfAllowed(2)" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">← Bước 2: Chứng từ</button>
+                    </div>
+                    <button id="btnSurveyCalculate" type="submit" class="px-6 py-2.5 rounded-lg text-sm font-semibold text-white gradient-brand transition">Tính phát thải & xuất kết quả →</button>
+                </div>
             </form>
         </section>
 
         <!-- Processing state -->
-        <section id="sectionLoading" class="hidden bg-white rounded-3xl border border-slate-200/90 shadow-sm p-8 text-center space-y-4">
-            <div class="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-200 text-brand-700 flex items-center justify-center text-2xl mx-auto animate-bounce">
-                ⚙️
-            </div>
+        <section id="sectionLoading" class="hidden bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-8 text-center space-y-4">
+            <div class="w-10 h-10 rounded-full border-2 border-[#cce5c0] border-t-[#003c33] animate-spin mx-auto" aria-hidden="true"></div>
             <div class="space-y-1">
-                <h3 class="text-base font-bold text-slate-900" id="loadingTitle">Đang bóc tách chứng từ và tính toán phát thải...</h3>
-                <p class="text-xs text-slate-500" id="loadingSubtitle">Hệ thống áp dụng hệ số phát thải MONRE và lan truyền sai số Gaussian 95%</p>
+                <h3 class="text-sm font-bold text-[#091710]" id="loadingTitle">Đang xử lý dữ liệu...</h3>
+                <p class="text-xs text-[#6a8978]" id="loadingSubtitle">Vui lòng đợi trong giây lát.</p>
             </div>
-            <div class="w-full max-w-md mx-auto bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div id="loadingProgress" class="bg-brand-600 h-2 rounded-full transition-all duration-300" style="width: 45%"></div>
+            <div class="w-full max-w-sm mx-auto bg-[#edf5e9] h-1.5 rounded-full overflow-hidden">
+                <div id="loadingProgress" class="bg-[#003c33] h-1.5 rounded-full transition-all duration-300" style="width: 45%"></div>
             </div>
         </section>
 
-        <!-- STEP 3: RESULTS & DELIVERABLES -->
-        <section id="sectionResults" class="hidden space-y-6">
-            
-            <!-- Result Summary Card -->
-            <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
-                
-                <!-- Facility Header & Reset Button -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-5 border-b border-slate-100">
+        <!-- STEP 4: RESULTS & DELIVERABLES -->
+        <section id="sectionResults" class="hidden space-y-5">
+
+            <div class="bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-6">
+
+                <!-- Facility Header -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-[#e2f0db]">
                     <div>
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></span>
-                                KẾT QUẢ KIỂM KÊ HOÀN TẤT
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]">
+                                Hoàn tất kiểm kê
                             </span>
-                            <span id="resSector" class="text-xs text-slate-500 font-medium">Dệt may & Năng lượng nhiệt</span>
+                            <span id="resSector" class="text-xs text-[#6a8978] font-medium">Chưa xác nhận</span>
                         </div>
-                        <h2 id="resCompany" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
-                            EcoGarment Vietnam JSC
+                        <h2 id="resCompany" class="text-xl font-bold text-[#091710] tracking-tight mt-1.5">
+                            Doanh nghiệp
                         </h2>
-                        <p id="resMeta" class="text-xs text-slate-500 mt-0.5">
-                            Nhà máy May & Năng lượng Hà Nam • Kỳ báo cáo: Năm 2026
+                        <p id="resMeta" class="text-xs text-[#6a8978] mt-0.5">
+                            Cơ sở • Năm 2026
                         </p>
                     </div>
-
-                    <button onclick="resetToInput()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition flex items-center gap-1.5">
-                        <span>↺</span>
-                        <span>Tính Toán Lượt Mới</span>
-                    </button>
+                    <span id="resRunIdBadge" class="px-2.5 py-1 rounded-md bg-[#f5f9f4] text-[#2c4a3c] font-mono text-[11px] border border-[#e2f0db]">run</span>
                 </div>
 
-                <div id="resultWarnings" class="hidden rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-950" role="status"></div>
-                <!-- 4 Simple Big Metric Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Total Emissions -->
-                    <div class="p-5 rounded-2xl bg-slate-900 text-white flex flex-col justify-between">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tổng Phát Thải Ròng</span>
+                <div id="resultWarnings" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-950" role="status"></div>
+
+                <!-- 4 Clean Metric Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    <div class="p-4 rounded-xl bg-[#003c33] text-white flex flex-col justify-between">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#9fe870]">Tổng phát thải</span>
                         <div class="my-2">
-                            <span id="resTotal" class="text-3xl font-black font-mono">4,933.80</span>
-                            <span class="text-xs font-semibold text-slate-400">tCO₂e</span>
+                            <span id="resTotal" class="text-2xl sm:text-3xl font-bold font-mono">0.00</span>
+                            <span class="text-xs text-[#c5edab]">tCO₂e</span>
                         </div>
-                        <span id="resUncertainty" class="text-[11px] font-mono text-slate-400">95% CI: [4,454.7 - 5,435.4] t</span>
+                        <span id="resUncertainty" class="text-[11px] font-mono text-[#c5edab]/90 truncate">Khoảng bất định</span>
                     </div>
 
-                    <!-- Scope 1 -->
-                    <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-slate-900 flex flex-col justify-between">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Scope 1 (Trực Tiếp)</span>
+                    <div class="p-4 rounded-xl bg-[#f5f9f4] border border-[#cce5c0] flex flex-col justify-between">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Phạm vi 1 · Trực tiếp</span>
                         <div class="my-2">
-                            <span id="resScope1" class="text-3xl font-black font-mono text-emerald-950">4,914.82</span>
-                            <span class="text-xs font-semibold text-emerald-700">tCO₂e</span>
+                            <span id="resScope1" class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">0.00</span>
+                            <span class="text-xs text-[#2c4a3c]">tCO₂e</span>
                         </div>
-                        <span class="text-[11px] text-emerald-700 font-medium">Nhiên liệu đốt lò hơi & xe cộ</span>
+                        <span class="text-[11px] text-[#6a8978]">Nhiên liệu đốt cố định & di động</span>
                     </div>
 
-                    <!-- Scope 2 -->
-                    <div class="p-5 rounded-2xl bg-blue-50 border border-blue-200 text-slate-900 flex flex-col justify-between">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-blue-800">Scope 2 (Gián Tiếp)</span>
+                    <div class="p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-[#2a5c47]">Phạm vi 2 · Gián tiếp</span>
                         <div class="my-2">
-                            <span id="resScope2" class="text-3xl font-black font-mono text-blue-950">18.98</span>
-                            <span class="text-xs font-semibold text-blue-700">tCO₂e</span>
+                            <span id="resScope2" class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">0.00</span>
+                            <span class="text-xs text-[#2c4a3c]">tCO₂e</span>
                         </div>
-                        <span class="text-[11px] text-blue-700 font-medium">Điện mua lưới EVN (MONRE)</span>
+                        <span class="text-[11px] text-[#6a8978]">Điện mua lưới EVN</span>
                     </div>
 
-                    <!-- Reliability -->
-                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 flex flex-col justify-between">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Độ Tin Cậy Dữ Liệu</span>
-                            <span id="resGradeBadge" class="px-2 py-0.5 rounded text-[11px] font-black bg-emerald-600 text-white">GRADE A</span>
+                    <div class="p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-[#6a8978]">Độ tin cậy</span>
+                            <span id="resGradeBadge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#003c33] text-white">A</span>
                         </div>
                         <div class="my-2">
-                            <span id="resScore" class="text-3xl font-black font-mono">88.5%</span>
-                            <span class="text-xs font-semibold text-slate-500">Tin cậy</span>
+                            <span id="resScore" class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">0.0%</span>
                         </div>
-                        <span id="resVerdict" class="text-[11px] text-slate-600 truncate">Đạt chuẩn kiểm toán và quyết toán</span>
+                        <span id="resVerdict" class="text-[11px] text-[#6a8978] truncate">Chỉ số nội bộ</span>
                     </div>
                 </div>
 
-                <!-- Run-specific deliverables (never use the shared legacy /api/report links here) -->
-                <div class="pt-4 border-t border-slate-100 space-y-3">
+                <!-- Deliverables -->
+                <div class="pt-4 border-t border-[#e2f0db] space-y-3">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div>
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                                <span id="downloadHeading">📥 3. Tải Về Trọn Bộ Báo Cáo Quy Chuẩn</span>
-                                <span id="resRunIdBadge" class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[10px] font-semibold border border-slate-200">run: benchmark</span>
-                            </h3>
-                        </div>
-                        <button type="button" onclick="openAccountModal()" id="tierNoticeBanner" class="text-left sm:text-right text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-1 rounded-lg border border-amber-200 transition">
-                            ⚠️ Bản Free Preview (Có Watermark) • <span class="underline">Kích hoạt Pro để mở khóa Mẫu 02 & Excel</span>
+                        <h3 id="downloadHeading" class="text-xs font-bold uppercase tracking-wider text-[#183026]">
+                            4. Tải hồ sơ & báo cáo
+                        </h3>
+                        <button type="button" onclick="openAccountModal()" id="tierNoticeBanner" class="text-left sm:text-right text-[11px] font-medium text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] px-3 py-1 rounded-lg border border-[#cce5c0] transition">
+                            Bản xem trước (Free) · <span class="underline font-semibold text-[#003c33]">Mở khóa bản đầy đủ</span>
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                         <!-- Survey Workbook -->
-                        <a id="btnDlSurvey" href="/api/survey/template" download class="hidden p-4 rounded-2xl bg-teal-50 hover:bg-teal-100 border border-teal-200 transition text-left flex items-start gap-3 group">
-                            <span class="text-2xl">📑</span>
-                            <div class="truncate flex-1">
-                                <div class="text-xs font-bold text-teal-950 group-hover:text-teal-900 flex items-center justify-between gap-1">
-                                    <span>Biểu Khảo Sát</span>
-                                    <span>↓</span>
-                                </div>
-                                <div class="text-[11px] text-teal-700 truncate">Đã xác nhận (.xlsx)</div>
+                        <a id="btnDlSurvey" href="/api/survey/template" download class="hidden p-3.5 rounded-xl bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition text-left flex flex-col justify-between gap-1.5">
+                            <div class="text-xs font-bold text-[#003c33] flex items-center justify-between gap-1">
+                                <span>Biểu khảo sát</span>
+                                <span aria-hidden="true">↓</span>
                             </div>
+                            <div class="text-[11px] text-[#2c4a3c] truncate">Đã xác nhận (.xlsx)</div>
                         </a>
 
                         <!-- HTML Report -->
-                        <a id="btnDlHtml" href="/api/report/html" target="_blank" class="p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition text-left flex items-start gap-3 group">
-                            <span class="text-2xl">🌐</span>
-                            <div class="truncate flex-1">
-                                <div class="text-xs font-bold text-emerald-950 group-hover:text-emerald-900 flex items-center justify-between gap-1">
-                                    <span>Báo Cáo HTML</span>
-                                    <span>↗</span>
-                                </div>
-                                <div id="subDlHtml" class="text-[11px] text-emerald-700 truncate">Xem trước (Watermark)</div>
+                        <a id="btnDlHtml" href="/api/report/html" target="_blank" class="p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#e2f0db] transition text-left flex flex-col justify-between gap-1.5">
+                            <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
+                                <span>Báo cáo HTML</span>
+                                <span aria-hidden="true">↗</span>
                             </div>
+                            <div id="subDlHtml" class="text-[11px] text-[#6a8978] truncate">Xem trên trình duyệt</div>
                         </a>
 
                         <!-- Word DOCX -->
-                        <a id="btnDlDocx" href="/api/report/docx" onclick="return handleProDownload(event, 'docx')" download="Bao_cao_Mau02_ND06.docx" class="p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 transition text-left flex items-start gap-3 group">
-                            <span class="text-2xl">📝</span>
-                            <div class="truncate flex-1">
-                                <div class="text-xs font-bold text-blue-950 group-hover:text-blue-900 flex items-center justify-between gap-1">
-                                    <span>Word Mẫu 02</span>
-                                    <span id="badgeLockDocx" class="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950">🔒 PRO</span>
-                                </div>
-                                <div class="text-[11px] text-blue-700 truncate">Chuẩn nộp NĐ 06/2022</div>
+                        <a id="btnDlDocx" href="/api/report/docx" onclick="return handleProDownload(event, 'docx')" download="Bao_cao_Mau02_ND06.docx" class="p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#e2f0db] transition text-left flex flex-col justify-between gap-1.5">
+                            <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
+                                <span>Báo cáo Word</span>
+                                <span id="badgeLockDocx" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#2c4a3c] border border-[#cce5c0]">PRO</span>
                             </div>
+                            <div class="text-[11px] text-[#6a8978] truncate">Hồ sơ (.docx)</div>
                         </a>
 
                         <!-- PDF Audit -->
-                        <a id="btnDlPdf" href="/api/report/pdf" target="_blank" class="p-4 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 transition text-left flex items-start gap-3 group">
-                            <span class="text-2xl">📕</span>
-                            <div class="truncate flex-1">
-                                <div class="text-xs font-bold text-rose-950 group-hover:text-rose-900 flex items-center justify-between gap-1">
-                                    <span>Báo Cáo PDF</span>
-                                    <span>↗</span>
-                                </div>
-                                <div id="subDlPdf" class="text-[11px] text-rose-700 truncate">Xem trước (Watermark)</div>
+                        <a id="btnDlPdf" href="/api/report/pdf" target="_blank" class="p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#e2f0db] transition text-left flex flex-col justify-between gap-1.5">
+                            <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
+                                <span>Báo cáo PDF</span>
+                                <span aria-hidden="true">↗</span>
                             </div>
+                            <div id="subDlPdf" class="text-[11px] text-[#6a8978] truncate">Xem trước PDF</div>
                         </a>
 
                         <!-- Excel QA -->
-                        <a id="btnDlExcel" href="/api/report/excel" onclick="return handleProDownload(event, 'excel')" download="Ho_so_ket_qua_CO2_EcoStream.xlsx" class="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 transition text-left flex items-start gap-3 group">
-                            <span class="text-2xl">📊</span>
-                            <div class="truncate flex-1">
-                                <div class="text-xs font-bold text-slate-900 group-hover:text-slate-800 flex items-center justify-between gap-1">
-                                    <span>Hồ Sơ Excel</span>
-                                    <span id="badgeLockExcel" class="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950">🔒 PRO</span>
-                                </div>
-                                <div class="text-[11px] text-slate-600 truncate">Đối soát chi tiết từng dòng</div>
+                        <a id="btnDlExcel" href="/api/report/excel" onclick="return handleProDownload(event, 'excel')" download="Ho_so_ket_qua_CO2_EcoStream.xlsx" class="p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#e2f0db] transition text-left flex flex-col justify-between gap-1.5">
+                            <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
+                                <span>Bảng kiểm kê Excel</span>
+                                <span id="badgeLockExcel" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#2c4a3c] border border-[#cce5c0]">PRO</span>
                             </div>
+                            <div class="text-[11px] text-[#6a8978] truncate">Đối soát từng dòng (.xlsx)</div>
                         </a>
                     </div>
                 </div>
 
-                <div id="demoDownloads" class="hidden text-xs text-slate-600">Dữ liệu mẫu (chế độ cũ): <a href="/api/report/html" target="_blank" rel="noopener noreferrer" class="underline text-brand-700">HTML</a> · <a href="/api/report/pdf" target="_blank" rel="noopener noreferrer" class="underline text-brand-700">PDF</a> · <a href="/api/report/docx" class="underline text-brand-700">Word</a> · <a href="/api/report/excel" class="underline text-brand-700">Excel</a></div>
                 <!-- Collapsible Clean Details Table -->
-                <div class="pt-4 border-t border-slate-100">
-                    <button type="button" onclick="toggleDetailsTable()" class="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-slate-900 py-2">
-                        <span class="flex items-center gap-1.5">
-                            <span>📋</span>
-                            <span>Danh Sách Hoạt Động & Bằng Chứng Bóc Tách (<span id="calcCountBadge">0</span> mục)</span>
-                        </span>
-                        <span id="detailsToggleIcon" class="text-slate-400">▼ Xem chi tiết</span>
+                <div class="pt-4 border-t border-[#e2f0db]">
+                    <button type="button" onclick="toggleDetailsTable()" class="w-full flex items-center justify-between text-xs font-semibold text-[#183026] hover:text-[#003c33] py-1.5">
+                        <span>Chi tiết hoạt động đã tính (<span id="calcCountBadge">0</span> dòng)</span>
+                        <span id="detailsToggleIcon" class="text-[#6a8978]">▼ Xem chi tiết</span>
                     </button>
 
-                    <div id="detailsTableWrapper" class="hidden mt-3 overflow-x-auto rounded-2xl border border-slate-200">
+                    <div id="detailsTableWrapper" class="hidden mt-3 overflow-x-auto rounded-xl border border-[#e2f0db]">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="bg-slate-100/80 text-slate-700 font-bold border-b border-slate-200 uppercase text-[11px]">
+                                <tr class="bg-[#f5f9f4] text-[#2c4a3c] font-semibold border-b border-[#e2f0db] text-[11px]">
                                     <th class="py-2.5 px-3">#</th>
-                                    <th class="py-2.5 px-3">Mô tả hoạt động</th>
-                                    <th class="py-2.5 px-3">Scope</th>
+                                    <th class="py-2.5 px-3">Nguồn phát thải</th>
+                                    <th class="py-2.5 px-3">Phạm vi</th>
                                     <th class="py-2.5 px-3 text-right">Lượng hoạt động</th>
                                     <th class="py-2.5 px-3 text-right">Hệ số EF</th>
-                                    <th class="py-2.5 px-3 text-right">Phát thải (tCO₂e)</th>
-                                    <th class="py-2.5 px-3 text-right">Chứng từ gốc</th>
-                                    <th class="py-2.5 px-3 text-right">Độ tin cậy</th>
+                                    <th class="py-2.5 px-3 text-right">tCO₂e</th>
+                                    <th class="py-2.5 px-3 text-right">Chứng từ</th>
+                                    <th class="py-2.5 px-3 text-right">Tin cậy</th>
                                 </tr>
                             </thead>
-                            <tbody id="calculationsTableBody">
-                                <!-- Injected -->
-                            </tbody>
+                            <tbody id="calculationsTableBody"></tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Step 4 Bottom Action Bar: Review Previous Steps & Start New Run -->
+                <div class="pt-4 border-t border-[#e2f0db] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="goToStepIfAllowed(1)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">
+                            ← Bước 1: Thông tin
+                        </button>
+                        <button type="button" onclick="goToStepIfAllowed(2)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">
+                            ← Bước 2: Chứng từ
+                        </button>
+                        <button type="button" onclick="goToStepIfAllowed(3)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">
+                            ← Bước 3: Rà soát
+                        </button>
+                    </div>
+
+                    <button type="button" id="btnResetNewRun" onclick="resetToInput()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-red-700 bg-red-50 hover:bg-red-100 border-2 border-red-300 transition flex items-center justify-center gap-2">
+                        <span>↺</span>
+                        <span>Tính Toán Lượt Mới</span>
+                    </button>
                 </div>
 
             </div>
@@ -399,74 +687,66 @@
 
     </main>
 
-    <!-- Modal: Enterprise Account Login & Pro License Activation -->
-    <div id="accountLicenseModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5">
-            <div class="flex items-start justify-between border-b border-slate-100 pb-4">
+    <!-- Modal: Enterprise Account & AI Settings -->
+    <div id="accountLicenseModal" class="fixed inset-0 z-50 bg-[#091710]/50 backdrop-blur-xs hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-[#e2f0db] space-y-4">
+            <div class="flex items-start justify-between border-b border-[#e2f0db] pb-3.5">
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xl">🔐</span>
-                        <h3 class="text-base font-extrabold text-slate-900">Tài Khoản Doanh Nghiệp & License Pro</h3>
-                    </div>
-                    <p class="text-xs text-slate-500 mt-0.5">Cô lập dữ liệu theo Mã Tổ Chức (Multi-Tenant) & Mở khóa xuất bản Mẫu 02</p>
+                    <h3 class="text-base font-bold text-[#091710]">Tài khoản & cấu hình</h3>
+                    <p class="text-xs text-[#6a8978] mt-0.5">Phân tách phiên chạy theo mã tổ chức và mở khóa xuất bản</p>
                 </div>
-                <button type="button" onclick="closeAccountModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center">✕</button>
+                <button type="button" onclick="closeAccountModal()" class="w-7 h-7 rounded-lg bg-[#f5f9f4] hover:bg-[#edf5e9] text-[#2c4a3c] font-bold flex items-center justify-center border border-[#e2f0db]">✕</button>
             </div>
 
-            <form onsubmit="handleEnterpriseLogin(event)" class="space-y-4">
+            <form onsubmit="handleEnterpriseLogin(event)" class="space-y-3.5">
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Email Cán Bộ / Kế Toán</label>
-                    <input type="email" id="modalEmailInput" value="hse@ecogarment.vn" class="w-full text-xs font-medium px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-brand-500 outline-hidden" required>
+                    <label class="block text-xs font-medium text-[#2c4a3c] mb-1">Email phụ trách</label>
+                    <input type="email" id="modalEmailInput" value="hse@ecogarment.vn" class="w-full text-xs px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden" required>
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Mã Tổ Chức / Doanh Nghiệp (Org ID)</label>
-                    <input type="text" id="modalOrgInput" value="ecogarment-vn" placeholder="Ví dụ: ecogarment-vn" class="w-full text-xs font-mono font-bold px-3.5 py-2.5 border border-slate-300 rounded-xl focus:border-brand-500 outline-hidden" required>
-                    <p class="text-[11px] text-slate-400 mt-1">Mỗi Org ID có không gian lưu trữ phiên chạy (<code class="font-mono">run_id</code>) tách biệt.</p>
+                    <label class="block text-xs font-medium text-[#2c4a3c] mb-1">Mã tổ chức (Org ID)</label>
+                    <input type="text" id="modalOrgInput" value="ecogarment-vn" placeholder="ecogarment-vn" class="w-full text-xs font-mono font-semibold px-3 py-2 border border-[#cce5c0] rounded-lg outline-hidden" required>
                 </div>
 
-                <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+                <div class="p-3.5 rounded-xl bg-[#f5f9f4] border border-[#cce5c0] space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="block text-[11px] font-bold text-amber-950 uppercase">Mã Kích Hoạt Gói Pro / Enterprise</label>
-                        <button type="button" onclick="fillDemoProKey()" class="text-[11px] font-bold text-emerald-700 hover:underline">✨ Dùng mã Demo Pro</button>
+                        <label class="block text-xs font-semibold text-[#183026]">Mã bản quyền (Pro / Enterprise)</label>
+                        <button type="button" onclick="fillDemoProKey()" class="text-[11px] font-semibold text-[#003c33] hover:underline">Điền mã dùng thử</button>
                     </div>
-                    <input type="text" id="modalLicenseInput" placeholder="Dán mã kích hoạt (ECO-PRO-2026 hoặc ECO2....)" class="w-full text-xs font-mono font-bold px-3 py-2 bg-white border border-amber-300 rounded-xl focus:border-emerald-600 outline-hidden">
-                    <div class="text-[11px] text-amber-800 space-y-0.5 leading-relaxed">
-                        <div>• <strong>Gói Free:</strong> Xem báo cáo HTML/PDF có đóng dấu Watermark.</div>
-                        <div>• <strong>Gói Pro:</strong> Gỡ Watermark + Mở khóa tải <strong>Word Mẫu 02 NĐ 06/2022</strong> & <strong>Hồ sơ Excel</strong>.</div>
-                    </div>
+                    <input type="text" id="modalLicenseInput" placeholder="ECO-PRO-2026" class="w-full text-xs font-mono font-semibold px-3 py-2 bg-white border border-[#cce5c0] rounded-lg outline-hidden">
+                    <p class="text-[11px] text-[#6a8978]">Bản Pro mở khóa tải Word và bảng kiểm kê Excel không watermark.</p>
                 </div>
 
-                <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2">
+                <div class="p-3.5 rounded-xl bg-white border border-[#e2f0db] space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="block text-[11px] font-bold text-indigo-950 uppercase">Cấu hình AI Bóc Tách (BYOK - 0đ)</label>
-                        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] font-bold text-indigo-700 hover:underline">🔑 Lấy Gemini Key Free ↗</a>
+                        <label class="block text-xs font-semibold text-[#183026]">API bóc tách (tùy chọn)</label>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] font-medium text-[#003c33] hover:underline">Lấy Gemini Key ↗</a>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
-                        <select id="modalAiProviderSelect" onchange="toggleAiKeyInput()" class="text-xs font-bold px-2 py-2 bg-white border border-indigo-300 rounded-xl focus:border-indigo-600 outline-hidden">
-                            <option value="gemini">Google Gemini (Free)</option>
-                            <option value="openai">OpenAI (API)</option>
+                        <select id="modalAiProviderSelect" onchange="toggleAiKeyInput()" class="text-xs font-medium px-2 py-2 bg-white border border-[#cce5c0] rounded-lg outline-hidden">
+                            <option value="gemini">Gemini</option>
+                            <option value="openai">OpenAI</option>
                             <option value="ollama">Ollama (Local)</option>
-                            <option value="offline">Tắt AI (Chỉ dùng Core)</option>
+                            <option value="offline">Offline</option>
                         </select>
-                        <input type="password" id="modalAiKeyInput" placeholder="Dán API Key (AIzaSy...)" class="col-span-2 text-xs font-mono px-3 py-2 bg-white border border-indigo-300 rounded-xl focus:border-indigo-600 outline-hidden">
+                        <input type="password" id="modalAiKeyInput" placeholder="API Key" class="col-span-2 text-xs font-mono px-3 py-2 bg-white border border-[#cce5c0] rounded-lg outline-hidden">
                     </div>
-                    <p class="text-[10px] text-indigo-700">Google Gemini cung cấp hạn mức miễn phí 1.500 lượt/ngày. Dữ liệu nhạy cảm được che chắn (PII Masking) an toàn tuyệt đối trước khi gửi.</p>
                 </div>
 
-                <div id="modalStatusMsg" class="hidden text-xs font-bold p-2.5 rounded-xl text-center"></div>
+                <div id="modalStatusMsg" class="hidden text-xs font-semibold p-2.5 rounded-lg text-center"></div>
 
                 <div class="flex items-center justify-end gap-2 pt-2">
-                    <button type="button" onclick="switchToFreeTier()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Chuyển về Free</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white gradient-brand hover:opacity-95 transition shadow-sm">Lưu & Kích Hoạt</button>
+                    <button type="button" onclick="switchToFreeTier()" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#cce5c0] transition">Chuyển về Free</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold text-white gradient-brand transition">Lưu cấu hình</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-200/80 bg-white py-5 text-center text-xs text-slate-400">
-        EcoStream AI Carbon Accounting • Trường Đại học Khoa học và Công nghệ Hà Nội (USTH)
+    <footer class="border-t border-[#e2f0db] bg-white py-4 text-center text-xs text-[#6a8978]">
+        EcoStream · Kiểm kê khí nhà kính cấp cơ sở (NĐ 06/2022/NĐ-CP)
     </footer>
 
     <!-- Direct & Clean Logic Script -->
@@ -513,8 +793,156 @@
             box.append(title, list);
         }
 
+        const FACILITY_DRAFT_KEY = 'ecostream_facility_info_draft_v1';
+        const FACILITY_FIELD_IDS = [
+            'contactNameInput', 'contactRoleInput', 'contactPhoneInput', 'contactEmailInput',
+            'locationInput', 'periodInput', 'companyInput', 'facilityAddressInput',
+            'facilityPhoneInput', 'facilityEmailInput', 'legalRepInput', 'legalRepTitleInput',
+            'industrySectorInput', 'operatingStatusInput', 'startYearInput', 'facilityRepInput',
+        ];
+        let currentFlowStep = 1;
+        let maxReachedStep = 1;
+
+        function setActiveStep(step, resetMax = false) {
+            currentFlowStep = step;
+            if (resetMax) {
+                maxReachedStep = step;
+            } else {
+                maxReachedStep = Math.max(maxReachedStep, step);
+            }
+            for (let i = 1; i <= 4; i++) {
+                const badge = byId(`stepBadge${i}`);
+                if (!badge) continue;
+                const num = badge.querySelector('span');
+                const reachable = i <= maxReachedStep;
+                badge.disabled = !reachable;
+                if (i === step) {
+                    badge.className = 'px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-[#003c33] text-white border-[#003c33] cursor-pointer';
+                    if (num) num.className = 'w-5 h-5 rounded-full bg-white/15 text-white flex items-center justify-center text-[11px] font-bold shrink-0';
+                } else if (reachable) {
+                    badge.className = 'px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-[#edf5e9] hover:bg-[#dff4cc] text-[#091710] border-[#cce5c0] cursor-pointer';
+                    if (num) num.className = 'w-5 h-5 rounded-full bg-[#2a5c47] text-white flex items-center justify-center text-[11px] font-bold shrink-0';
+                } else {
+                    badge.className = 'px-3 py-2 rounded-xl text-xs font-semibold border transition text-left flex items-center gap-2 bg-white text-[#6a8978] border-[#e2f0db] cursor-not-allowed opacity-70';
+                    if (num) num.className = 'w-5 h-5 rounded-full bg-[#f5f9f4] text-[#6a8978] flex items-center justify-center text-[11px] font-bold shrink-0';
+                }
+            }
+        }
+
+        function showStep(step, resetMax = false) {
+            byId('sectionFacilityInfo').classList.toggle('hidden', step !== 1);
+            byId('sectionInput').classList.toggle('hidden', step !== 2);
+            byId('sectionReview').classList.toggle('hidden', step !== 3);
+            byId('sectionResults').classList.toggle('hidden', step !== 4);
+            byId('sectionLoading').classList.add('hidden');
+            if (step === 2) {
+                renderFacilitySummaryStrip();
+            }
+            setActiveStep(step, resetMax);
+            const targetId = step === 1 ? 'sectionFacilityInfo' : step === 2 ? 'sectionInput' : step === 3 ? 'sectionReview' : 'sectionResults';
+            byId(targetId).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function goToStepIfAllowed(step) {
+            if (activeRequest) return;
+            if (step < 1 || step > maxReachedStep) return;
+            if (step >= 2) {
+                const facilityForm = byId('facilityInfoForm');
+                if (facilityForm && !facilityForm.reportValidity()) {
+                    showStep(1);
+                    return;
+                }
+                saveFacilityDraft();
+            }
+            showStep(step);
+        }
+
+        function saveFacilityDraft() {
+            try {
+                const draft = {};
+                FACILITY_FIELD_IDS.forEach(id => {
+                    const el = byId(id);
+                    if (el) draft[id] = el.value;
+                });
+                sessionStorage.setItem(FACILITY_DRAFT_KEY, JSON.stringify(draft));
+            } catch (_) {}
+        }
+
+        function restoreFacilityDraft() {
+            try {
+                const raw = sessionStorage.getItem(FACILITY_DRAFT_KEY);
+                if (!raw) return;
+                const draft = JSON.parse(raw);
+                if (draft && typeof draft === 'object') {
+                    FACILITY_FIELD_IDS.forEach(id => {
+                        const el = byId(id);
+                        if (el && typeof draft[id] === 'string' && draft[id] !== '') {
+                            el.value = draft[id];
+                        }
+                    });
+                }
+            } catch (_) {}
+        }
+
+        function clearFacilityInfo() {
+            FACILITY_FIELD_IDS.forEach(id => {
+                const el = byId(id);
+                if (!el) return;
+                el.value = id === 'periodInput' ? '2026' : '';
+            });
+            try { sessionStorage.removeItem(FACILITY_DRAFT_KEY); } catch (_) {}
+        }
+
+        function renderFacilitySummaryStrip() {
+            const strip = byId('facilitySummaryStrip');
+            strip.replaceChildren();
+            const facility = byId('locationInput').value.trim();
+            const company = byId('companyInput').value.trim() || facility;
+            const period = byId('periodInput').value.trim();
+            const address = byId('facilityAddressInput').value.trim();
+            const sector = byId('industrySectorInput').value.trim();
+            const contact = byId('contactNameInput').value.trim();
+
+            const title = document.createElement('div');
+            title.className = 'font-bold text-slate-900';
+            title.textContent = `Cơ sở: ${facility} · Kỳ báo cáo: Năm ${period}`;
+            strip.append(title);
+
+            const details = [];
+            if (company && company !== facility) details.push(`Doanh nghiệp: ${company}`);
+            if (address) details.push(`Địa chỉ: ${address}`);
+            if (sector) details.push(`Ngành nghề: ${sector}`);
+            if (contact) details.push(`Người cung cấp: ${contact}`);
+            if (details.length) {
+                const sub = document.createElement('div');
+                sub.className = 'text-slate-600';
+                sub.textContent = details.join(' · ');
+                strip.append(sub);
+            }
+        }
+
+        function proceedToUploadStep(e) {
+            e.preventDefault();
+            saveFacilityDraft();
+            showStep(2);
+        }
+
+        function backToFacilityInfo() {
+            showStep(1);
+        }
+
+        function backToUploadStep() {
+            showStep(2);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             updateAccountAndTierUI();
+            restoreFacilityDraft();
+            FACILITY_FIELD_IDS.forEach(id => {
+                const el = byId(id);
+                if (el) el.addEventListener('input', saveFacilityDraft);
+            });
+            setActiveStep(1, true);
         });
 
         function toggleAiKeyInput() {
@@ -607,7 +1035,7 @@
                 const data = await res.json();
                 if (licenseKey && !data.is_pro) {
                     msgBox.className = "text-xs font-bold p-2.5 rounded-xl text-center bg-rose-50 text-rose-700 border border-rose-200";
-                    msgBox.innerText = "Mã License không hợp lệ! Hãy bấm '✨ Dùng mã Demo Pro' (ECO-PRO-2026) để thử nghiệm.";
+                    msgBox.innerText = "Mã không hợp lệ. Hãy bấm 'Điền mã dùng thử' (ECO-PRO-2026) để kiểm tra.";
                     msgBox.classList.remove('hidden');
                     return;
                 }
@@ -648,15 +1076,15 @@
 
             const isPro = (currentTier === 'PRO');
             if (isPro) {
-                btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 transition flex items-center gap-1.5 shadow-2xs";
-                icon.innerText = "💎";
-                badge.className = "px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-600 text-white";
-                badge.innerText = "PRO VERIFIED";
+                btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#edf5e9] hover:bg-[#dff4cc] text-[#003c33] border border-[#cce5c0] transition inline-flex items-center gap-1.5";
+                icon.className = "w-2 h-2 rounded-full bg-[#003c33]";
+                badge.className = "px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#003c33] text-[#9fe870]";
+                badge.innerText = "PRO";
             } else {
-                btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition flex items-center gap-1.5 shadow-2xs";
-                icon.innerText = "🔒";
-                badge.className = "px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950";
-                badge.innerText = "FREE PREVIEW";
+                btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#f5f9f4] hover:bg-[#edf5e9] text-[#183026] border border-[#cce5c0] transition inline-flex items-center gap-1.5";
+                icon.className = "w-2 h-2 rounded-full bg-[#6a8978]";
+                badge.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#2c4a3c]";
+                badge.innerText = "FREE";
             }
         }
 
@@ -694,33 +1122,33 @@
 
             if (isPro) {
                 if (notice) {
-                    notice.className = "text-left sm:text-right text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-200 transition";
-                    notice.innerHTML = `💎 Gói Pro (${currentOrgId}) • Đã mở khóa toàn bộ báo cáo gốc không Watermark`;
+                    notice.className = "text-left sm:text-right text-[11px] font-medium text-[#003c33] bg-[#edf5e9] hover:bg-[#dff4cc] px-3 py-1 rounded-lg border border-[#cce5c0] transition";
+                    notice.textContent = `Gói Pro (${currentOrgId}) · Đã mở khóa đầy đủ`;
                 }
-                if (subHtml) subHtml.innerText = "Bản chính thức (Không Watermark)";
-                if (subPdf) subPdf.innerText = "Bản chính thức ký duyệt kiểm toán";
+                if (subHtml) subHtml.innerText = "Bản chính thức";
+                if (subPdf) subPdf.innerText = "Bản chính thức (.pdf)";
                 if (lockDocx) {
-                    lockDocx.className = "px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-600 text-white";
-                    lockDocx.innerText = "↓ TẢI";
+                    lockDocx.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#003c33] text-white";
+                    lockDocx.innerText = "↓";
                 }
                 if (lockExcel) {
-                    lockExcel.className = "px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-emerald-600 text-white";
-                    lockExcel.innerText = "↓ TẢI";
+                    lockExcel.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#003c33] text-white";
+                    lockExcel.innerText = "↓";
                 }
             } else {
                 if (notice) {
-                    notice.className = "text-left sm:text-right text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 px-3 py-1 rounded-lg border border-amber-200 transition";
-                    notice.innerHTML = `⚠️ Bản Free Preview (Có Watermark) • <span class="underline">Kích hoạt Pro để mở khóa Mẫu 02 & Excel</span>`;
+                    notice.className = "text-left sm:text-right text-[11px] font-medium text-[#2c4a3c] bg-[#f5f9f4] hover:bg-[#edf5e9] px-3 py-1 rounded-lg border border-[#cce5c0] transition";
+                    notice.innerHTML = `Bản xem trước (Free) · <span class="underline font-semibold text-[#003c33]">Mở khóa bản đầy đủ</span>`;
                 }
-                if (subHtml) subHtml.innerText = "Xem trước (Có Watermark)";
-                if (subPdf) subPdf.innerText = "Xem trước (Có Watermark)";
+                if (subHtml) subHtml.innerText = "Xem trước (Watermark)";
+                if (subPdf) subPdf.innerText = "Xem trước (Watermark)";
                 if (lockDocx) {
-                    lockDocx.className = "px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950";
-                    lockDocx.innerText = "🔒 PRO";
+                    lockDocx.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#2c4a3c] border border-[#cce5c0]";
+                    lockDocx.innerText = "PRO";
                 }
                 if (lockExcel) {
-                    lockExcel.className = "px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-200 text-amber-950";
-                    lockExcel.innerText = "🔒 PRO";
+                    lockExcel.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f5f9f4] text-[#2c4a3c] border border-[#cce5c0]";
+                    lockExcel.innerText = "PRO";
                 }
             }
         }
@@ -730,10 +1158,10 @@
                 e.preventDefault();
                 openAccountModal();
                 const msgBox = document.getElementById('modalStatusMsg');
-                msgBox.className = "text-xs font-bold p-2.5 rounded-xl text-center bg-amber-100 text-amber-900 border border-amber-300";
+                msgBox.className = "text-xs font-semibold p-2.5 rounded-lg text-center bg-[#f5f9f4] text-[#003c33] border border-[#cce5c0]";
                 msgBox.innerText = docType === 'docx'
-                    ? "🔒 Tải file Word Mẫu 02 NĐ 06/2022 yêu cầu gói Pro/Enterprise. Bấm '✨ Dùng mã Demo Pro' bên trên để mở khóa ngay!"
-                    : "🔒 Tải Hồ sơ kiểm toán Excel yêu cầu gói Pro/Enterprise. Bấm '✨ Dùng mã Demo Pro' bên trên để mở khóa ngay!";
+                    ? "Tải báo cáo Word yêu cầu mã Pro. Bấm 'Điền mã dùng thử' để mở khóa."
+                    : "Tải bảng kiểm kê Excel yêu cầu mã Pro. Bấm 'Điền mã dùng thử' để mở khóa.";
                 msgBox.classList.remove('hidden');
                 return false;
             }
@@ -756,16 +1184,18 @@
                 handleFilesSelected(e.dataTransfer.files);
             }
         }
+        const MAX_SURVEY_FILES = 100;
         function handleFilesSelected(files) {
             if (!files || files.length === 0) return;
-            const allowed = ['.pdf', '.xlsx', '.docx', '.csv'];
+            const allowed = ['.pdf', '.xlsx', '.docx', '.csv', '.png', '.jpg', '.jpeg'];
             const additions = Array.from(files);
-            const invalid = additions.find(f => !allowed.some(ext => f.name.toLowerCase().endsWith(ext)) || !/^[a-zA-Z0-9_.-]+$/.test(f.name) || f.name.includes('..') || f.size > 10 * 1024 * 1024);
-            if (invalid) { alert('Tệp không hợp lệ: ' + invalid.name + '. Chỉ hỗ trợ PDF/XLSX/DOCX/CSV, tên không dấu và tối đa 10 MB mỗi tệp.'); return; }
-            if (selectedFiles.length + additions.length > 20) { alert('Chỉ được chọn tối đa 20 chứng từ.'); return; }
-            additions.forEach(f => {
-                if (!selectedFiles.some(existing => existing.name === f.name)) selectedFiles.push(f);
-            });
+            const invalid = additions.find(f => !allowed.some(ext => f.name.toLowerCase().endsWith(ext)) || f.name.includes('..') || f.name.includes('/') || f.name.includes('\\') || f.size > 10 * 1024 * 1024);
+            if (invalid) { alert('Tệp không hợp lệ: ' + invalid.name + '. Chỉ hỗ trợ PDF, XLSX, DOCX, CSV, PNG/JPG và tối đa 10 MB mỗi tệp.'); return; }
+            const uniqueAdditions = additions.filter(f => !selectedFiles.some(existing => existing.name === f.name));
+            if (selectedFiles.length + uniqueAdditions.length > MAX_SURVEY_FILES) { alert(`Chỉ được chọn tối đa ${MAX_SURVEY_FILES} chứng từ.`); return; }
+            uniqueAdditions.forEach(f => selectedFiles.push(f));
+            const fi = byId('fileInput');
+            if (fi) fi.value = '';
             renderSelectedFilesList();
         }
         function removeFile(index, e) {
@@ -781,49 +1211,41 @@
 
             if (selectedFiles.length === 0) {
                 box.classList.add('hidden');
-                dropzoneText.innerHTML = 'Kéo & Thả chứng từ vào đây, hoặc <span class="text-brand-700 underline">chọn tệp từ máy tính</span>';
+                dropzoneText.innerHTML = 'Kéo thả tệp vào đây, hoặc <span class="text-[#003c33] underline">chọn từ máy tính</span>';
                 return;
             }
 
             box.classList.remove('hidden');
             countText.innerText = `${selectedFiles.length} tệp`;
-            dropzoneText.innerHTML = `Đã chọn <strong class="text-brand-800">${selectedFiles.length} tệp</strong>. Bấm để đính kèm thêm.`;
+            dropzoneText.innerHTML = `Đã chọn <strong class="text-[#003c33]">${selectedFiles.length} tệp</strong>. Bấm để thêm tệp.`;
 
             list.innerHTML = selectedFiles.map((f, i) => `
-                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 shadow-2xs">
-                    <span>📄</span>
-                    <span class="max-w-[180px] truncate" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>
-                    <button type="button" onclick="removeFile(${i}, event)" class="text-red-500 hover:text-red-700 font-bold ml-1">✕</button>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-[#cce5c0] rounded-lg text-xs font-medium text-[#183026]">
+                    <span class="max-w-[200px] truncate font-mono" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>
+                    <button type="button" onclick="removeFile(${i}, event)" class="text-[#6a8978] hover:text-red-700 font-bold ml-1">✕</button>
                 </div>
             `).join('');
-        }
-
-        // Keep the benchmark quick action for comparing historical results.
-        async function runDemoQuick() {
-            if (activeRequest) return;
-            activeRequest = true;
-            showLoading('Đang phân tích bộ dữ liệu kiểm chứng benchmark...', 'EcoGarment Vietnam JSC — Nhà máy Hà Nam');
-            try {
-                const data = await readApiResponse(await fetch(`/api/demo?org_id=${encodeURIComponent(currentOrgId)}&user_id=${encodeURIComponent(currentUserId)}`));
-                latestRunId = data.run_id || 'benchmark';
-                isSurveyRun = false;
-                displayResults(data);
-            } catch (err) {
-                alert('Lỗi nạp demo: ' + err.message);
-                resetToInput();
-            } finally { activeRequest = false; }
         }
 
         async function handleCalculate(e) {
             e.preventDefault();
             if (activeRequest) return;
+            const facilityForm = byId('facilityInfoForm');
+            if (!facilityForm.reportValidity()) {
+                showStep(1);
+                return;
+            }
             if (selectedFiles.length === 0) { alert('Vui lòng chọn ít nhất một chứng từ.'); return; }
             activeRequest = true;
-            const formData = new FormData(byId('calcForm'));
+            const formData = new FormData(facilityForm);
+            const locationVal = String(formData.get('location') || '').trim();
+            const companyVal = String(formData.get('company') || '').trim();
+            formData.set('location', locationVal);
+            formData.set('company', companyVal || locationVal);
             selectedFiles.forEach(f => formData.append('files', f));
             formData.append('org_id', currentOrgId);
             formData.append('user_id', currentUserId);
-            showLoading('Đang tạo biểu khảo sát từ chứng từ...', 'Sau bước này, vui lòng rà soát số liệu trước khi tính toán.');
+            showLoading('Đang đọc dữ liệu & tạo biểu khảo sát...', 'Thông tin cơ sở (CV 1790/VNL-P16) và số liệu chứng từ sẽ được ghi vào Excel.');
             try {
                 const data = await readApiResponse(await fetch('/api/survey/prepare', { method: 'POST', body: formData }));
                 latestRunId = data.run_id;
@@ -831,26 +1253,566 @@
                 displayReview(data);
             } catch (err) {
                 alert('Không thể tạo biểu khảo sát: ' + err.message);
-                resetToInput();
+                backToUploadStep();
             } finally { activeRequest = false; }
         }
 
+        let surveyWorkbookState = null;
+        let surveyDirty = false;
+        let activeExcelTab = 'info';
+        let extraCellsEdits = {};
+
+        const EXCEL_INFO_FIELDS = [
+            ['contact_name', 'Người cung cấp thông tin'],
+            ['contact_role', 'Chức vụ / Bộ phận'],
+            ['contact_phone', 'Điện thoại người cung cấp'],
+            ['contact_email', 'Email người cung cấp'],
+            ['facility_name', '1. Tên cơ sở'],
+            ['facility_address', 'Địa chỉ cơ sở'],
+            ['facility_phone', 'Điện thoại cơ sở'],
+            ['facility_email', 'Email cơ sở'],
+            ['legal_representative', 'Người đại diện pháp luật'],
+            ['legal_rep_title', 'Chức danh'],
+            ['industry_sector', 'Ngành nghề SX/KD'],
+            ['operating_status', 'Tình trạng hoạt động'],
+            ['start_year', 'Năm bắt đầu hoạt động'],
+            ['facility_representative', 'Đại diện cơ sở'],
+        ];
+
+        function markSurveyDirty() {
+            surveyDirty = true;
+            const box = byId('surveySaveStatus');
+            if (box) {
+                box.className = 'rounded-lg px-3 py-2 text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200';
+                box.textContent = 'Có thay đổi chưa lưu vào file Excel. Bấm "Lưu vào Excel" hoặc "Tính phát thải" để ghi trực tiếp.';
+                box.classList.remove('hidden');
+            }
+        }
+
+        function switchExcelTab(tab) {
+            activeExcelTab = tab;
+            const extraOrder = (surveyWorkbookState && surveyWorkbookState.extra_sheet_order) || [];
+            const allKeys = ['info', '11', '12', '21', ...extraOrder];
+            allKeys.forEach(key => {
+                const btn = byId(`excelTabBtn-${key}`);
+                if (!btn) return;
+                const active = key === tab;
+                btn.className = active
+                    ? 'excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-[#003c33] text-white border-[#003c33]'
+                    : 'excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]';
+            });
+            byId('excelSheetPanel-info').classList.toggle('hidden', tab !== 'info');
+            byId('excelSheetPanel-11').classList.toggle('hidden', tab !== '11');
+            byId('excelSheetPanel-12').classList.toggle('hidden', tab !== '12');
+            byId('excelSheetPanel-21').classList.toggle('hidden', tab !== '21');
+            const isExtra = extraOrder.includes(tab);
+            byId('excelSheetPanel-extra').classList.toggle('hidden', !isExtra);
+            if (isExtra) renderExtraSheetPanel(tab);
+        }
+
+        function formatSumCell(vals) {
+            const sum = vals.reduce((acc, v) => acc + (Number.isFinite(Number(v)) && v !== '' && v !== null ? Number(v) : 0), 0);
+            return sum ? sum.toLocaleString('en-US', { maximumFractionDigits: 4 }) : '—';
+        }
+
+        function makeTextCell(val, placeholder, onChange, extraClass = '') {
+            const td = document.createElement('td');
+            td.className = 'p-1';
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.placeholder = placeholder || '';
+            inp.value = val || '';
+            inp.className = `w-full text-xs px-2 py-1 border border-[#e2f0db] rounded bg-white outline-hidden ${extraClass}`;
+            inp.addEventListener('input', () => { onChange(inp.value); markSurveyDirty(); });
+            td.append(inp);
+            return td;
+        }
+
+        function renderExcelInfoTab() {
+            const grid = byId('excelInfoGrid');
+            if (!grid || !surveyWorkbookState) return;
+            const gi = surveyWorkbookState.general_info || {};
+            grid.replaceChildren();
+            EXCEL_INFO_FIELDS.forEach(([key, label]) => {
+                const wrap = document.createElement('div');
+                const lbl = document.createElement('label');
+                lbl.className = 'block text-[11px] font-semibold text-[#2c4a3c] mb-1';
+                lbl.textContent = label;
+                const inp = document.createElement('input');
+                inp.type = 'text';
+                inp.value = gi[key] || '';
+                inp.dataset.infoKey = key;
+                inp.className = 'w-full text-xs px-2.5 py-1.5 border border-[#cce5c0] rounded-lg bg-white outline-hidden';
+                inp.addEventListener('input', () => {
+                    surveyWorkbookState.general_info[key] = inp.value;
+                    markSurveyDirty();
+                });
+                wrap.append(lbl, inp);
+                grid.append(wrap);
+            });
+        }
+
+        function renderExcel11Tab() {
+            const tbody = byId('excelBody11');
+            if (!tbody || !surveyWorkbookState) return;
+            tbody.replaceChildren();
+            (surveyWorkbookState.sheet_1_1 || []).forEach(row => {
+                const hasRowData = (row.months || []).some(v => v !== null && v !== '');
+                const tr = document.createElement('tr');
+                tr.className = hasRowData ? 'bg-[#edf5e9]/35 hover:bg-[#edf5e9]/60' : 'hover:bg-[#f5f9f4]/70';
+
+                const tdStt = document.createElement('td');
+                tdStt.className = 'p-2 text-center font-mono text-[11px] text-[#6a8978]';
+                tdStt.textContent = row.stt ?? '';
+
+                const tdName = document.createElement('td');
+                tdName.className = 'p-2 font-medium text-[#091710] sticky left-0 bg-white border-r border-[#e2f0db] min-w-[240px]';
+                if (row.name_editable) {
+                    const nameInp = document.createElement('input');
+                    nameInp.type = 'text';
+                    nameInp.value = row.name === '…' ? '' : (row.name || '');
+                    nameInp.placeholder = 'Nhập tên nhiên liệu khác...';
+                    if (row.row === 7) nameInp.setAttribute('list', 'coalOtherOptionsList');
+                    nameInp.className = 'w-full text-xs font-medium px-2 py-1 border border-[#cce5c0] rounded bg-white outline-hidden';
+                    nameInp.addEventListener('input', () => { row.name = nameInp.value; markSurveyDirty(); });
+                    tdName.append(nameInp);
+                } else {
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = row.name;
+                    tdName.append(nameSpan);
+                }
+                if (!row.calculable) {
+                    const tag = document.createElement('span');
+                    tag.className = 'ml-1.5 px-1.5 py-0.5 rounded text-[10px] bg-[#f5f9f4] text-[#6a8978] border border-[#e2f0db] whitespace-nowrap';
+                    tag.textContent = 'Chưa có EF';
+                    tdName.append(tag);
+                }
+
+                const tdCode = makeTextCell(row.material_code, '', v => { row.material_code = v; }, 'font-mono');
+
+                const tdUnit = document.createElement('td');
+                tdUnit.className = 'p-1';
+                if (row.allowed_units && row.allowed_units.length) {
+                    const unitSel = document.createElement('select');
+                    unitSel.className = 'w-full text-xs px-1.5 py-1 border border-[#e2f0db] rounded bg-white outline-hidden';
+                    row.allowed_units.forEach(u => {
+                        const opt = document.createElement('option');
+                        opt.value = u;
+                        opt.textContent = u;
+                        if (u === row.unit) opt.selected = true;
+                        unitSel.append(opt);
+                    });
+                    unitSel.addEventListener('change', () => { row.unit = unitSel.value; markSurveyDirty(); });
+                    tdUnit.append(unitSel);
+                } else {
+                    const unitInp = document.createElement('input');
+                    unitInp.type = 'text';
+                    unitInp.setAttribute('list', 'surveyUnitOptionsList');
+                    unitInp.placeholder = 'Đơn vị';
+                    unitInp.value = row.unit || '';
+                    unitInp.className = 'w-full text-xs px-1.5 py-1 border border-[#e2f0db] rounded bg-white outline-hidden';
+                    unitInp.addEventListener('input', () => { row.unit = unitInp.value; markSurveyDirty(); });
+                    tdUnit.append(unitInp);
+                }
+
+                tr.append(tdStt, tdName, tdCode, tdUnit);
+
+                const tdSum = document.createElement('td');
+                tdSum.className = 'p-2 text-right font-mono font-semibold text-[#003c33] bg-[#edf5e9]/40';
+                tdSum.textContent = formatSumCell(row.months || []);
+
+                for (let m = 0; m < 12; m++) {
+                    const td = document.createElement('td');
+                    td.className = 'p-1';
+                    const inp = document.createElement('input');
+                    inp.type = 'text';
+                    inp.inputMode = 'decimal';
+                    inp.placeholder = '—';
+                    inp.value = row.months[m] !== null && row.months[m] !== undefined ? String(row.months[m]) : '';
+                    inp.className = 'w-full text-right text-xs font-mono px-1.5 py-1 border border-[#e2f0db] rounded bg-white outline-hidden';
+                    inp.addEventListener('input', () => {
+                        const raw = inp.value.trim();
+                        row.months[m] = raw === '' ? null : raw;
+                        tdSum.textContent = formatSumCell(row.months);
+                        markSurveyDirty();
+                    });
+                    td.append(inp);
+                    tr.append(td);
+                }
+
+                const tdHv = makeTextCell(row.heating_value, '—', v => { row.heating_value = v; }, 'font-mono text-right');
+                const tdEq = makeTextCell(row.equipment, '—', v => { row.equipment = v; });
+                const tdSup = makeTextCell(row.supplier, '—', v => { row.supplier = v; });
+
+                tr.append(tdSum, tdHv, tdEq, tdSup);
+                tbody.append(tr);
+            });
+        }
+
+        function renderExcel12Tab() {
+            const tbody = byId('excelBody12');
+            if (!tbody || !surveyWorkbookState) return;
+            tbody.replaceChildren();
+            const rows = surveyWorkbookState.sheet_1_2 || [];
+            const opts = surveyWorkbookState.mobile_fuel_options || [
+                { kind: 'diesel', name: 'Dầu DO (Diesel)', default_unit: 'liter', allowed_units: ['liter', 'lít'] },
+                { kind: 'petrol', name: 'Xăng', default_unit: 'liter', allowed_units: ['liter', 'lít'] },
+            ];
+
+            rows.forEach(row => {
+                const hasRowData = (row.months || []).some(v => v !== null && v !== '') || !!row.name;
+                const tr = document.createElement('tr');
+                tr.className = hasRowData ? 'bg-[#edf5e9]/35 hover:bg-[#edf5e9]/60' : 'hover:bg-[#f5f9f4]/70';
+
+                const tdStt = document.createElement('td');
+                tdStt.className = 'p-2 text-center font-mono text-[11px] text-[#6a8978]';
+                tdStt.textContent = row.stt ?? '';
+
+                const tdFuel = document.createElement('td');
+                tdFuel.className = 'p-1 sticky left-0 bg-white border-r border-[#e2f0db] min-w-[220px]';
+                const fuelInp = document.createElement('input');
+                fuelInp.type = 'text';
+                fuelInp.setAttribute('list', 'mobileFuelOptionsList');
+                fuelInp.placeholder = 'Chọn hoặc tự nhập tên nhiên liệu...';
+                fuelInp.value = row.name || '';
+                fuelInp.className = 'w-full text-xs font-medium px-2 py-1 border border-[#cce5c0] rounded bg-white outline-hidden';
+                tdFuel.append(fuelInp);
+
+                const tdCode = makeTextCell(row.material_code, '', v => { row.material_code = v; }, 'font-mono');
+
+                const tdUnit = document.createElement('td');
+                tdUnit.className = 'p-1';
+                const unitInp = document.createElement('input');
+                unitInp.type = 'text';
+                unitInp.setAttribute('list', 'surveyUnitOptionsList');
+                unitInp.placeholder = 'Đơn vị';
+                unitInp.value = row.unit || '';
+                unitInp.className = 'w-full text-xs px-1.5 py-1 border border-[#e2f0db] rounded bg-white outline-hidden';
+                tdUnit.append(unitInp);
+
+                fuelInp.addEventListener('input', () => {
+                    row.name = fuelInp.value;
+                    const matched = opts.find(o => o.name.toLowerCase() === fuelInp.value.trim().toLowerCase());
+                    row.kind = matched ? matched.kind : '';
+                    if (matched && !unitInp.value.trim()) {
+                        row.unit = matched.default_unit;
+                        unitInp.value = matched.default_unit;
+                    }
+                    markSurveyDirty();
+                });
+                unitInp.addEventListener('input', () => { row.unit = unitInp.value; markSurveyDirty(); });
+
+                tr.append(tdStt, tdFuel, tdCode, tdUnit);
+
+                const tdSum = document.createElement('td');
+                tdSum.className = 'p-2 text-right font-mono font-semibold text-[#003c33] bg-[#edf5e9]/40';
+                tdSum.textContent = formatSumCell(row.months || []);
+
+                for (let m = 0; m < 12; m++) {
+                    const td = document.createElement('td');
+                    td.className = 'p-1';
+                    const inp = document.createElement('input');
+                    inp.type = 'text';
+                    inp.inputMode = 'decimal';
+                    inp.placeholder = '—';
+                    inp.value = row.months[m] !== null && row.months[m] !== undefined ? String(row.months[m]) : '';
+                    inp.className = 'w-full text-right text-xs font-mono px-1.5 py-1 border border-[#e2f0db] rounded bg-white outline-hidden';
+                    inp.addEventListener('input', () => {
+                        const raw = inp.value.trim();
+                        row.months[m] = raw === '' ? null : raw;
+                        tdSum.textContent = formatSumCell(row.months);
+                        markSurveyDirty();
+                    });
+                    td.append(inp);
+                    tr.append(td);
+                }
+
+                const tdHv = makeTextCell(row.heating_value, '—', v => { row.heating_value = v; }, 'font-mono text-right');
+                const tdVtype = makeTextCell(row.vehicle_type, '—', v => { row.vehicle_type = v; });
+                const tdVinfo = makeTextCell(row.vehicle_info, '—', v => { row.vehicle_info = v; });
+                const tdDist = makeTextCell(row.distance_km, '—', v => { row.distance_km = v; }, 'font-mono text-right');
+                const tdSup = makeTextCell(row.supplier, '—', v => { row.supplier = v; });
+
+                tr.append(tdSum, tdHv, tdVtype, tdVinfo, tdDist, tdSup);
+                tbody.append(tr);
+            });
+        }
+
+        function renderExcelExtraTabs() {
+            const mount = byId('excelExtraTabMount');
+            if (!mount || !surveyWorkbookState) return;
+            mount.replaceChildren();
+            const order = surveyWorkbookState.extra_sheet_order || [];
+            order.forEach(name => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = `excelTabBtn-${name}`;
+                btn.textContent = name === 'Cung cap thong tin khai khoang' ? 'Khai khoáng' : name;
+                btn.className = 'excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]';
+                btn.onclick = () => switchExcelTab(name);
+                mount.append(btn);
+            });
+        }
+
+        function renderExtraSheetPanel(sheetName) {
+            const header = byId('excelExtraSheetHeader');
+            const table = byId('excelExtraTable');
+            if (!table || !surveyWorkbookState) return;
+            const sheet = (surveyWorkbookState.extra_sheets || {})[sheetName];
+            if (!sheet) return;
+            if (header) {
+                header.textContent = sheet.read_only
+                    ? `${sheetName} · Bảng tham chiếu (chỉ đọc)`
+                    : `${sheetName} · Bấm vào các ô trống để nhập trực tiếp vào Excel`;
+            }
+            table.replaceChildren();
+            const tbody = document.createElement('tbody');
+            tbody.className = 'divide-y divide-[#e2f0db]';
+            if (!extraCellsEdits[sheetName]) extraCellsEdits[sheetName] = {};
+
+            const tierWidthClass = (tier) => {
+                if (tier === 'wide') return 'min-w-[230px]';
+                if (tier === 'narrow') return 'min-w-[60px] max-w-[92px]';
+                return 'min-w-[130px] max-w-[200px]';
+            };
+
+            (sheet.rows || []).forEach(rowCells => {
+                const tr = document.createElement('tr');
+                rowCells.forEach(cell => {
+                    const td = document.createElement(cell.is_header ? 'th' : 'td');
+                    if (cell.rowspan > 1) td.rowSpan = cell.rowspan;
+                    if (cell.colspan > 1) td.colSpan = cell.colspan;
+                    const wClass = cell.colspan > 1 ? '' : tierWidthClass(cell.col_tier);
+                    if (cell.is_header) {
+                        td.className = `p-2 bg-[#f5f9f4] text-[#183026] font-semibold text-[11px] border border-[#e2f0db] whitespace-pre-line ${wClass}`;
+                        td.textContent = cell.value;
+                    } else if (cell.editable) {
+                        td.className = `p-1 border border-[#e2f0db] bg-white align-top ${wClass}`;
+                        const cur = Object.prototype.hasOwnProperty.call(extraCellsEdits[sheetName], cell.coord)
+                            ? extraCellsEdits[sheetName][cell.coord]
+                            : cell.value;
+                        if (cell.col_tier === 'wide') {
+                            const ta = document.createElement('textarea');
+                            ta.rows = 1;
+                            ta.value = cur || '';
+                            ta.placeholder = '—';
+                            ta.className = 'w-full text-xs px-2 py-1 border border-[#e2f0db] rounded bg-white outline-hidden resize-none leading-snug';
+                            const fitHeight = () => {
+                                ta.style.height = 'auto';
+                                ta.style.height = Math.max(26, ta.scrollHeight) + 'px';
+                            };
+                            ta.addEventListener('input', () => {
+                                fitHeight();
+                                cell.value = ta.value;
+                                extraCellsEdits[sheetName][cell.coord] = ta.value;
+                                markSurveyDirty();
+                            });
+                            td.append(ta);
+                            requestAnimationFrame(fitHeight);
+                        } else {
+                            const inp = document.createElement('input');
+                            inp.type = 'text';
+                            inp.value = cur || '';
+                            inp.placeholder = '—';
+                            inp.className = 'w-full text-xs px-1.5 py-1 border border-[#e2f0db] rounded bg-white outline-hidden font-mono';
+                            inp.addEventListener('input', () => {
+                                cell.value = inp.value;
+                                extraCellsEdits[sheetName][cell.coord] = inp.value;
+                                markSurveyDirty();
+                            });
+                            td.append(inp);
+                        }
+                    } else {
+                        td.className = `p-2 border border-[#e2f0db] bg-[#f5f9f4]/40 text-[#2c4a3c] whitespace-pre-line ${wClass}`;
+                        td.textContent = cell.formula ? '—' : (cell.value || '');
+                    }
+                    tr.append(td);
+                });
+                tbody.append(tr);
+            });
+            table.append(tbody);
+        }
+
+        function renderExcel21Tab() {
+            const tbody = byId('excelBody21');
+            if (!tbody || !surveyWorkbookState) return;
+            tbody.replaceChildren();
+            const rows = surveyWorkbookState.sheet_2_1 || [];
+            const totalCell = document.createElement('td');
+            totalCell.className = 'p-2.5 text-right font-mono font-bold text-[#003c33] bg-[#edf5e9]';
+
+            const updateGrandTotal = () => {
+                const gridSum = rows.reduce((a, r) => a + (Number.isFinite(Number(r.grid_kwh)) && r.grid_kwh !== null && r.grid_kwh !== '' ? Number(r.grid_kwh) : 0), 0);
+                const selfSum = rows.reduce((a, r) => a + (Number.isFinite(Number(r.self_kwh)) && r.self_kwh !== null && r.self_kwh !== '' ? Number(r.self_kwh) : 0), 0);
+                totalCell.textContent = (gridSum + selfSum) ? (gridSum + selfSum).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—';
+            };
+
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                const isMissingGrid = row.grid_kwh === null || row.grid_kwh === '';
+                tr.className = isMissingGrid ? 'bg-amber-50/30 hover:bg-amber-50/60' : 'hover:bg-[#f5f9f4]/70';
+
+                const tdMonth = document.createElement('td');
+                tdMonth.className = 'p-2.5 font-semibold text-[#091710]';
+                tdMonth.textContent = `Tháng ${row.month}`;
+
+                const tdCode = makeTextCell(row.material_code, '', v => { row.material_code = v; }, 'font-mono');
+
+                const tdUnit = document.createElement('td');
+                tdUnit.className = 'p-2.5 font-mono text-[#2c4a3c]';
+                tdUnit.textContent = row.unit || 'kWh';
+
+                const tdRowSum = document.createElement('td');
+                tdRowSum.className = 'p-2.5 text-right font-mono font-semibold text-[#003c33] bg-[#edf5e9]/40';
+                const updateRowSum = () => {
+                    tdRowSum.textContent = formatSumCell([row.grid_kwh, row.self_kwh]);
+                    updateGrandTotal();
+                };
+                updateRowSum();
+
+                const makeNumInput = (fieldKey) => {
+                    const td = document.createElement('td');
+                    td.className = 'p-1.5';
+                    const inp = document.createElement('input');
+                    inp.type = 'text';
+                    inp.inputMode = 'decimal';
+                    inp.placeholder = 'Chưa có số liệu';
+                    inp.value = row[fieldKey] !== null && row[fieldKey] !== undefined ? String(row[fieldKey]) : '';
+                    inp.className = 'w-full text-right text-xs font-mono px-2 py-1 border border-[#cce5c0] rounded bg-white outline-hidden';
+                    inp.addEventListener('input', () => {
+                        const raw = inp.value.trim();
+                        row[fieldKey] = raw === '' ? null : raw;
+                        tr.className = (row.grid_kwh === null || row.grid_kwh === '') ? 'bg-amber-50/30 hover:bg-amber-50/60' : 'hover:bg-[#f5f9f4]/70';
+                        updateRowSum();
+                        markSurveyDirty();
+                    });
+                    td.append(inp);
+                    return td;
+                };
+
+                tr.append(tdMonth, tdCode, tdUnit, makeNumInput('grid_kwh'), makeNumInput('self_kwh'), tdRowSum);
+                tbody.append(tr);
+            });
+
+            const trTotal = document.createElement('tr');
+            trTotal.className = 'border-t-2 border-[#cce5c0] bg-[#edf5e9]/50';
+            const tdLbl = document.createElement('td');
+            tdLbl.colSpan = 5;
+            tdLbl.className = 'p-2.5 text-xs font-bold text-[#091710]';
+            tdLbl.textContent = 'Tổng cộng cả năm';
+            updateGrandTotal();
+            trTotal.append(tdLbl, totalCell);
+            tbody.append(trTotal);
+        }
+
+        function renderExcelEditor(state, keepCurrentTab = false) {
+            surveyWorkbookState = state;
+            surveyDirty = false;
+            extraCellsEdits = {};
+            renderExcelExtraTabs();
+            renderExcelInfoTab();
+            renderExcel11Tab();
+            renderExcel12Tab();
+            renderExcel21Tab();
+
+            if (keepCurrentTab && activeExcelTab) {
+                switchExcelTab(activeExcelTab);
+                return;
+            }
+            const has11 = (state.sheet_1_1 || []).some(r => (r.months || []).some(v => v !== null && v !== ''));
+            const has21 = (state.sheet_2_1 || []).some(r => r.grid_kwh !== null && r.grid_kwh !== '');
+            const has12 = (state.sheet_1_2 || []).some(r => (r.months || []).some(v => v !== null && v !== ''));
+            if (has21 && !has11) switchExcelTab('21');
+            else if (has11) switchExcelTab('11');
+            else if (has12) switchExcelTab('12');
+            else switchExcelTab('info');
+        }
+
+        async function loadSurveyWorkbookEditor(runId) {
+            const box = byId('surveySaveStatus');
+            if (box) box.classList.add('hidden');
+            try {
+                const state = await readApiResponse(await fetch(surveyPath(runId, 'survey/data')));
+                renderExcelEditor(state, false);
+            } catch (err) {
+                if (box) {
+                    box.className = 'rounded-lg px-3 py-2 text-xs font-medium bg-red-50 text-red-700 border border-red-200';
+                    box.textContent = 'Không tải được dữ liệu Excel: ' + err.message;
+                    box.classList.remove('hidden');
+                }
+            }
+        }
+
+        async function saveSurveyEdits(silent = false) {
+            if (!latestRunId || !surveyWorkbookState) return true;
+            const box = byId('surveySaveStatus');
+            const payload = {
+                general_info: surveyWorkbookState.general_info || {},
+                sheet_1_1: (surveyWorkbookState.sheet_1_1 || []).map(r => ({
+                    row: r.row,
+                    name: r.name,
+                    material_code: r.material_code || '',
+                    unit: r.unit,
+                    months: r.months,
+                    heating_value: r.heating_value || '',
+                    equipment: r.equipment || '',
+                    supplier: r.supplier || '',
+                })),
+                sheet_1_2: (surveyWorkbookState.sheet_1_2 || []).map(r => ({
+                    row: r.row,
+                    name: r.name,
+                    material_code: r.material_code || '',
+                    unit: r.unit,
+                    months: r.months,
+                    heating_value: r.heating_value || '',
+                    vehicle_type: r.vehicle_type || '',
+                    vehicle_info: r.vehicle_info || '',
+                    distance_km: r.distance_km || '',
+                    supplier: r.supplier || '',
+                })),
+                sheet_2_1: (surveyWorkbookState.sheet_2_1 || []).map(r => ({
+                    month: r.month,
+                    material_code: r.material_code || '',
+                    unit: r.unit || 'kWh',
+                    grid_kwh: r.grid_kwh,
+                    self_kwh: r.self_kwh,
+                })),
+                extra_cells: extraCellsEdits,
+            };
+            const updated = await readApiResponse(await fetch(surveyPath(latestRunId, 'survey/save'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            }));
+            renderExcelEditor(updated, true);
+            if (!silent && box) {
+                const warns = Array.isArray(updated.save_warnings) ? updated.save_warnings : [];
+                if (warns.length) {
+                    box.className = 'rounded-lg px-3 py-2 text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200';
+                    box.textContent = 'Đã lưu vào file Excel (Bang_khao_sat_da_dien.xlsx). Lưu ý: ' + warns.join(' · ');
+                } else {
+                    box.className = 'rounded-lg px-3 py-2 text-xs font-medium bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]';
+                    box.textContent = 'Đã lưu trực tiếp vào file Excel khảo sát (Bang_khao_sat_da_dien.xlsx).';
+                }
+                box.classList.remove('hidden');
+            }
+            return true;
+        }
+
         function displayReview(data) {
-            byId('sectionLoading').classList.add('hidden');
-            byId('sectionInput').classList.add('hidden');
-            byId('sectionResults').classList.add('hidden');
-            byId('sectionReview').classList.remove('hidden');
+            showStep(3, true);
             byId('reviewedInput').value = '';
-            byId('reviewRunId').textContent = `Mã phiên: ${data.run_id} · ${Array.isArray(data.items) ? data.items.length : 0} dòng dữ liệu trích xuất`;
+            byId('reviewRunId').textContent = `Mã phiên: ${data.run_id} · ${Array.isArray(data.items) ? data.items.length : 0} dòng trích xuất`;
             const list = byId('evidenceList');
             list.replaceChildren();
             (data.files || []).forEach(file => {
                 const li = document.createElement('li');
-                li.className = 'flex flex-wrap justify-between gap-2 border-b border-slate-200 pb-2';
+                li.className = 'flex flex-wrap justify-between gap-2 border-b border-[#e2f0db] last:border-b-0 pb-1.5 last:pb-0';
                 const name = document.createElement('span');
-                name.className = 'font-bold break-all';
+                name.className = 'font-semibold text-[#091710] break-all font-mono';
                 name.textContent = file.filename;
                 const status = document.createElement('span');
+                status.className = 'text-[#2c4a3c]';
                 const details = [];
                 if (file.records) details.push(`${file.records} dòng Scope 1/2 · ${file.status}`);
                 if (file.scope3_records) details.push(`${file.scope3_records} dòng Scope 3 đã đọc · chưa tính trong luồng này`);
@@ -862,12 +1824,7 @@
             const preview = surveyPath(data.run_id, 'survey/preview');
             byId('surveyDownload').href = surveyPath(data.run_id, 'files/survey');
             byId('surveyOpen').href = preview;
-            byId('surveyFrame').src = preview;
-            byId('surveyPrint').onclick = () => {
-                const frame = byId('surveyFrame');
-                try { frame.contentWindow.print(); } catch (_) { window.open(preview, '_blank', 'noopener'); }
-            };
-            byId('sectionReview').scrollIntoView({ behavior: 'smooth' });
+            loadSurveyWorkbookEditor(data.run_id);
         }
 
         async function handleSurveyCalculate(e) {
@@ -878,22 +1835,25 @@
                 alert('Bản đã sửa phải là tệp .xlsx, không quá 10 MB.'); return;
             }
             activeRequest = true;
-            const formData = new FormData();
-            if (reviewed) formData.append('reviewed', reviewed);
-            showLoading('Đang tính toán từ biểu khảo sát đã rà soát...', 'Tạo bảng kiểm kê và báo cáo của phiên này.');
             try {
+                if (!reviewed && surveyWorkbookState && surveyDirty) {
+                    showLoading('Đang lưu thay đổi vào biểu khảo sát Excel...', 'Ghi dữ liệu trực tiếp vào Bang_khao_sat_da_dien.xlsx.');
+                    await saveSurveyEdits(true);
+                }
+                const formData = new FormData();
+                if (reviewed) formData.append('reviewed', reviewed);
+                showLoading('Đang tính toán từ biểu khảo sát...', 'Tổng hợp phát thải và xuất kết quả.');
                 const data = await readApiResponse(await fetch(surveyPath(latestRunId, 'calculate'), { method: 'POST', body: formData }));
                 displayResults(data);
             } catch (err) {
                 alert('Không thể tính toán: ' + err.message);
-                byId('sectionLoading').classList.add('hidden');
-                byId('sectionReview').classList.remove('hidden');
-                byId('sectionReview').scrollIntoView({ behavior: 'smooth' });
+                showStep(3);
             } finally { activeRequest = false; }
         }
 
         // UI State Transitions
         function showLoading(title, subtitle) {
+            document.getElementById('sectionFacilityInfo').classList.add('hidden');
             document.getElementById('sectionInput').classList.add('hidden');
             document.getElementById('sectionResults').classList.add('hidden');
             document.getElementById('sectionReview').classList.add('hidden');
@@ -906,20 +1866,24 @@
 
         function resetToInput() {
             latestRunId = null;
-            document.getElementById('sectionLoading').classList.add('hidden');
-            document.getElementById('sectionReview').classList.add('hidden');
-            document.getElementById('surveyFrame').removeAttribute('src');
-            document.getElementById('sectionResults').classList.add('hidden');
-            document.getElementById('sectionInput').classList.remove('hidden');
+            isSurveyRun = false;
+            surveyWorkbookState = null;
+            surveyDirty = false;
+            extraCellsEdits = {};
+            selectedFiles = [];
+            const fi = byId('fileInput');
+            if (fi) fi.value = '';
+            const ri = byId('reviewedInput');
+            if (ri) ri.value = '';
+            const box = byId('surveySaveStatus');
+            if (box) box.classList.add('hidden');
+            renderSelectedFilesList();
+            showStep(1, true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function displayResults(data) {
-            document.getElementById('sectionLoading').classList.add('hidden');
-            document.getElementById('sectionInput').classList.add('hidden');
-            document.getElementById('sectionReview').classList.add('hidden');
-            const secResults = document.getElementById('sectionResults');
-            secResults.classList.remove('hidden');
+            showStep(4);
 
             const s = data.summary || data;
             const rel = s.reliability || {};
@@ -933,7 +1897,7 @@
             const total = Number(s.total_co2e_tonnes || 0);
             document.getElementById('resTotal').innerText = formatNumber(total);
             const hasBounds = s.total_uncertainty_min_tonnes != null && s.total_uncertainty_max_tonnes != null;
-            document.getElementById('resUncertainty').innerText = hasBounds ? `Khoảng bất định mô hình: [${Number(s.total_uncertainty_min_tonnes).toFixed(1)} - ${Number(s.total_uncertainty_max_tonnes).toFixed(1)}] t (không phải 95% CI)` : 'Khoảng bất định chưa được cung cấp';
+            document.getElementById('resUncertainty').innerText = hasBounds ? `[${Number(s.total_uncertainty_min_tonnes).toFixed(1)} – ${Number(s.total_uncertainty_max_tonnes).toFixed(1)}] t` : 'Khoảng bất định';
 
             document.getElementById('resScope1').innerText = formatNumber(s.scope_1_tonnes);
             document.getElementById('resScope2').innerText = formatNumber(s.scope_2_tonnes);
@@ -942,11 +1906,11 @@
             document.getElementById('resScore').innerText = `${score.toFixed(1)}%`;
             const grade = rel.grade || '—';
             const gradeBadge = document.getElementById('resGradeBadge');
-            gradeBadge.innerText = `${grade} · chỉ số nội bộ`;
-            gradeBadge.className = `px-2 py-0.5 rounded text-[11px] font-black ${grade === 'A' ? 'bg-emerald-600 text-white' : grade === 'B' ? 'bg-blue-600 text-white' : 'bg-amber-600 text-white'}`;
-            document.getElementById('resVerdict').innerText = isSurveyRun ? 'Điểm nội bộ; chưa thay thế thẩm tra độc lập' : (rel.summary_verdict || 'Đạt chuẩn kiểm toán và quyết toán');
+            gradeBadge.innerText = `Hạng ${grade}`;
+            gradeBadge.className = `px-2 py-0.5 rounded text-[10px] font-bold ${grade === 'A' ? 'bg-[#003c33] text-[#9fe870]' : grade === 'B' ? 'bg-[#2a5c47] text-white' : 'bg-amber-100 text-amber-900'}`;
+            document.getElementById('resVerdict').innerText = isSurveyRun ? 'Chỉ số nội bộ theo nguồn dữ liệu' : (rel.summary_verdict || 'Đạt chuẩn đối soát');
             showWarnings('resultWarnings', data.warnings);
-            byId('downloadHeading').textContent = isSurveyRun ? '📥 3. Tải kết quả của phiên này' : '📥 Tải Về Trọn Bộ Báo Cáo Quy Chuẩn';
+            byId('downloadHeading').textContent = isSurveyRun ? '4. Tải hồ sơ & báo cáo' : 'Tải hồ sơ & báo cáo';
 
             // Update per-run & tier-aware download links
             refreshDownloadLinks();
@@ -956,19 +1920,19 @@
             document.getElementById('calcCountBadge').innerText = calcs.length;
             const tbody = document.getElementById('calculationsTableBody');
             tbody.innerHTML = calcs.map((c, i) => `
-                <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
-                    <td class="py-2.5 px-3 font-mono text-slate-400">${i + 1}</td>
-                    <td class="py-2.5 px-3 font-bold text-slate-800">${escapeHtml(c.description)}</td>
-                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${c.scope === 'Scope 1' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}">${escapeHtml(c.scope)}</span></td>
-                    <td class="py-2.5 px-3 text-right font-mono">${formatNumber(c.activity_value)} <span class="text-slate-400 text-[10px]">${escapeHtml(c.activity_unit)}</span></td>
-                    <td class="py-2.5 px-3 text-right font-mono text-slate-600">${escapeHtml(c.emission_factor_value)}</td>
-                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">${Number(c.co2e_tonnes || 0).toFixed(3)}</td>
-                    <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500 text-right truncate max-w-[140px]">${escapeHtml(c.evidence?.source_document || '-')}</td>
-                    <td class="py-2.5 px-3 text-right font-mono font-bold ${Number(c.quality_composite_score) >= 85 ? 'text-emerald-700' : 'text-amber-700'}">${escapeHtml(c.quality_composite_score ?? '—')}%</td>
+                <tr class="border-b border-[#e2f0db] last:border-b-0 hover:bg-[#f5f9f4] transition">
+                    <td class="py-2.5 px-3 font-mono text-[#6a8978]">${i + 1}</td>
+                    <td class="py-2.5 px-3 font-semibold text-[#091710]">${escapeHtml(c.description)}</td>
+                    <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${c.scope === 'Scope 1' ? 'bg-[#edf5e9] text-[#003c33] border border-[#cce5c0]' : 'bg-slate-100 text-slate-700 border border-slate-200'}">${escapeHtml(c.scope)}</span></td>
+                    <td class="py-2.5 px-3 text-right font-mono">${formatNumber(c.activity_value)} <span class="text-[#6a8978] text-[10px]">${escapeHtml(c.activity_unit)}</span></td>
+                    <td class="py-2.5 px-3 text-right font-mono text-[#2c4a3c]">${escapeHtml(c.emission_factor_value)}</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-[#091710]">${Number(c.co2e_tonnes || 0).toFixed(3)}</td>
+                    <td class="py-2.5 px-3 font-mono text-[11px] text-[#6a8978] text-right truncate max-w-[140px]">${escapeHtml(c.evidence?.source_document || '-')}</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-semibold ${Number(c.quality_composite_score) >= 85 ? 'text-[#003c33]' : 'text-amber-700'}">${escapeHtml(c.quality_composite_score ?? '—')}%</td>
                 </tr>
             `).join('');
 
-            secResults.scrollIntoView({ behavior: 'smooth' });
+            byId('sectionResults').scrollIntoView({ behavior: 'smooth' });
         }
 
         function toggleDetailsTable() {

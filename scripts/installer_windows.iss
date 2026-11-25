@@ -21,6 +21,7 @@ DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
 OutputDir=..\dist
 OutputBaseFilename=EcoStream_Windows_Setup_v1.0
+SetupIconFile=..\scripts\ecostream.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
