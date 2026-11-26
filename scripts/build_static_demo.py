@@ -17,7 +17,7 @@ from pathlib import Path
 import openpyxl
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEMO_SRC = REPO_ROOT / "data" / "demo_full_2026"
+DEMO_SRC = REPO_ROOT / "data" / "demo" / "ecogarment_2026"
 WEB_STATIC_SRC = REPO_ROOT / "ecostream" / "app" / "static"
 DOCS_DIR = REPO_ROOT / "docs"
 DOCS_STATIC_DIR = DOCS_DIR / "static"
@@ -183,8 +183,11 @@ def copy_assets() -> None:
     DOCS_STATIC_DIR.mkdir(exist_ok=True)
 
     # Copy demo input + output files
+    # Input files live in inputs/ subfolder; computed result (GHGs xlsx) lives at DEMO_SRC root
     for f in INPUT_FILES + OUTPUT_FILES:
-        src = DEMO_SRC / f["filename"]
+        src = DEMO_SRC / "inputs" / f["filename"]
+        if not src.exists():
+            src = DEMO_SRC / f["filename"]
         if src.exists():
             shutil.copy2(src, ASSETS_DIR / f["filename"])
 
