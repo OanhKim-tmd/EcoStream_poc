@@ -1,17 +1,24 @@
-"""FastAPI web service serving the EcoStream Interactive Carbon & Reliability Dashboard with Multi-Agent Orchestrator."""
+"""FastAPI web service: survey-first workflow (chứng từ → biểu khảo sát → Scope 1/2 → kết quả)."""
 
-import os
-import sys
-import shutil
-import tempfile
-import socket
-from datetime import datetime
-from typing import Dict, List, Optional
 import json
-import hashlib
+import os
+import re
+import secrets
+import shutil
+import socket
+import sys
+import tempfile
+import zipfile
+from datetime import datetime
+from typing import List, Optional
+
+from cryptography.fernet import Fernet
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-# Configure UTF-8 on Windows
 if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -19,111 +26,34 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-import re
-import secrets
 import uvicorn
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException, Depends, Header, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, PlainTextResponse, JSONResponse, FileResponse, Response
-from fastapi.staticfiles import StaticFiles
 
-from ecostream.orchestrator.pipeline import WorkflowOrchestrator
-from ecostream.orchestrator.state import BlackboardWorkspace
-from ecostream.models.results import AuditReport
-from ecostream.reporting.export import ReportExporter
 from ecostream.factors.database import get_factor_database
-from ecostream.orchestrator.survey_pipeline import (
-    prepare_survey, calculate_survey, get_survey_status,
-    get_survey_workbook_data, save_survey_workbook_data,
-    SURVEY_FILE, INVENTORY_FILE, REPORT_FILE,
-)
 from ecostream.ingestion.survey_workbook import (
-    SurveyGeneralInfo, SurveyValidationError, SURVEY_NAME, TEMPLATES,
+    SURVEY_NAME,
+    TEMPLATES,
+    SurveyGeneralInfo,
+    SurveyValidationError,
+)
+from ecostream.orchestrator.state import BlackboardWorkspace
+from ecostream.orchestrator.survey_pipeline import (
+    INVENTORY_FILE,
+    REPORT_FILE,
+    SURVEY_FILE,
+    calculate_survey,
+    get_survey_status,
+    get_survey_workbook_data,
+    prepare_survey,
+    save_survey_workbook_data,
 )
 
 app = FastAPI(
-    title="EcoStream Multi-Agent AI Carbon Engine",
-    description="Multi-agent carbon accounting, Decree 06/2022 Mẫu 02 mitigation, and audit query/assumption logs.",
-    version="0.2.0",
+    title="EcoStream — Kiểm kê khí nhà kính cấp cơ sở",
+    description="Luồng khảo sát: chứng từ → biểu khảo sát (rà soát) → Scope 1/2 → workbook kiểm kê và báo cáo Word dự thảo.",
+    version="0.3.0",
 )
 
-# ── 1. Hardened CORS Configuration ────────────────────────────────────
-# Restrict CORS to authorized internal and configured local domains
-allowed_origins_env = os.environ.get("ECOSTREAM_ALLOWED_ORIGINS", "")
-if allowed_origins_env:
-    allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
-else:
-    allowed_origins = [
-        "http://localhost",
-        "http://localhost:8000",
-        "http://localhost:3000",
-        "http://127.0.0.1",
-        "http://127.0.0.1:8000",
-        "http://127.0.0.1:3000",
-    ]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-# ── 2. Path Traversal Guard Utilities ─────────────────────────────────
-def _validate_safe_identifier(name: str, field_name: str = "identifier") -> str:
-    """Validate that identifier does not contain directory traversal characters."""
-    if not name or not re.match(r"^[a-zA-Z0-9_\-\.]+$", name) or ".." in name or "/" in name or "\\" in name:
-        raise HTTPException(status_code=400, detail=f"Invalid {field_name}: Path traversal detected.")
-    return name
-
-def _sanitize_upload_filename(raw_filename: str) -> str:
-    """Normalize uploaded filename (supporting Vietnamese/spaces) while blocking traversal."""
-    import unicodedata
-    raw = (raw_filename or "").strip()
-    if not raw or "/" in raw or "\\" in raw or ".." in raw or "\x00" in raw:
-        raise HTTPException(status_code=400, detail="Invalid filename: Path traversal detected.")
-    stem, ext = os.path.splitext(raw)
-    stem_ascii = unicodedata.normalize("NFKD", stem.replace("đ", "d").replace("Đ", "D"))
-    stem_ascii = "".join(ch for ch in stem_ascii if not unicodedata.combining(ch))
-    stem_clean = re.sub(r"[^a-zA-Z0-9_\-]+", "_", stem_ascii).strip("_") or "upload"
-    ext_clean = re.sub(r"[^a-zA-Z0-9.]+", "", ext.lower())
-    return _validate_safe_identifier(f"{stem_clean}{ext_clean}", "filename")
-
-
-def _verify_safe_path(base_dir: str, filename: str) -> str:
-    """Ensure target path resides strictly inside base_dir using os.path.commonpath."""
-    _validate_safe_identifier(filename, "filename")
-    abs_base = os.path.abspath(base_dir)
-    target_path = os.path.abspath(os.path.join(base_dir, filename))
-    if os.path.commonpath([abs_base, target_path]) != abs_base:
-        raise HTTPException(status_code=403, detail="Forbidden: Path Traversal attempt blocked.")
-    return target_path
-
-# ── 3. API Key Authentication Guard ───────────────────────────────────
-def verify_api_key(
-    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
-    api_key: Optional[str] = Query(None),
-) -> bool:
-    """Authenticate incoming requests via X-API-Key header or query parameter.
-
-    If ECOSTREAM_API_KEY environment variable is configured, requests must provide
-    a matching key. If not configured, access is granted for local development/testing.
-    """
-    expected_key = os.environ.get("ECOSTREAM_API_KEY")
-    if not expected_key:
-        return True
-
-    provided = x_api_key or api_key
-    if not provided or not secrets.compare_digest(provided, expected_key):
-        raise HTTPException(
-            status_code=401,
-            detail="Unauthorized: Invalid or missing API Key. Provide valid X-API-Key header.",
-            headers={"WWW-Authenticate": "ApiKey"},
-        )
-    return True
-
-# Locate base directories (supports both source execution and PyInstaller .app/.exe bundle)
+# Resolve project paths for source runs and frozen desktop builds.
 if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
     PROJECT_ROOT = sys._MEIPASS
     BASE_DIR = os.path.join(PROJECT_ROOT, "ecostream")
@@ -144,55 +74,52 @@ else:
     SAMPLES_DIR = os.path.join(PROJECT_ROOT, "data", "samples")
     RUNS_DIR = os.environ.get("ECOSTREAM_RUNS_DIR", os.path.join(PROJECT_ROOT, "runs"))
 
-# Cache latest generated report and per-run reports for multi-tenant isolation
-_latest_report: Optional[AuditReport] = None
-_reports_by_run: Dict[str, AuditReport] = {}
 
-from ecostream.privacy.licensing import DEFAULT_PRO_KEYS, verify_commercial_license
-
-
-class EnterpriseLoginRequest(BaseModel):
-    email: str = "demo@ecogarment.vn"
-    org_id: str = "ecogarment-vn"
-    license_key: Optional[str] = None
+def _validate_safe_identifier(name: str, field_name: str = "identifier") -> str:
+    if not name or not re.fullmatch(r"[a-zA-Z0-9_.-]+", name) or ".." in name or "/" in name or "\\" in name:
+        raise HTTPException(status_code=400, detail=f"Invalid {field_name}: path traversal detected")
+    return name
 
 
-class LicenseVerifyRequest(BaseModel):
-    license_key: str
+def _sanitize_upload_filename(raw_filename: str) -> str:
+    import unicodedata
+
+    raw = (raw_filename or "").strip()
+    if not raw or "/" in raw or "\\" in raw or ".." in raw or "\x00" in raw:
+        raise HTTPException(status_code=400, detail="Invalid filename: path traversal detected")
+    stem, ext = os.path.splitext(raw)
+    normalized = unicodedata.normalize("NFKD", stem.replace("đ", "d").replace("Đ", "D"))
+    normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    stem_clean = re.sub(r"[^a-zA-Z0-9_-]+", "_", normalized).strip("_") or "upload"
+    ext_clean = re.sub(r"[^a-zA-Z0-9.]+", "", ext.lower())
+    return _validate_safe_identifier(f"{stem_clean}{ext_clean}", "filename")
 
 
-def _get_valid_pro_keys() -> set:
-    env_keys = os.environ.get("ECOSTREAM_PRO_KEYS", "")
-    custom = {k.strip().upper() for k in env_keys.split(",") if k.strip()}
-    return DEFAULT_PRO_KEYS.union(custom)
+def _verify_safe_path(base_dir: str, filename: str) -> str:
+    _validate_safe_identifier(filename, "filename")
+    abs_base = os.path.abspath(base_dir)
+    target = os.path.abspath(os.path.join(base_dir, filename))
+    if os.path.commonpath([abs_base, target]) != abs_base:
+        raise HTTPException(status_code=403, detail="Forbidden: path traversal attempt blocked")
+    return target
 
 
-def _is_valid_pro_key(key: Optional[str], org_id: Optional[str] = None) -> bool:
-    if not key:
-        return False
-    valid, _ = verify_commercial_license(key, org_id)
-    return valid
+def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")) -> bool:
+    """Require header authentication whenever an API key is configured."""
+    expected_key = os.environ.get("ECOSTREAM_API_KEY")
+    if not expected_key:
+        return True
+    if not x_api_key or not secrets.compare_digest(x_api_key, expected_key):
+        raise HTTPException(status_code=401, detail="Unauthorized: provide a valid X-API-Key header", headers={"WWW-Authenticate": "ApiKey"})
+    return True
 
 
 def _save_tenant_meta(run_dir: str, org_id: Optional[str], user_id: Optional[str]) -> None:
-    if not org_id and not user_id:
-        return
-    try:
+    if org_id or user_id:
         os.makedirs(run_dir, exist_ok=True)
         meta_path = os.path.join(run_dir, "tenant_meta.json")
         with open(meta_path, "w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "org_id": org_id or "public",
-                    "user_id": user_id or "anonymous",
-                    "created_at": datetime.now().isoformat(),
-                },
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
-    except Exception:
-        pass
+            json.dump({"org_id": org_id or "public", "user_id": user_id or "anonymous"}, f, ensure_ascii=False, indent=2)
 
 
 def _load_tenant_meta(run_dir: str) -> dict:
@@ -201,31 +128,117 @@ def _load_tenant_meta(run_dir: str) -> dict:
         try:
             with open(meta_path, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
+        except (OSError, json.JSONDecodeError):
             pass
     return {"org_id": "public", "user_id": "anonymous"}
 
 
-def _resolve_report(run_id: Optional[str] = None) -> AuditReport:
-    """Resolve report for a specific run_id (multi-user safe) or fall back to _latest_report."""
-    global _latest_report
-    if run_id and run_id != "benchmark":
-        _validate_safe_identifier(run_id, "run_id")
-        if run_id in _reports_by_run:
-            return _reports_by_run[run_id]
-        workspace = BlackboardWorkspace(run_id, RUNS_DIR)
-        deliv_json = os.path.join(workspace.deliverables_dir, "final_inventory_summary.json")
-        if os.path.exists(deliv_json):
-            with open(deliv_json, "r", encoding="utf-8") as f:
-                report_data = json.load(f)
-                report_Obj = AuditReport(**report_data)
-                _reports_by_run[run_id] = report_Obj
-                return report_Obj
-    if not _latest_report:
-        run_demo()
-    return _latest_report
+allowed_origins_env = os.environ.get("ECOSTREAM_ALLOWED_ORIGINS", "")
+allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()] if allowed_origins_env else [
+    "http://localhost", "http://localhost:8000", "http://localhost:3000",
+    "http://127.0.0.1", "http://127.0.0.1:8000", "http://127.0.0.1:3000",
+]
+app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_credentials=False,
+                   allow_methods=["GET", "POST", "OPTIONS"], allow_headers=["*"])
 
-# Mount static files directory if present
+MAX_SURVEY_FILES = max(1, int(os.environ.get("ECOSTREAM_MAX_SURVEY_FILES", "100")))
+MAX_SURVEY_FILE_BYTES = 10 * 1024 * 1024
+MAX_SURVEY_TOTAL_BYTES = 50 * 1024 * 1024
+MAX_UPLOAD_UNCOMPRESSED_BYTES = 250 * 1024 * 1024
+MAX_OFFICE_ARCHIVE_MEMBERS = 20_000
+MAX_OFFICE_UNCOMPRESSED_BYTES = 200 * 1024 * 1024
+MAX_OFFICE_COMPRESSION_RATIO = 100
+UPLOAD_BODY_LIMIT = 52 * 1024 * 1024
+_BODY_LIMIT_EXCEPTION = type("BodyLimitExceeded", (Exception,), {})
+
+
+class UploadBodyLimitMiddleware:
+    """Reject oversized upload requests before multipart parsing/spooling."""
+
+    def __init__(self, app, max_bytes: int):
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope.get("path") != "/api/survey/prepare" or scope.get("method") != "POST":
+            await self.app(scope, receive, send)
+            return
+        headers = {key.lower(): value for key, value in scope.get("headers", [])}
+        try:
+            declared = int(headers.get(b"content-length", b"0"))
+        except ValueError:
+            declared = self.max_bytes + 1
+        if declared > self.max_bytes:
+            await self._reject(send)
+            return
+        total = 0
+        exceeded = False
+
+        async def limited_receive():
+            nonlocal total, exceeded
+            message = await receive()
+            if message["type"] == "http.request":
+                total += len(message.get("body", b""))
+                if total > self.max_bytes:
+                    exceeded = True
+                    return {"type": "http.disconnect"}
+            return message
+
+        async def guarded_send(message):
+            if exceeded and message["type"] == "http.response.start":
+                raise _BODY_LIMIT_EXCEPTION
+            await send(message)
+
+        try:
+            await self.app(scope, limited_receive, guarded_send)
+        except _BODY_LIMIT_EXCEPTION:
+            await self._reject(send)
+
+    async def _reject(self, send):
+        body = b'{"detail":"Upload request exceeds 52 MB limit"}'
+        await send({"type": "http.response.start", "status": 413, "headers": [(b"content-type", b"application/json"), (b"content-length", str(len(body)).encode())]})
+        await send({"type": "http.response.body", "body": body})
+
+
+app.add_middleware(UploadBodyLimitMiddleware, max_bytes=UPLOAD_BODY_LIMIT)
+
+
+def _validate_uploaded_document(path: str, filename: str) -> int:
+    """Check signatures and bound Office archive expansion; return uncompressed bytes."""
+    ext = os.path.splitext(filename)[1].lower()
+    with open(path, "rb") as stream:
+        signature = stream.read(8)
+    if ext == ".pdf":
+        if not signature.startswith(b"%PDF-"):
+            raise HTTPException(status_code=422, detail=f"Tệp không phải PDF hợp lệ: {filename}")
+        return 0
+    if ext == ".csv":
+        if b"\x00" in signature:
+            raise HTTPException(status_code=422, detail=f"CSV có định dạng nhị phân không hợp lệ: {filename}")
+        return 0
+    if ext not in (".xlsx", ".docx") or not signature.startswith(b"PK\x03\x04"):
+        raise HTTPException(status_code=422, detail=f"Chữ ký tệp không khớp định dạng {ext}: {filename}")
+    try:
+        with zipfile.ZipFile(path) as archive:
+            members = archive.infolist()
+            total_size = sum(item.file_size for item in members)
+            compressed_size = max(1, os.path.getsize(path))
+            if (len(members) > MAX_OFFICE_ARCHIVE_MEMBERS or total_size > MAX_OFFICE_UNCOMPRESSED_BYTES
+                    or total_size / compressed_size > MAX_OFFICE_COMPRESSION_RATIO):
+                raise HTTPException(status_code=413, detail=f"Tệp Office bung quá lớn hoặc nén bất thường: {filename}")
+            names = {item.filename for item in members}
+            required = {"[Content_Types].xml", "xl/workbook.xml"} if ext == ".xlsx" else {"[Content_Types].xml", "word/document.xml"}
+            if not required.issubset(names):
+                raise HTTPException(status_code=422, detail=f"Cấu trúc {ext} không hợp lệ: {filename}")
+            bad_member = archive.testzip()
+            if bad_member:
+                raise HTTPException(status_code=422, detail=f"Tệp Office bị hỏng: {filename}")
+            return total_size
+    except (zipfile.BadZipFile, OSError) as exc:
+        raise HTTPException(status_code=422, detail=f"Tệp Office không phải ZIP hợp lệ: {filename}") from exc
+
+
+# Serve bundled UI assets (offline CSS, fonts, icons).
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -239,230 +252,79 @@ def serve_index():
     return HTMLResponse("<h2>EcoStream Dashboard UI is being loaded...</h2>")
 
 
-@app.get("/monitor", response_class=HTMLResponse)
+@app.get("/monitor", response_class=HTMLResponse, dependencies=[Depends(verify_api_key)])
 def serve_monitor():
-    monitor_path = os.path.join(STATIC_DIR, "monitor.html")
-    if os.path.exists(monitor_path):
-        with open(monitor_path, "r", encoding="utf-8") as f:
+    path = os.path.join(STATIC_DIR, "monitor.html")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
-    return HTMLResponse("<h2>EcoStream Live Workflow Monitor is being loaded...</h2>")
+    raise HTTPException(status_code=404, detail="monitor.html not found")
 
 
-@app.get("/monitor.js")
+@app.get("/monitor.js", dependencies=[Depends(verify_api_key)])
 def serve_monitor_js():
-    js_path = os.path.join(STATIC_DIR, "monitor.js")
-    if os.path.exists(js_path):
-        return FileResponse(js_path, media_type="application/javascript")
-    raise HTTPException(status_code=404, detail="monitor.js not found")
-
-
+    path = os.path.join(STATIC_DIR, "monitor.js")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="monitor.js not found")
+    return FileResponse(path, media_type="application/javascript")
 
 
 @app.get("/api/auth/status")
-def get_auth_status(
-    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
-    api_key: Optional[str] = Query(None),
-):
-    """Check API Key authentication status."""
+def get_auth_status(x_api_key: Optional[str] = Header(None, alias="X-API-Key")):
     expected_key = os.environ.get("ECOSTREAM_API_KEY")
     if not expected_key:
         return {"auth_required": False, "authenticated": True, "mode": "development_unrestricted"}
-    provided = x_api_key or api_key
-    is_valid = bool(provided and secrets.compare_digest(provided, expected_key))
-    return {
-        "auth_required": True,
-        "authenticated": is_valid,
-        "mode": "production_secured",
-    }
-
-
-@app.post("/api/auth/login")
-def enterprise_login(req: EnterpriseLoginRequest):
-    """Authenticate an enterprise user/organization and determine subscription tier (FREE vs PRO)."""
-    clean_org = re.sub(r"[^a-zA-Z0-9_\-\.]", "-", req.org_id.strip() or "default-org").strip("-") or "default-org"
-    clean_email = req.email.strip() or "user@enterprise.vn"
-    user_id = hashlib.sha256(f"{clean_org}:{clean_email}".encode("utf-8")).hexdigest()[:12]
-    is_pro = _is_valid_pro_key(req.license_key, clean_org)
-    tier = "PRO" if is_pro else "FREE"
-    token_seed = f"{clean_org}:{user_id}:{tier}:{secrets.token_hex(8)}"
-    session_token = hashlib.sha256(token_seed.encode("utf-8")).hexdigest()
-    return {
-        "authenticated": True,
-        "email": clean_email,
-        "user_id": user_id,
-        "org_id": clean_org,
-        "tier": tier,
-        "is_pro": is_pro,
-        "session_token": session_token,
-        "features": {
-            "watermark_free": is_pro,
-            "docx_mau02_export": is_pro,
-            "excel_audit_export": is_pro,
-        },
-    }
-
-
-@app.post("/api/license/verify")
-def verify_license_key(req: LicenseVerifyRequest):
-    """Verify whether a provided License Key unlocks Pro/Enterprise features."""
-    clean_key = req.license_key.strip()
-    is_valid, meta = verify_commercial_license(clean_key)
-    if not is_valid:
-        raise HTTPException(
-            status_code=403,
-            detail=f"Mã License không hợp lệ: {meta.get('reason', 'Xác thực thất bại')}. (Gợi ý mã trải nghiệm Pro: ECO-PRO-2026).",
-        )
-    return {
-        "valid": True,
-        "tier": meta.get("tier", "PRO"),
-        "license_key": clean_key,
-        "bound_org": meta.get("bound_org", "ANY"),
-        "expires": meta.get("expires", ""),
-        "features": meta.get("features", []),
-        "message": "Đã kích hoạt thành công gói EcoStream Pro / Enterprise! Toàn bộ báo cáo Word Mẫu 02 & Excel đã được mở khóa.",
-    }
-
-
-class AISettingsRequest(BaseModel):
-    provider: str = "gemini"  # gemini, openai, ollama, offline
-    api_key: Optional[str] = ""
-    model: Optional[str] = ""
-    base_url: Optional[str] = ""
-
-
-@app.get("/api/settings/ai")
-def get_ai_settings_endpoint():
-    """Retrieve current AI provider configuration status."""
-    from ecostream.privacy.ai_settings import get_ai_config, mask_key
-    cfg = get_ai_config()
-    return {
-        "provider": cfg.get("provider", "offline"),
-        "model": cfg.get("model", ""),
-        "base_url": cfg.get("base_url", ""),
-        "configured": cfg.get("configured", False),
-        "masked_key": mask_key(cfg.get("api_key", "")),
-    }
-
-
-@app.post("/api/settings/ai")
-def save_ai_settings_endpoint(req: AISettingsRequest):
-    """Save user AI provider configuration locally (BYOK)."""
-    from ecostream.privacy.ai_settings import save_ai_config, mask_key
-    cfg = save_ai_config(
-        provider=req.provider,
-        api_key=req.api_key or "",
-        model=req.model or "",
-        base_url=req.base_url or "",
-    )
-    return {
-        "success": True,
-        "provider": cfg.get("provider"),
-        "model": cfg.get("model"),
-        "configured": cfg.get("configured"),
-        "masked_key": mask_key(cfg.get("api_key", "")),
-        "message": "Đã lưu cấu hình AI thành công!",
-    }
-
-
-@app.get("/api/demo", dependencies=[Depends(verify_api_key)])
-def run_demo(
-    org_id: Optional[str] = Query(None),
-    user_id: Optional[str] = Query(None),
-    x_org_id: Optional[str] = Header(None, alias="X-Org-Id"),
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
-):
-    """Run benchmark case study using multi-agent workflow on data/samples/input.xlsx."""
-    global _latest_report
-    sample_xlsx = os.path.join(SAMPLES_DIR, "input.xlsx")
-    if not os.path.exists(sample_xlsx):
-        from scripts.generate_mock_excel import generate_benchmark_excel
-        generate_benchmark_excel(sample_xlsx)
-
-    orch = WorkflowOrchestrator(offline_mode=True)
-    res = orch.run_pipeline(
-        input_files=[sample_xlsx],
-        company_name="EcoGarment Vietnam JSC",
-        facility_name="Nhà máy May & Năng lượng Hà Nam",
-        reporting_year=2026,
-    )
-    eff_org = org_id or x_org_id
-    eff_user = user_id or x_user_id
-    _save_tenant_meta(orch.workspace.run_dir, eff_org, eff_user)
-
-    # Build backward-compatible AuditReport structure
-    deliv_json = os.path.join(orch.workspace.deliverables_dir, "final_inventory_summary.json")
-    if os.path.exists(deliv_json):
-        with open(deliv_json, "r", encoding="utf-8") as f:
-            report_data = json.load(f)
-            report_data["run_id"] = orch.run_id
-            report_data["org_id"] = eff_org or "public"
-            report_obj = AuditReport(**report_data)
-            _latest_report = report_obj
-            _reports_by_run[orch.run_id] = report_obj
-            return report_data
-
-    return res
-
-
-# Survey-first workflow. Legacy /api/upload remains available for older clients.
-MAX_SURVEY_FILES = max(1, int(os.environ.get("ECOSTREAM_MAX_SURVEY_FILES", "100")))
+    valid = bool(x_api_key and secrets.compare_digest(x_api_key, expected_key))
+    return {"auth_required": True, "authenticated": valid, "mode": "production_secured"}
 
 
 @app.post("/api/survey/prepare", dependencies=[Depends(verify_api_key)])
 async def prepare_survey_from_documents(
-    files: List[UploadFile] = File(...),
-    company: str = Form(...),
-    location: str = Form(...),
-    period: int = Form(...),
-    contact_name: str = Form(""),
-    contact_role: str = Form(""),
-    contact_phone: str = Form(""),
-    contact_email: str = Form(""),
-    facility_address: str = Form(""),
-    facility_phone: str = Form(""),
-    facility_email: str = Form(""),
-    legal_representative: str = Form(""),
-    legal_rep_title: str = Form(""),
-    industry_sector: str = Form(""),
-    operating_status: str = Form(""),
-    start_year: str = Form(""),
-    facility_representative: str = Form(""),
+    files: List[UploadFile] = File(...), company: str = Form(...), location: str = Form(...), period: int = Form(...),
+    contact_name: str = Form(""), contact_role: str = Form(""), contact_phone: str = Form(""), contact_email: str = Form(""),
+    facility_address: str = Form(""), facility_phone: str = Form(""), facility_email: str = Form(""),
+    legal_representative: str = Form(""), legal_rep_title: str = Form(""), industry_sector: str = Form(""),
+    operating_status: str = Form(""), start_year: str = Form(""), facility_representative: str = Form(""),
 ):
     if not company.strip() or not location.strip():
         raise HTTPException(status_code=422, detail="Tên doanh nghiệp và cơ sở không được để trống")
+    if len(company) > 300 or len(location) > 300:
+        raise HTTPException(status_code=422, detail="Tên doanh nghiệp/cơ sở vượt quá 300 ký tự")
+    metadata_values = (contact_name, contact_role, contact_phone, contact_email, facility_address, facility_phone,
+                       facility_email, legal_representative, legal_rep_title, industry_sector, operating_status,
+                       start_year, facility_representative)
+    if any(len(value) > 500 for value in metadata_values):
+        raise HTTPException(status_code=422, detail="Thông tin cơ sở vượt quá giới hạn độ dài")
     if not files or len(files) > MAX_SURVEY_FILES:
         raise HTTPException(status_code=422, detail=f"Chọn 1–{MAX_SURVEY_FILES} chứng từ")
     general_info = SurveyGeneralInfo(
-        contact_name=contact_name.strip(),
-        contact_role=contact_role.strip(),
-        contact_phone=contact_phone.strip(),
-        contact_email=contact_email.strip(),
-        facility_name=location.strip(),
-        facility_address=facility_address.strip(),
-        facility_phone=facility_phone.strip(),
-        facility_email=facility_email.strip(),
-        legal_representative=legal_representative.strip(),
-        legal_rep_title=legal_rep_title.strip(),
-        industry_sector=industry_sector.strip(),
-        operating_status=operating_status.strip(),
-        start_year=start_year.strip(),
-        facility_representative=facility_representative.strip(),
+        contact_name=contact_name.strip(), contact_role=contact_role.strip(), contact_phone=contact_phone.strip(),
+        contact_email=contact_email.strip(), facility_name=location.strip(), facility_address=facility_address.strip(),
+        facility_phone=facility_phone.strip(), facility_email=facility_email.strip(), legal_representative=legal_representative.strip(),
+        legal_rep_title=legal_rep_title.strip(), industry_sector=industry_sector.strip(), operating_status=operating_status.strip(),
+        start_year=start_year.strip(), facility_representative=facility_representative.strip(),
     )
     with tempfile.TemporaryDirectory() as temp_dir:
-        paths = []
+        paths, total_bytes, expanded_bytes = [], 0, 0
         try:
             for file in files:
                 name = _sanitize_upload_filename(file.filename or "")
-                if os.path.splitext(name)[1].lower() not in (".xlsx", ".csv", ".pdf", ".docx", ".png", ".jpg", ".jpeg", ".bmp", ".webp"):
+                if os.path.splitext(name)[1].lower() not in (".xlsx", ".csv", ".pdf", ".docx"):
                     raise HTTPException(status_code=422, detail=f"Không hỗ trợ định dạng tệp: {name}")
                 destination = _verify_safe_path(temp_dir, name)
                 if os.path.exists(destination):
                     raise HTTPException(status_code=422, detail=f"Tệp trùng tên: {name}")
-                content = await file.read(10 * 1024 * 1024 + 1)
-                if len(content) > 10 * 1024 * 1024:
+                content = await file.read(MAX_SURVEY_FILE_BYTES + 1)
+                if len(content) > MAX_SURVEY_FILE_BYTES:
                     raise HTTPException(status_code=413, detail=f"Tệp quá 10 MB: {name}")
+                total_bytes += len(content)
+                if total_bytes > MAX_SURVEY_TOTAL_BYTES:
+                    raise HTTPException(status_code=413, detail="Tổng dung lượng chứng từ vượt quá 50 MB")
                 with open(destination, "wb") as stream:
                     stream.write(content)
+                expanded_bytes += _validate_uploaded_document(destination, name)
+                if expanded_bytes > MAX_UPLOAD_UNCOMPRESSED_BYTES:
+                    raise HTTPException(status_code=413, detail="Tổng dữ liệu Office sau giải nén vượt quá 250 MB")
                 paths.append(destination)
             return prepare_survey(paths, company.strip(), location.strip(), period, RUNS_DIR, general_info=general_info)
         except SurveyValidationError as exc:
@@ -484,10 +346,10 @@ def survey_run_status(run_id: str):
 
 @app.get("/api/survey/runs/{run_id}/survey/preview", dependencies=[Depends(verify_api_key)])
 def preview_survey(run_id: str):
-    """Printable overview without serving arbitrary workbook markup."""
     from dataclasses import asdict
     from html import escape
     from ecostream.ingestion.survey_workbook import read_survey
+
     _validate_safe_identifier(run_id, "run_id")
     try:
         metadata = get_survey_status(run_id, RUNS_DIR)
@@ -501,21 +363,17 @@ def preview_survey(run_id: str):
     try:
         data = read_survey(survey)
         if data.general_info:
-            for k, v in asdict(data.general_info).items():
-                if v:
-                    gi[k] = v
+            for key, value in asdict(data.general_info).items():
+                if value:
+                    gi[key] = value
         rows = "".join(f"<tr><td>{escape(item.sheet)}!{escape(item.coordinate)}</td><td>{escape(item.kind)}</td><td>{item.month}</td><td>{item.quantity:g}</td><td>{escape(item.unit)}</td></tr>" for item in data.items)
     except SurveyValidationError as exc:
         rows = f"<tr><td colspan='5'>{escape(str(exc))}</td></tr>"
     info_lines = [
-        ("Người cung cấp thông tin", gi.get("contact_name", "")),
-        ("Chức vụ/Bộ phận", gi.get("contact_role", "")),
-        ("Điện thoại (người cung cấp)", gi.get("contact_phone", "")),
-        ("Email (người cung cấp)", gi.get("contact_email", "")),
-        ("1. Tên cơ sở", gi.get("facility_name") or metadata.get("facility", "")),
-        ("Địa chỉ", gi.get("facility_address", "")),
-        ("Điện thoại cơ sở", gi.get("facility_phone", "")),
-        ("Email cơ sở", gi.get("facility_email", "")),
+        ("Người cung cấp thông tin", gi.get("contact_name", "")), ("Chức vụ/Bộ phận", gi.get("contact_role", "")),
+        ("Điện thoại (người cung cấp)", gi.get("contact_phone", "")), ("Email (người cung cấp)", gi.get("contact_email", "")),
+        ("1. Tên cơ sở", gi.get("facility_name") or metadata.get("facility", "")), ("Địa chỉ", gi.get("facility_address", "")),
+        ("Điện thoại cơ sở", gi.get("facility_phone", "")), ("Email cơ sở", gi.get("facility_email", "")),
         ("Người đại diện pháp luật", f"{gi.get('legal_representative', '')}{' — ' + gi.get('legal_rep_title', '') if gi.get('legal_rep_title') else ''}".strip(" —")),
         ("Ngành nghề SX/KD", gi.get("industry_sector", "")),
         ("Tình trạng / Năm bắt đầu", f"{gi.get('operating_status', '')}{' / ' + gi.get('start_year', '') if gi.get('start_year') else ''}".strip(" /")),
@@ -565,12 +423,13 @@ async def calculate_survey_run(run_id: str, reviewed: Optional[UploadFile] = Fil
         if reviewed is not None:
             if not (reviewed.filename or "").lower().endswith(".xlsx"):
                 raise HTTPException(status_code=422, detail="Bản khảo sát đã sửa phải là tệp .xlsx")
-            content = await reviewed.read(10 * 1024 * 1024 + 1)
-            if len(content) > 10 * 1024 * 1024:
+            content = await reviewed.read(MAX_SURVEY_FILE_BYTES + 1)
+            if len(content) > MAX_SURVEY_FILE_BYTES:
                 raise HTTPException(status_code=413, detail="Tệp khảo sát quá 10 MB")
             path = os.path.join(temp_dir, "reviewed.xlsx")
             with open(path, "wb") as stream:
                 stream.write(content)
+            _validate_uploaded_document(path, "reviewed.xlsx")
         try:
             return calculate_survey(run_id, path, RUNS_DIR)
         except SurveyValidationError as exc:
@@ -599,209 +458,85 @@ def download_generated_survey(run_id: str):
     return download_survey_file(run_id, "survey")
 
 
-@app.post("/api/upload", dependencies=[Depends(verify_api_key)])
-async def upload_documents(
-    files: List[UploadFile] = File(...),
-    company: str = Form("EcoGarment Vietnam JSC"),
-    period: str = Form("2026"),
-    location: str = Form("Nhà máy May & Năng lượng Hà Nam"),
-    enable_scope3: bool = Form(False),
-    enable_mitigation: bool = Form(False),
-    org_id: Optional[str] = Form(None),
-    user_id: Optional[str] = Form(None),
-    x_org_id: Optional[str] = Header(None, alias="X-Org-Id"),
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
-):
-    """Upload custom business files (Excel, PDF, Word, CSV) and run multi-agent pipeline."""
-    global _latest_report
-
-    os.makedirs(RUNS_DIR, exist_ok=True)
-    temp_dir = tempfile.mkdtemp()
-    saved_paths = []
-    try:
-        for f in files:
-            raw_name = os.path.basename(f.filename or "upload.bin")
-            safe_fname = _validate_safe_identifier(raw_name, "upload filename")
-            dest_path = _verify_safe_path(temp_dir, safe_fname)
-            with open(dest_path, "wb") as out_f:
-                content = await f.read()
-                out_f.write(content)
-            saved_paths.append(dest_path)
-
-        # Parse year if available
-        year_num = 2026
-        try:
-            m = re.search(r"\b(202\d)\b", period)
-            if m:
-                year_num = int(m.group(1))
-        except Exception:
-            pass
-
-        eff_org = org_id or x_org_id
-        eff_user = user_id or x_user_id
-        safe_c = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', company).strip('-')
-        safe_l = re.sub(r'[^a-zA-Z0-9À-ỹ]+', '-', location).strip('-')
-        ts_suffix = datetime.now().strftime("%H%M%S")
-        org_prefix = f"{re.sub(r'[^a-zA-Z0-9_-]+', '', eff_org)}_" if eff_org else ""
-        run_name = f"{org_prefix}{safe_c}_{safe_l}_{period}_{ts_suffix}"
-        orch = WorkflowOrchestrator(run_id=run_name, offline_mode=True)
-        res = orch.run_pipeline(
-            input_files=saved_paths,
-            company_name=company,
-            facility_name=location,
-            reporting_year=year_num,
-            enable_scope3=enable_scope3,
-            enable_mitigation=enable_mitigation,
-        )
-        _save_tenant_meta(orch.workspace.run_dir, eff_org, eff_user)
-
-        deliv_json = os.path.join(orch.workspace.deliverables_dir, "final_inventory_summary.json")
-        if os.path.exists(deliv_json):
-            with open(deliv_json, "r", encoding="utf-8") as f:
-                report_data = json.load(f)
-                report_data["run_id"] = orch.run_id
-                report_data["org_id"] = eff_org or "public"
-                report_obj = AuditReport(**report_data)
-                _latest_report = report_obj
-                _reports_by_run[orch.run_id] = report_obj
-                return report_data
-
-        return res
-    except Exception as e:
-        import traceback
-        err_msg = traceback.format_exc()
-        return {"error": "Pipeline Crashed", "details": err_msg}
-    finally:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-
-
-@app.get("/api/orchestrator/runs")
-def list_runs(
-    org_id: Optional[str] = Query(None),
-    x_org_id: Optional[str] = Header(None, alias="X-Org-Id"),
-):
-    """List pipeline execution runs in blackboard workspace (supports multi-tenant org_id isolation)."""
+@app.get("/api/orchestrator/runs", include_in_schema=False, dependencies=[Depends(verify_api_key)])
+def list_runs(org_id: Optional[str] = Query(None), x_org_id: Optional[str] = Header(None, alias="X-Org-Id")):
     if not os.path.exists(RUNS_DIR):
         return {"runs": []}
     filter_org = org_id or x_org_id
     runs = []
-    for r_name in sorted(os.listdir(RUNS_DIR), reverse=True):
-        r_dir = os.path.join(RUNS_DIR, r_name)
-        if os.path.isdir(r_dir):
-            tenant_meta = _load_tenant_meta(r_dir)
-            if filter_org and tenant_meta.get("org_id") not in (filter_org, "public"):
-                continue
-            workspace = BlackboardWorkspace(r_name, RUNS_DIR)
-            state = workspace.load_state()
-            queries = workspace.load_intermediate_json("query_log.json") or []
-            assumptions = workspace.load_intermediate_json("assumption_log.json") or []
-            deliverables = workspace.list_deliverables()
-            intermediate_files = workspace.list_intermediate_files()
-
-            runs.append({
-                "run_id": r_name,
-                "org_id": tenant_meta.get("org_id", "public"),
-                "user_id": tenant_meta.get("user_id", "anonymous"),
-                "state": state.model_dump() if state else None,
-                "phase": state.phase.value if state else "UNKNOWN",
-                "progress_pct": state.progress_pct if state else 0.0,
-                "start_time": state.start_time if state else None,
-                "end_time": state.end_time if state else None,
-                "queries_count": len(queries),
-                "assumptions_count": len(assumptions),
-                "deliverables_count": len(deliverables),
-                "intermediate_count": len(intermediate_files),
-                "has_deliverables": len(deliverables) > 0,
-            })
+    for name in sorted(os.listdir(RUNS_DIR), reverse=True):
+        run_dir = os.path.join(RUNS_DIR, name)
+        if not os.path.isdir(run_dir):
+            continue
+        tenant_meta = _load_tenant_meta(run_dir)
+        if filter_org and tenant_meta.get("org_id") not in (filter_org, "public"):
+            continue
+        workspace = BlackboardWorkspace(name, RUNS_DIR)
+        state = workspace.load_state()
+        runs.append({"run_id": name, "org_id": tenant_meta.get("org_id", "public"), "user_id": tenant_meta.get("user_id", "anonymous"),
+                     "state": state.model_dump() if state else None, "phase": state.phase.value if state else "UNKNOWN",
+                     "progress_pct": state.progress_pct if state else 0.0, "start_time": state.start_time if state else None,
+                     "end_time": state.end_time if state else None,
+                     "queries_count": len(workspace.load_intermediate_json("query_log.json") or []),
+                     "assumptions_count": len(workspace.load_intermediate_json("assumption_log.json") or []),
+                     "deliverables_count": len(workspace.list_deliverables()), "intermediate_count": len(workspace.list_intermediate_files()),
+                     "has_deliverables": bool(workspace.list_deliverables())})
     return {"runs": runs}
 
 
 @app.get("/api/orchestrator/runs/{run_id}", dependencies=[Depends(verify_api_key)])
 def get_run_details(run_id: str):
-    """Get state, index, intermediate extractions, logs, and deliverables for a specific run."""
     _validate_safe_identifier(run_id, "run_id")
     workspace = BlackboardWorkspace(run_id, RUNS_DIR)
     state = workspace.load_state()
     if not state:
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found.")
-
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
     index = workspace.load_index()
-    scope1 = workspace.load_intermediate_json("scope1_extracted.json")
-    scope2 = workspace.load_intermediate_json("scope2_extracted.json")
-    scope3 = workspace.load_intermediate_json("scope3_extracted.json")
-    mitigation = workspace.load_intermediate_json("mitigation_extracted.json")
-    math_results = workspace.load_intermediate_json("math_results.json")
-    mitigation_summary = workspace.load_intermediate_json("mitigation_summary.json")
-    queries = workspace.load_intermediate_json("query_log.json")
-    assumptions = workspace.load_intermediate_json("assumption_log.json")
-    intermediate_files = workspace.list_intermediate_files()
-    deliverables = workspace.list_deliverables()
-    manifest = workspace.get_file_manifest()
-
-    return {
-        "run_id": run_id,
-        "state": state.model_dump(),
-        "index": index.model_dump() if index else None,
-        "intermediate": {
-            "scope1": scope1 or [],
-            "scope2": scope2 or [],
-            "scope3": scope3 or [],
-            "mitigation": mitigation or [],
-            "math_results": math_results,
-            "mitigation_summary": mitigation_summary,
-            "queries": queries or [],
-            "assumptions": assumptions or [],
-        },
-        "intermediate_files": intermediate_files,
-        "deliverables": deliverables,
-        "manifest": manifest,
-        "math_results": math_results,
-        "mitigation_summary": mitigation_summary,
-        "queries": queries or [],
-        "assumptions": assumptions or [],
-    }
+    intermediate = {name: workspace.load_intermediate_json(filename) for name, filename in {
+        "scope1": "scope1_extracted.json", "scope2": "scope2_extracted.json", "scope3": "scope3_extracted.json",
+        "mitigation": "mitigation_extracted.json", "math_results": "math_results.json", "mitigation_summary": "mitigation_summary.json",
+        "queries": "query_log.json", "assumptions": "assumption_log.json",
+    }.items()}
+    return {"run_id": run_id, "state": state.model_dump(), "index": index.model_dump() if index else None,
+            "intermediate": {key: (value or []) if key in ("scope1", "scope2", "scope3", "mitigation", "queries", "assumptions") else value for key, value in intermediate.items()},
+            "intermediate_files": workspace.list_intermediate_files(), "deliverables": workspace.list_deliverables(),
+            "manifest": workspace.get_file_manifest(), "math_results": intermediate["math_results"],
+            "mitigation_summary": intermediate["mitigation_summary"], "queries": intermediate["queries"] or [], "assumptions": intermediate["assumptions"] or []}
 
 
 @app.get("/api/orchestrator/runs/{run_id}/files", dependencies=[Depends(verify_api_key)])
 def get_run_files(run_id: str):
-    """Get directory tree manifest for a specific run."""
     _validate_safe_identifier(run_id, "run_id")
     workspace = BlackboardWorkspace(run_id, RUNS_DIR)
     if not os.path.exists(workspace.run_dir):
-        raise HTTPException(status_code=404, detail=f"Run {run_id} not found.")
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
     return workspace.get_file_manifest()
 
 
 @app.get("/api/orchestrator/runs/{run_id}/intermediate/{filename}", dependencies=[Depends(verify_api_key)])
 def get_intermediate_file(run_id: str, filename: str):
-    """Fetch raw intermediate JSON/text file."""
     _validate_safe_identifier(run_id, "run_id")
     workspace = BlackboardWorkspace(run_id, RUNS_DIR)
-    fpath = _verify_safe_path(workspace.intermediate_dir, filename)
-    if not os.path.exists(fpath):
-        raise HTTPException(status_code=404, detail=f"Intermediate file {filename} not found in run {run_id}.")
-
+    path = _verify_safe_path(workspace.intermediate_dir, filename)
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail=f"Intermediate file {filename} not found")
     if filename.endswith(".json"):
-        with open(fpath, "r", encoding="utf-8") as f:
-            import json
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    return FileResponse(fpath, media_type="text/plain; charset=utf-8", filename=filename)
-
+    return FileResponse(path, media_type="text/plain; charset=utf-8", filename=filename)
 
 
 @app.get("/api/orchestrator/runs/{run_id}/deliverables/{filename}", dependencies=[Depends(verify_api_key)])
 def download_deliverable(run_id: str, filename: str):
-    """Download a generated deliverable file (.md, .html, .docx, .pdf, .json)."""
     _validate_safe_identifier(run_id, "run_id")
     workspace = BlackboardWorkspace(run_id, RUNS_DIR)
-    fpath = _verify_safe_path(workspace.deliverables_dir, filename)
-    if not os.path.exists(fpath):
-        raise HTTPException(status_code=404, detail=f"Deliverable {filename} not found for run {run_id}.")
-
+    path = _verify_safe_path(workspace.deliverables_dir, filename)
+    if not os.path.isfile(path):
+        raise HTTPException(status_code=404, detail=f"Deliverable {filename} not found")
     media_type = "application/octet-stream"
     if filename.endswith(".html"):
         media_type = "text/html"
-    elif filename.endswith(".md") or filename.endswith(".txt"):
+    elif filename.endswith((".md", ".txt")):
         media_type = "text/markdown; charset=utf-8"
     elif filename.endswith(".json"):
         media_type = "application/json"
@@ -809,143 +544,62 @@ def download_deliverable(run_id: str, filename: str):
         media_type = "application/pdf"
     elif filename.endswith(".docx"):
         media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    return FileResponse(path, media_type=media_type, filename=filename)
 
-    return FileResponse(fpath, media_type=media_type, filename=filename)
 
-
-@app.get("/api/factors")
+@app.get("/api/factors", dependencies=[Depends(verify_api_key)])
 def list_factors():
-    """List all standard emission factors registered in the database."""
-    db = get_factor_database()
-    return [f.model_dump() for f in db.get_all_factors()]
-
-
-@app.get("/api/export/html", response_class=HTMLResponse, dependencies=[Depends(verify_api_key)])
-@app.get("/api/report/html", response_class=HTMLResponse, dependencies=[Depends(verify_api_key)])
-def export_html(
-    run_id: Optional[str] = Query(None),
-    tier: Optional[str] = Query(None),
-    license_key: Optional[str] = Query(None),
-    x_license_key: Optional[str] = Header(None, alias="X-License-Key"),
-):
-    report = _resolve_report(run_id)
-    eff_key = license_key or x_license_key
-    use_watermark = (tier and tier.lower() == "free") and not _is_valid_pro_key(eff_key)
-    return HTMLResponse(content=ReportExporter.to_html(report, watermark=bool(use_watermark)))
-
-
-@app.get("/api/export/markdown", response_class=PlainTextResponse, dependencies=[Depends(verify_api_key)])
-@app.get("/api/report/markdown", response_class=PlainTextResponse, dependencies=[Depends(verify_api_key)])
-def export_markdown(run_id: Optional[str] = Query(None)):
-    report = _resolve_report(run_id)
-    return PlainTextResponse(content=ReportExporter.to_markdown(report))
-
-
-@app.get("/api/export/pdf", dependencies=[Depends(verify_api_key)])
-@app.get("/api/report/pdf", dependencies=[Depends(verify_api_key)])
-def export_pdf(
-    run_id: Optional[str] = Query(None),
-    tier: Optional[str] = Query(None),
-    license_key: Optional[str] = Query(None),
-    x_license_key: Optional[str] = Header(None, alias="X-License-Key"),
-):
-    report = _resolve_report(run_id)
-    eff_key = license_key or x_license_key
-    use_watermark = (tier and tier.lower() == "free") and not _is_valid_pro_key(eff_key)
-    pdf_bytes = ReportExporter.to_pdf(report, watermark=bool(use_watermark))
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": 'inline; filename="Bao_cao_kiem_ke_va_giam_nhe_KNK.pdf"'},
-    )
-
-
-@app.get("/api/export/docx", dependencies=[Depends(verify_api_key)])
-@app.get("/api/report/docx", dependencies=[Depends(verify_api_key)])
-def export_docx(
-    run_id: Optional[str] = Query(None),
-    tier: Optional[str] = Query(None),
-    license_key: Optional[str] = Query(None),
-    x_license_key: Optional[str] = Header(None, alias="X-License-Key"),
-):
-    eff_key = license_key or x_license_key
-    if tier and tier.lower() == "free" and not _is_valid_pro_key(eff_key):
-        raise HTTPException(
-            status_code=402,
-            detail="Yêu cầu nâng cấp gói Pro/Enterprise để tải về file Word Mẫu 02 NĐ 06/2022/NĐ-CP.",
-        )
-    report = _resolve_report(run_id)
-    docx_bytes = ReportExporter.to_docx(report)
-    return Response(
-        content=docx_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": 'attachment; filename="Bao_cao_Mau02_ND06.docx"'},
-    )
-
-
-@app.get("/api/export/excel", dependencies=[Depends(verify_api_key)])
-@app.get("/api/report/excel", dependencies=[Depends(verify_api_key)])
-def export_excel(
-    run_id: Optional[str] = Query(None),
-    tier: Optional[str] = Query(None),
-    license_key: Optional[str] = Query(None),
-    x_license_key: Optional[str] = Header(None, alias="X-License-Key"),
-):
-    eff_key = license_key or x_license_key
-    if tier and tier.lower() == "free" and not _is_valid_pro_key(eff_key):
-        raise HTTPException(
-            status_code=402,
-            detail="Yêu cầu nâng cấp gói Pro/Enterprise để tải về Hồ sơ kiểm toán Excel.",
-        )
-    report = _resolve_report(run_id)
-    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
-        tmp_path = tmp.name
-    try:
-        ReportExporter.to_excel(report, tmp_path)
-        with open(tmp_path, "rb") as f:
-            excel_bytes = f.read()
-    finally:
-        if os.path.exists(tmp_path):
-            try:
-                os.remove(tmp_path)
-            except Exception:
-                pass
-    return Response(
-        content=excel_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": 'attachment; filename="Ho_so_ket_qua_CO2_EcoStream.xlsx"'},
-    )
+    return [factor.model_dump() for factor in get_factor_database().get_all_factors()]
 
 
 def find_available_port(start_port: int = 8000, host: str = "127.0.0.1", max_attempts: int = 20) -> int:
-    """Find the first available TCP port."""
     for port in range(start_port, start_port + max_attempts):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            s.bind((host, port))
-            s.close()
+            sock.bind((host, port))
             return port
-        except Exception:
-            continue
-
-    # Fallback to ephemeral port
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((host, 0))
-    port = s.getsockname()[1]
-    s.close()
+        except OSError:
+            sock.close()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind((host, 0))
+    port = sock.getsockname()[1]
+    sock.close()
     return port
+
+
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+MIN_API_KEY_LENGTH = 16
+
+
+def assert_safe_to_serve(host: str) -> None:
+    if host in LOOPBACK_HOSTS:
+        return
+    problems = []
+    api_key = os.environ.get("ECOSTREAM_API_KEY", "")
+    if len(api_key) < MIN_API_KEY_LENGTH:
+        problems.append(f"ECOSTREAM_API_KEY (tối thiểu {MIN_API_KEY_LENGTH} ký tự)")
+    encryption_key = os.environ.get("ECOSTREAM_ENCRYPTION_KEY", "")
+    if not encryption_key:
+        problems.append("ECOSTREAM_ENCRYPTION_KEY")
+    else:
+        try:
+            Fernet(encryption_key.encode("utf-8"))
+        except (ValueError, TypeError):
+            problems.append("ECOSTREAM_ENCRYPTION_KEY không hợp lệ; dùng Fernet.generate_key()")
+    if problems:
+        raise RuntimeError("Từ chối khởi động trên địa chỉ mạng: thiếu cấu hình bảo mật: " + ", ".join(problems))
 
 
 def run_server(host: Optional[str] = None, port: Optional[int] = None):
     env_port = os.environ.get("PORT")
     env_host = os.environ.get("ECOSTREAM_HOST") or os.environ.get("HOST")
     if env_port:
-        actual_host = host or env_host or "0.0.0.0"
-        actual_port = int(env_port)
+        actual_host, actual_port = host or env_host or "0.0.0.0", int(env_port)
     else:
         actual_host = host or env_host or "127.0.0.1"
         actual_port = find_available_port(port or 8000, actual_host)
-    print(f"\n[EcoStream] Multi-Agent Web Server is live at: http://{actual_host}:{actual_port}\n")
+    assert_safe_to_serve(actual_host)
+    print(f"\n[EcoStream] Survey web server is live at: http://{actual_host}:{actual_port}\n")
     uvicorn.run(app, host=actual_host, port=actual_port)
 
 

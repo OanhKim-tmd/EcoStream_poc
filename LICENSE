@@ -1,21 +1,44 @@
-MIT License
+﻿GIẤY PHÉP SỬ DỤNG PHẦN MỀM ECOSTREAM (EULA) - PHẦN MỀM THƯƠNG MẠI
+Bản quyền (c) 2026 Vũ Thị Kim Oanh, Phạm Hồng Vân, Phạm Quang Vinh. Bảo lưu mọi quyền.
 
-Copyright (c) 2026 Tran Minh Duong
+(Sau đây gọi chung là "Nhóm tác giả".)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. PHẠM VI
+EcoStream (gồm mã nguồn, mã thực thi, giao diện web, tài liệu, biểu mẫu, mô hình tính toán và dữ liệu đi kèm) là phần mềm thương mại thuộc quyền sở hữu của Nhóm tác giả. Phần mềm được cấp phép sử dụng, không bán quyền sở hữu.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. ĐIỀU KIỆN SỬ DỤNG
+Bạn chỉ được cài đặt và sử dụng EcoStream khi đã mua giấy phép hoặc đăng ký dịch vụ hợp lệ từ Nhóm tác giả (hoặc đại lý được ủy quyền), hoặc được Nhóm tác giả cho phép bằng văn bản (ví dụ: bản dùng thử có thời hạn). Giấy phép là không độc quyền, không chuyển nhượng, giới hạn trong phạm vi số người dùng, số cơ sở và thời hạn đã mua.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+3. CÁC HÀNH VI BỊ CẤM
+Khi chưa có sự đồng ý bằng văn bản của Nhóm tác giả, bạn không được:
+a) sao chép, phân phối, cho thuê, cho mượn, bán lại, cấp phép lại hoặc chia sẻ phần mềm / khóa kích hoạt cho bên thứ ba;
+b) chỉnh sửa, tạo sản phẩm phái sinh, dịch ngược, tháo rời hoặc tìm cách trích xuất mã nguồn, trừ khi pháp luật cho phép rõ ràng;
+c) gỡ bỏ hoặc vô hiệu hóa thông báo bản quyền, cơ chế cấp phép hoặc biện pháp bảo vệ;
+d) dùng phần mềm để cung cấp dịch vụ cho bên thứ ba dưới dạng sản phẩm cạnh tranh hoặc dịch vụ thuê ngoài thương mại;
+e) dùng phần mềm vào mục đích vi phạm pháp luật.
+
+4. DỮ LIỆU CỦA BẠN
+Bạn giữ toàn bộ quyền đối với chứng từ và dữ liệu do bạn nhập vào. Bạn chịu trách nhiệm về tính hợp pháp, chính xác của dữ liệu đầu vào. Nhóm tác giả không sử dụng dữ liệu của bạn cho mục đích khác ngoài việc vận hành chức năng của phần mềm, trừ khi có thỏa thuận riêng.
+
+5. KẾT QUẢ TÍNH TOÁN
+Kết quả kiểm kê khí nhà kính, giảm nhẹ phát thải và báo cáo do phần mềm tạo ra là bản dự thảo hỗ trợ, phụ thuộc vào dữ liệu đầu vào và phương pháp được triển khai. Đây không phải tư vấn pháp lý, không phải báo cáo đã được thẩm định hay xác nhận bởi cơ quan có thẩm quyền. Bạn cần tự đối chiếu với văn bản pháp luật và biểu mẫu hiện hành trước khi nộp hoặc công bố.
+
+6. PHÍ VÀ THANH TOÁN
+Phí cấp phép / dịch vụ, chu kỳ gia hạn và chính sách hoàn tiền (nếu có) được quy định trong hợp đồng hoặc đơn đặt hàng giữa bạn và Nhóm tác giả.
+
+7. TỪ CHỐI BẢO ĐẢM
+Trong phạm vi pháp luật cho phép, phần mềm được cung cấp "NGUYÊN TRẠNG", không kèm bảo đảm nào khác ngoài những gì được cam kết bằng văn bản trong hợp đồng.
+
+8. GIỚI HẠN TRÁCH NHIỆM
+Trong phạm vi pháp luật cho phép, Nhóm tác giả không chịu trách nhiệm đối với thiệt hại gián tiếp, mất dữ liệu, mất lợi nhuận hoặc hậu quả phát sinh từ việc sử dụng phần mềm. Tổng trách nhiệm (nếu có) không vượt quá số phí bạn đã thanh toán cho giấy phép trong 12 tháng gần nhất.
+
+9. CHẤM DỨT
+Giấy phép chấm dứt ngay khi bạn vi phạm các điều khoản trên hoặc hết hạn mà không gia hạn. Khi đó bạn phải ngừng sử dụng và xóa các bản sao phần mềm.
+
+10. THÀNH PHẦN MÃ NGUỒN MỞ
+Phần mềm có thể sử dụng các thư viện mã nguồn mở của bên thứ ba; các thư viện đó tuân theo giấy phép riêng của chúng.
+
+11. LUẬT ÁP DỤNG
+Giấy phép này chịu sự điều chỉnh của pháp luật Việt Nam.
+
+Liên hệ cấp phép: [điền email / số điện thoại liên hệ của nhóm]

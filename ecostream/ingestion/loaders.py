@@ -1,7 +1,5 @@
 """Multi-format document loader for SME invoices, spreadsheets, and receipt transcripts."""
 
-import csv
-import io
 import os
 from typing import List, Optional
 from pydantic import BaseModel, Field

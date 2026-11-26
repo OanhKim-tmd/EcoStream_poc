@@ -1,5 +1,4 @@
 """Survey-first workflow contract: template mapping, calculations and guarded API."""
-import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -51,14 +50,14 @@ class SurveyWorkflowTests(unittest.TestCase):
     def test_calculation_uses_survey_and_removes_sample_activity(self):
         outcome = calculate_survey(self.run_id, base_runs_dir=self.tmp.name)
         self.assertEqual(outcome["stage"], "COMPLETED")
-        self.assertAlmostEqual(outcome["summary"]["total_co2e_tonnes"], 1556.556, places=3)
+        self.assertAlmostEqual(outcome["summary"]["total_co2e_tonnes"], 1594.699, places=3)
         wb = load_workbook(self.outputs / INVENTORY_FILE)
         self.assertEqual(wb["S1-Stationary Combustion"]["F18"].value, 12500)
         self.assertEqual(wb["S2-Electricity Consumption"]["C7"].value, 45250)
         self.assertIsNone(wb["S2-Electricity Consumption"]["E13"].value)
         self.assertIsNone(wb["S2-Electricity Consumption"]["C13"].value)
         self.assertEqual(wb["S2-Electricity Consumption"]["F19"].value, "=SUM(F7:F18)")
-        self.assertAlmostEqual(wb["EcoStream đối soát"]["B14"].value, 1556.556, places=3)
+        self.assertAlmostEqual(wb["EcoStream đối soát"]["B14"].value, 1594.699, places=3)
         text = "\n".join(p.text for p in Document(self.outputs / REPORT_FILE).paragraphs)
         self.assertIn("Cơ sở kiểm thử", text)
         self.assertIn("Chưa đủ PTCS", text)
@@ -418,29 +417,26 @@ class SurveyWorkflowTests(unittest.TestCase):
         self.assertEqual(next(i.quantity for i in petrol_items if i.month == 1), 312.5)
         self.assertEqual(next(i.quantity for i in diesel_items if i.month == 1), 1240.0)
 
-    def test_png_fuel_invoice_upload_and_ocr_extraction(self):
+    def test_images_rejected_and_scanned_pdf_flagged_without_ocr(self):
+        """No OCR: images are refused at upload; a PDF without a text layer yields a manual-entry warning."""
         from unittest.mock import patch
-        png_file = ROOT / "data/hóa đơn xăng dầu.png"
-        if not png_file.exists():
-            self.skipTest("Sample PNG invoice not present")
+        from reportlab.pdfgen import canvas
         client = TestClient(app)
-        self.assertIn(".png", client.get("/").text)
+        self.assertIn('accept=".pdf,.xlsx,.docx,.csv"', client.get("/").text)
         with patch.object(server, "RUNS_DIR", self.tmp.name):
-            with png_file.open("rb") as stream:
-                resp = client.post(
-                    "/api/survey/prepare",
-                    data={"company": "CTY PNG Test", "location": "Cơ sở PNG", "period": "2025"},
-                    files={"files": ("hóa đơn xăng dầu.png", stream, "image/png")},
-                )
-            self.assertEqual(resp.status_code, 200, resp.text)
-            payload = resp.json()
-            self.assertEqual(len(payload["items"]), 1)
-            self.assertEqual(payload["items"][0]["kind"], "petrol")
-            self.assertEqual(payload["items"][0]["month"], 1)
-            self.assertAlmostEqual(payload["items"][0]["quantity"], 46.38, places=2)
-            run_id = payload["run_id"]
-            wb = load_workbook(Path(self.tmp.name) / run_id / "deliverables" / SURVEY_FILE)
-            self.assertAlmostEqual(wb["1.1"]["F11"].value, 46.38, places=2)
+            resp = client.post(
+                "/api/survey/prepare",
+                data={"company": "CTY", "location": "Cơ sở", "period": "2026"},
+                files={"files": ("hoa_don.png", b"\x89PNG\r\n\x1a\n", "image/png")},
+            )
+            self.assertEqual(resp.status_code, 422, resp.text)
+        scanned = Path(self.tmp.name) / "scan.pdf"
+        pdf = canvas.Canvas(str(scanned))
+        pdf.rect(50, 50, 200, 100, fill=1)  # graphics only, no text layer
+        pdf.save()
+        extracted = extract_documents([str(scanned)], 2026)
+        self.assertEqual(extracted.items, [])
+        self.assertTrue(any("không có lớp chữ" in w for w in extracted.warnings), extracted.warnings)
 
     def test_extra_cells_thong_tin_chung_does_not_crash_prepare(self):
         from unittest.mock import patch

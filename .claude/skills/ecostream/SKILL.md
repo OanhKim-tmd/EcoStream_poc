@@ -1,33 +1,29 @@
 ---
 name: ecostream
-description: Ingest business documents, run multi-agent carbon accounting, Decree 06/2022 Mẫu 02 mitigation math, and generate Vietnamese regulatory deliverables.
+description: Kiểm kê khí nhà kính cấp cơ sở (Scope 1/2) từ chứng từ: tạo biểu khảo sát, tính phát thải, xuất workbook kiểm kê và báo cáo Word dự thảo.
 user-invocable: true
 disable-model-invocation: false
 ---
 
-# EcoStream Multi-Agent Carbon Engine
+# EcoStream: luồng khảo sát Scope 1/2
 
-Execute the end-to-end multi-agent pipeline to process business files (Excel, PDF, DOCX, CSV), route them to specialized domain subagents, execute deterministic carbon & mitigation math, and generate official Vietnamese regulatory deliverables.
+Đọc chứng từ có lớp chữ (Excel, Word, CSV, PDF), tạo biểu khảo sát, tính phát thải Scope 1 và 2 từ biểu đã rà soát, rồi xuất workbook kiểm kê và báo cáo Word dự thảo. Không dùng AI bên ngoài; phép tính là tất định.
 
-## Usage
-- `/ecostream --demo` : Run benchmark demo on `data/samples/input.xlsx`
-- `/ecostream --input <path_to_file_or_dir>` : Run on custom business files/invoices
-- `/ecostream --input <path> --company "Company Name" --facility "Plant Name" --year 2026`
+## Cách dùng
+- `/ecostream --demo`: chạy dữ liệu mẫu `data/samples/input.xlsx`.
+- `/ecostream --input <file_or_dir> --company "Tên" --facility "Nhà máy" --year 2026`: chạy trên chứng từ thật.
+- `/ecostream --run-id <run_id> --reviewed <Bang_khao_sat.xlsx>`: tính lại sau khi đã rà soát biểu.
 
-## Procedure
-1. Parse arguments from the invocation.
-2. If `--demo` or no argument is given, run:
+## Quy trình
+1. Phân tích tham số từ lệnh gọi.
+2. Chạy đúng một lệnh:
    ```bash
-   python -m ecostream.cli --demo
+   python -m ecostream --demo
+   python -m ecostream --input $ARGUMENTS
+   python -m ecostream --run-id <run_id> --reviewed <file>
    ```
-3. If `--input` is provided:
-   ```bash
-   python -m ecostream.cli $ARGUMENTS
-   ```
-4. Verify the deliverables created in `runs/<run_id>/deliverables/`:
-   - `Bao_cao_kiem_ke_va_giam_nhe_KNK.md`
-   - `Bao_cao_kiem_ke_va_giam_nhe_KNK.html`
-   - `Bao_cao_Mau02_ND06.docx`
-   - `Bao_cao_kiem_ke_va_giam_nhe_KNK.pdf`
-   - `final_inventory_summary.json`
-5. Present the summary table, Mẫu 02 mitigation results, and query/assumption logs.
+3. Kiểm tra ba tệp trong `runs/<run_id>/deliverables/`:
+   - `Bang_khao_sat_da_dien.xlsx`
+   - `GHGs_inventory_da_tinh.xlsx`
+   - `Bao_cao_kiem_ke_KNK.docx`
+4. Trình bày tổng Scope 1, Scope 2, tổng và mức độ tin cậy, cùng toàn bộ cảnh báo trong kết quả. Scope 3 nằm ngoài phạm vi và phải được nêu rõ là chưa tính.

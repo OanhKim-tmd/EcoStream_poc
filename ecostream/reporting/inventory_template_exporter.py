@@ -7,7 +7,6 @@ verified Python calculation results separately rather than asserting equality.
 from __future__ import annotations
 
 from collections import defaultdict
-from pathlib import Path
 
 from openpyxl import load_workbook
 from openpyxl.cell.cell import MergedCell
@@ -80,7 +79,11 @@ def export_inventory(data: SurveyData, report: AuditReport, target: str) -> list
                     raise SurveyValidationError(f"{name}!B{row}: chưa có tỷ trọng quy đổi cho nhiên liệu này")
                 density = "$F$5" if row == 18 else "$F$7"
                 sheet[f"Q{row}"] = f"=P{row}*'Conversion Factors'!{density}/1000000"
-                warnings.append(f"{name}!Q{row}: quy đổi lít sang ktonnes theo tỷ trọng workbook gốc; cần xác nhận tỷ trọng")
+                fuel_label = {12: "Xăng", 16: "Dầu hỏa", 18: "Dầu DO", 62: "Nhiên liệu sinh học lỏng"}.get(row, f"Nhiên liệu dòng {row}")
+                kind_label = "di động" if name == "S1-Mobile Combustion" else "cố định"
+                note = f"{fuel_label} ({kind_label}): lượng đo bằng lít được đổi sang khối lượng theo tỷ trọng mặc định của mẫu. Hãy kiểm tra tỷ trọng."
+                if note not in warnings:
+                    warnings.append(note)
             elif unit == "kg":
                 sheet[f"Q{row}"] = f"=P{row}/1000000"
             elif unit == "m3":
@@ -154,9 +157,9 @@ def export_inventory(data: SurveyData, report: AuditReport, target: str) -> list
     audit.append(["Chênh lệch Scope 1: mẫu trừ EcoStream (tCO2e)", template_fuel_total - report.summary.scope_1_tonnes])
     audit.append(["Chênh lệch Scope 2: mẫu trừ EcoStream (tCO2e)", template_electricity_total - report.summary.scope_2_tonnes])
     if abs(template_fuel_total - report.summary.scope_1_tonnes) > 0.01:
-        warnings.append(f"Kết quả Scope 1 theo hệ số TJ của mẫu lệch {template_fuel_total - report.summary.scope_1_tonnes:+.3f} tCO2e so với EcoStream; cần xác định phương pháp chính thức")
+        warnings.append(f"Scope 1 tính theo công thức của file mẫu chênh {abs(template_fuel_total - report.summary.scope_1_tonnes):,.1f} tCO2e so với kết quả EcoStream ({'mẫu cao hơn' if template_fuel_total > report.summary.scope_1_tonnes else 'mẫu thấp hơn'}). Hai cách dùng hệ số khác nhau; hãy chọn một phương pháp để nộp báo cáo.")
     if abs(template_electricity_total - report.summary.scope_2_tonnes) > 0.01:
-        warnings.append(f"Kết quả Scope 2 theo mẫu lệch {template_electricity_total - report.summary.scope_2_tonnes:+.3f} tCO2e; cần rà soát")
+        warnings.append(f"Scope 2 tính theo file mẫu chênh {abs(template_electricity_total - report.summary.scope_2_tonnes):,.1f} tCO2e so với kết quả EcoStream; hãy kiểm tra lại.")
     audit.append([])
     audit.append(["Dòng", "Nguồn", "Scope", "Số lượng", "Đơn vị", "EF kgCO2e/đơn vị", "Phát thải tCO2e", "Bằng chứng"])
     for calc in report.calculations:

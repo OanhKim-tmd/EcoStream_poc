@@ -5,6 +5,8 @@ import os
 import sys
 import hashlib
 from typing import Optional
+from cryptography.fernet import Fernet, InvalidToken
+from ecostream.privacy.encryption import StorageEncryption
 
 
 class IngestionCache:
@@ -22,11 +24,27 @@ class IngestionCache:
                 cache_dir = os.path.join(user_root, "cache")
             else:
                 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                claude_cache = os.path.join(base_dir, ".claude", "references", "cache")
-                ref_cache = os.path.join(base_dir, "references", "cache")
-                cache_dir = claude_cache if os.path.exists(os.path.dirname(claude_cache)) else ref_cache
+                # Cache is generated runtime data, never project reference material.
+                cache_dir = os.path.join(base_dir, ".cache", "ecostream", "ingestion")
         self.cache_dir = cache_dir
         os.makedirs(self.cache_dir, exist_ok=True)
+        # Deployment cache is encrypted with the stable deployment key. On local runs
+        # without a configured key, cache only in memory (no derived/plaintext disk key).
+        configured_key = os.environ.get("ECOSTREAM_ENCRYPTION_KEY")
+        self._memory_cache: dict[str, str] = {}
+        self._fernet = None
+        if configured_key:
+            self._fernet = Fernet(StorageEncryption.get_or_create_key("ingestion-cache"))
+        # Remove legacy plaintext cache entries created by previous releases.
+        # Cache is reproducible from source documents and may be safely discarded.
+        for name in os.listdir(self.cache_dir):
+            if name.endswith(".md") and len(name) == 67:
+                candidate = name[:-3]
+                if len(candidate) == 64 and all(ch in "0123456789abcdef" for ch in candidate.lower()):
+                    try:
+                        os.remove(os.path.join(self.cache_dir, name))
+                    except OSError:
+                        pass
 
     @staticmethod
     def compute_sha256(file_path_or_bytes: str | bytes) -> str:
@@ -40,19 +58,37 @@ class IngestionCache:
                     hasher.update(chunk)
         return hasher.hexdigest()
 
+    def _cache_path(self, sha256_hash: str) -> str:
+        if len(sha256_hash) != 64 or any(ch not in "0123456789abcdef" for ch in sha256_hash.lower()):
+            raise ValueError("Invalid SHA-256 cache key")
+        return os.path.join(self.cache_dir, f"{sha256_hash}.enc")
+
     def get(self, sha256_hash: str) -> Optional[str]:
-        """Retrieve cached markdown string if present."""
-        target_file = os.path.join(self.cache_dir, f"{sha256_hash}.md")
-        if os.path.exists(target_file):
-            with open(target_file, "r", encoding="utf-8") as f:
-                return f.read()
-        return None
+        """Retrieve and decrypt cached markdown; unreadable entries become cache misses."""
+        if self._fernet is None:
+            return self._memory_cache.get(sha256_hash)
+        target_file = self._cache_path(sha256_hash)
+        if not os.path.isfile(target_file):
+            return None
+        try:
+            with open(target_file, "rb") as f:
+                plaintext = self._fernet.decrypt(f.read())
+            return plaintext.decode("utf-8")
+        except (InvalidToken, UnicodeDecodeError, OSError):
+            # Includes stale local ephemeral-key entries after process restart.
+            return None
 
     def store(self, sha256_hash: str, markdown_content: str) -> str:
-        """Store converted markdown in cache directory."""
-        target_file = os.path.join(self.cache_dir, f"{sha256_hash}.md")
-        with open(target_file, "w", encoding="utf-8") as f:
-            f.write(markdown_content)
+        """Encrypt converted markdown before storing it in the cache."""
+        if self._fernet is None:
+            self._memory_cache[sha256_hash] = markdown_content
+            return "<memory>"
+        target_file = self._cache_path(sha256_hash)
+        ciphertext = self._fernet.encrypt(markdown_content.encode("utf-8"))
+        temp_file = f"{target_file}.tmp"
+        with open(temp_file, "wb") as f:
+            f.write(ciphertext)
+        os.replace(temp_file, target_file)
         return target_file
 
 

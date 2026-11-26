@@ -1,11 +1,10 @@
-`; Script Inno Setup tao bo cai dat chuyen nghiep EcoStream cho Windows
-; Hoan toan mien phi, giup han che toi da loi bao dong gia virus (false-positive)
-; Tai Inno Setup mien phi tai: https://jrsoftware.org/isdl.php
+; Inno Setup script: builds dist\EcoStream-Windows-Setup.exe from dist\EcoStream\ (PyInstaller output).
+; Run after scripts/build_desktop_app.py. Inno Setup: https://jrsoftware.org/isdl.php
 
-#define MyAppName "EcoStream AI Carbon Accounting"
-#define MyAppVersion "1.0.0"
-#define MyAppPublisher "EcoStream Technologies"
-#define MyAppURL "https://ecostream.vn"
+#define MyAppName "EcoStream"
+#define MyAppVersion "0.3.0"
+#define MyAppPublisher "Vũ Thị Kim Oanh, Phạm Hồng Vân, Phạm Quang Vinh"
+#define MyAppURL "https://github.com/OanhKim-tmd/EcoStream_poc"
 #define MyAppExeName "EcoStream.exe"
 
 [Setup]
@@ -20,7 +19,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\LICENSE
 OutputDir=..\dist
-OutputBaseFilename=EcoStream_Windows_Setup_v1.0
+OutputBaseFilename=EcoStream-Windows-Setup
 SetupIconFile=..\scripts\ecostream.ico
 Compression=lzma2/ultra64
 SolidCompression=yes

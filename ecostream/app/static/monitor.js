@@ -10,6 +10,11 @@ let pollTimer = null;
 let currentRunData = null;
 let runsCache = [];
 
+// All run data and log fields are untrusted; encode before inserting into innerHTML.
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[char]));
+
 document.addEventListener('DOMContentLoaded', () => {
     initPollSpeedSelector();
     initPathInputListener();
@@ -377,14 +382,14 @@ function renderIntermediateTabs(data) {
         routingList.innerHTML = tasks.map(t => {
             const sheetLabel = t.sheet_name ? `Sheet: ${t.sheet_name}` : (t.source_file || t.description || 'Mục dữ liệu');
             const agentLabel = t.target_agent || t.assigned_subagent || '--';
-            const desc = t.description ? `<div class="text-[10px] text-[#6a8978]">${t.description}</div>` : '';
+            const desc = t.description ? `<div class="text-[10px] text-[#6a8978]">${escapeHtml(t.description)}</div>` : '';
             return `
             <div class="p-2 rounded-lg bg-white border border-[#e2f0db] flex items-center justify-between">
                 <div>
-                    <span class="font-semibold text-[#091710] text-xs">${sheetLabel}</span>
+                    <span class="font-semibold text-[#091710] text-xs">${escapeHtml(sheetLabel)}</span>
                     ${desc}
                 </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#003c33] border border-[#cce5c0] whitespace-nowrap ml-2">${agentLabel}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#003c33] border border-[#cce5c0] whitespace-nowrap ml-2">${escapeHtml(agentLabel)}</span>
             </div>
             `;
         }).join('');
@@ -403,11 +408,11 @@ function renderIntermediateTabs(data) {
                 const conf = r.quality?.composite_score ? Math.round(r.quality.composite_score * 100) + '%' : (r.confidence_score ? Math.round(r.confidence_score * 100) + '%' : '95%');
                 return `
                 <tr class="hover:bg-[#f5f9f4] transition">
-                    <td class="p-3 font-semibold text-[#091710]">${r.description || r.fuel_type || r.activity_type || '--'}</td>
-                    <td class="p-3 text-[#2c4a3c] font-sans">${r.category || r.equipment_category || 'Cố định / di động'}</td>
-                    <td class="p-3 text-[#091710] font-semibold font-mono">${Number(r.quantity || r.original_quantity || 0).toLocaleString()}</td>
-                    <td class="p-3 text-[#6a8978] font-mono">${r.unit || r.original_unit || '--'}</td>
-                    <td class="p-3 text-[#003c33] font-semibold font-mono">${Number(r.quantity || r.standard_quantity || 0).toLocaleString()} ${r.unit || r.standard_unit || 'kg'}</td>
+                    <td class="p-3 font-semibold text-[#091710]">${escapeHtml(r.description || r.fuel_type || r.activity_type || '--')}</td>
+                    <td class="p-3 text-[#2c4a3c] font-sans">${escapeHtml(r.category || r.equipment_category || 'Cố định / di động')}</td>
+                    <td class="p-3 text-[#091710] font-semibold font-mono">${escapeHtml(Number(r.quantity || r.original_quantity || 0).toLocaleString())}</td>
+                    <td class="p-3 text-[#6a8978] font-mono">${escapeHtml(r.unit || r.original_unit || '--')}</td>
+                    <td class="p-3 text-[#003c33] font-semibold font-mono">${escapeHtml(Number(r.quantity || r.standard_quantity || 0).toLocaleString())} ${escapeHtml(r.unit || r.standard_unit || 'kg')}</td>
                     <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#edf5e9] text-[#003c33]">${conf}</span></td>
                 </tr>
                 `;
@@ -431,10 +436,10 @@ function renderIntermediateTabs(data) {
                 const meterOrDoc = r.supplier || r.meter_id || r.customer_code || r.evidence?.source_document || 'EVN';
                 return `
                 <tr class="hover:bg-[#f5f9f4] transition ${isInterpolated ? 'bg-amber-50/40' : ''}">
-                    <td class="p-3 font-semibold text-[#091710]">${periodOrMonth}</td>
-                    <td class="p-3 font-semibold font-mono ${isInterpolated ? 'text-amber-800' : 'text-[#091710]'}">${Number(kwhVal).toLocaleString()}</td>
-                    <td class="p-3 text-[#6a8978] text-[11px] font-mono">${r.unit || 'kWh'}</td>
-                    <td class="p-3 text-[#2c4a3c]">${meterOrDoc}</td>
+                    <td class="p-3 font-semibold text-[#091710]">${escapeHtml(periodOrMonth)}</td>
+                    <td class="p-3 font-semibold font-mono ${isInterpolated ? 'text-amber-800' : 'text-[#091710]'}">${escapeHtml(Number(kwhVal).toLocaleString())}</td>
+                    <td class="p-3 text-[#6a8978] text-[11px] font-mono">${escapeHtml(r.unit || 'kWh')}</td>
+                    <td class="p-3 text-[#2c4a3c]">${escapeHtml(meterOrDoc)}</td>
                     <td class="p-3">${isInterpolated ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-200">Nội suy</span>' : '<span class="text-[#6a8978] font-sans">Hóa đơn EVN</span>'}</td>
                     <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${isInterpolated ? 'bg-amber-100 text-amber-900' : 'bg-[#edf5e9] text-[#003c33]'}">${conf}</span></td>
                 </tr>
@@ -457,11 +462,11 @@ function renderIntermediateTabs(data) {
         if (queries.length > 0) {
             qBody.innerHTML = queries.map(q => `
                 <tr class="hover:bg-amber-50/40 transition">
-                    <td class="p-3 font-mono font-semibold text-amber-900">${q.query_id || '--'}</td>
-                    <td class="p-3 text-[#2c4a3c] font-medium">${q.scope || '--'}</td>
-                    <td class="p-3 text-[#091710]">${q.detected_issue || q.description || q.issue || '--'}</td>
-                    <td class="p-3 text-[#6a8978]">${q.action_taken || q.provisional_action || '--'}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-900">${q.status || 'Tạm tính'}</span></td>
+                    <td class="p-3 font-mono font-semibold text-amber-900">${escapeHtml(q.query_id || '--')}</td>
+                    <td class="p-3 text-[#2c4a3c] font-medium">${escapeHtml(q.scope || '--')}</td>
+                    <td class="p-3 text-[#091710]">${escapeHtml(q.detected_issue || q.description || q.issue || '--')}</td>
+                    <td class="p-3 text-[#6a8978]">${escapeHtml(q.action_taken || q.provisional_action || '--')}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-900">${escapeHtml(q.status || 'Tạm tính')}</span></td>
                 </tr>
             `).join('');
         } else {
@@ -474,9 +479,9 @@ function renderIntermediateTabs(data) {
         if (assumptions.length > 0) {
             aBody.innerHTML = assumptions.map(a => `
                 <tr class="hover:bg-[#f5f9f4] transition">
-                    <td class="p-3 font-mono font-semibold text-[#091710]">${a.assumption_id || '--'}</td>
-                    <td class="p-3 text-[#2c4a3c] font-medium">${a.parameter_name || a.scope || '--'}</td>
-                    <td class="p-3 text-[#091710]">${a.justification || a.rule_applied || `${a.assumed_value} ${a.assumed_unit}`}</td>
+                    <td class="p-3 font-mono font-semibold text-[#091710]">${escapeHtml(a.assumption_id || '--')}</td>
+                    <td class="p-3 text-[#2c4a3c] font-medium">${escapeHtml(a.parameter_name || a.scope || '--')}</td>
+                    <td class="p-3 text-[#091710]">${escapeHtml(a.justification || a.rule_applied || `${a.assumed_value} ${a.assumed_unit}`)}</td>
                     <td class="p-3 font-mono font-semibold text-red-700">-${((a.confidence_penalty || 0.1) * 100).toFixed(0)}%</td>
                     <td class="p-3 font-mono font-semibold text-amber-800">+${a.uncertainty_markup_pct || 15}%</td>
                 </tr>

@@ -155,6 +155,7 @@ activemq-data/
 .env
 .envrc
 .venv
+.venv-build/
 env/
 venv/
 ENV/
@@ -221,8 +222,11 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# EcoStream Runs & Artifacts
+# EcoStream runtime data and conversion cache
 runs/*
+.cache/
+references/cache/
+.claude/references/cache/
 !runs/.gitkeep
 data/samples/test_input.xlsx
 

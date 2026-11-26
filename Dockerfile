@@ -9,11 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies for PDF rendering, Vietnamese fonts & OCR (Poppler + Tesseract + DejaVu)
+# Vietnamese-capable font for PDF report rendering (no OCR packages needed)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    tesseract-ocr \
-    tesseract-ocr-vie \
-    poppler-utils \
     fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
@@ -22,13 +19,19 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# Copy project files (.dockerignore keeps runs/, .git/, caches and local data out of the image)
 COPY . .
 
-# Create writable directories for non-root containers
-RUN mkdir -p /app/runs /app/data/samples && chmod -R 777 /app/runs /app/data
+# Unprivileged user. Only runs/ and the ingestion cache are writable; the code and
+# bundled sample data stay read-only for the app user.
+RUN useradd --create-home --uid 1000 --shell /usr/sbin/nologin ecostream \
+    && mkdir -p /app/runs /app/.cache \
+    && chown -R ecostream:ecostream /app/runs /app/.cache
+
+USER ecostream
 
 EXPOSE 7860 8000
 
-# Start FastAPI server (automatically binds to $PORT)
+# Start FastAPI server (automatically binds to $PORT). Refuses to start without
+# ECOSTREAM_API_KEY and ECOSTREAM_ENCRYPTION_KEY (see ecostream/app/server.py).
 CMD ["python", "-m", "ecostream.app"]

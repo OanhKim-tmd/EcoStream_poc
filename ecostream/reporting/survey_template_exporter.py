@@ -13,7 +13,6 @@ from openpyxl.utils import get_column_letter
 from ecostream.ingestion.survey_workbook import (
     FUEL_NAMES,
     FUEL_ROWS,
-    STATIONARY_FUEL_META,
     SURVEY_NAME,
     TEMPLATES,
     SurveyData,
@@ -258,12 +257,8 @@ def export_survey(
                 book["1.1"][f"C{row}"] = "Nhiên liệu sinh khối rắn khác (Viên nén sinh khối)"
             elif item.kind == "peat":
                 book["1.1"][f"C{row}"] = "Than bùn (Peat)"
-            meta = STATIONARY_FUEL_META.get(item.kind)
-            if meta:
-                book["1.1"][f"D{row}"] = meta[0]
-                book["1.1"][f"S{row}"] = meta[1]
-                book["1.1"][f"T{row}"] = meta[2]
-                book["1.1"][f"U{row}"] = meta[3]
+            # Columns D/S/T/U (mã vật tư, nhiệt trị, thiết bị, nhà cung cấp) are only
+            # filled from the source documents/user edits (extra_cells) — never invented.
         else:
             key_cell = ("2.1", f"E{item.month+2}")
             item.coordinate = f"E{item.month+2}"

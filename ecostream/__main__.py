@@ -1,10 +1,12 @@
-"""Top-level package entrypoint. Launches web dashboard by default or CLI with flags."""
+"""Entrypoint: không tham số → web app; có --demo/--input/--run-id → CLI khảo sát."""
 
 import sys
 
-if len(sys.argv) > 1 and ("--demo" in sys.argv or "--data-dir" in sys.argv or "--help" in sys.argv):
+CLI_FLAGS = ("--demo", "--input", "--run-id", "--help", "-h")
+
+if len(sys.argv) > 1 and any(a in CLI_FLAGS for a in sys.argv[1:]):
     from ecostream.cli import main
-    main()
+    sys.exit(main())
 else:
     from ecostream.app.server import run_server
     run_server()

@@ -1,0 +1,16 @@
+.git
+.gitignore
+.venv-build
+.venv
+venv
+.cache
+.pytest_cache
+.claude
+runs
+build
+dist
+**/__pycache__
+**/*.pyc
+**/*.enc
+.env
+.env.*

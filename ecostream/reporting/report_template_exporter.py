@@ -5,7 +5,6 @@ body is removed deliberately so no example record can leak into a new report.
 """
 from __future__ import annotations
 
-from pathlib import Path
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt

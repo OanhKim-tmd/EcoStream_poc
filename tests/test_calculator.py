@@ -19,7 +19,7 @@ class TestCalculator(unittest.TestCase):
         self.calculator = CarbonCalculator(self.db)
 
     def test_scope2_evn_electricity_calculation(self):
-        # 10,000 kWh * 0.7221 kg CO2/kWh = 7,221 kg CO2e = 7.221 tonnes
+        # 10,000 kWh * 0.6187 kg CO2/kWh (năm 2024, CV 1232/BNNMT-BĐKH) = 6,187 kg CO2e = 6.187 tonnes
         rec = ActivityRecord(
             id="TEST-EVN",
             description="EVN Grid Power",
@@ -42,12 +42,12 @@ class TestCalculator(unittest.TestCase):
             ),
         )
         calc = self.calculator.calculate_single(rec)
-        self.assertAlmostEqual(calc.co2e_tonnes, 7.221, places=3)
+        self.assertAlmostEqual(calc.co2e_tonnes, 6.187, places=3)
         self.assertEqual(calc.scope, EmissionScope.SCOPE_2)
         self.assertLessEqual(calc.uncertainty_pct, 5.0)
 
     def test_scope1_diesel_calculation(self):
-        # 1000 L * 2.68 kg CO2/L = 2,680 kg = 2.68 tonnes
+        # 1000 L * 2.749382 kgCO2e/L (IPCC cấp 1, tỷ trọng 0,86, mẫu NĐ 06) = 2.749 tonnes
         rec = ActivityRecord(
             id="TEST-DIESEL",
             description="Diesel Fuel DO 0.05S",
@@ -70,7 +70,7 @@ class TestCalculator(unittest.TestCase):
             ),
         )
         calc = self.calculator.calculate_single(rec)
-        self.assertAlmostEqual(calc.co2e_tonnes, 2.68, places=2)
+        self.assertAlmostEqual(calc.co2e_tonnes, 2.749382, places=4)
 
     def test_scope3_spend_proxy_uncertainty(self):
         # Spend proxy must have high uncertainty (+/- 40% or higher)

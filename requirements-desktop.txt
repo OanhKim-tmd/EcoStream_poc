@@ -1,0 +1,6 @@
+# Extra dependencies for building the standalone desktop app (not needed to run from source).
+# pywebview shows the UI in a native app window (WebView2 on Windows, WKWebView on macOS)
+# instead of opening a browser.
+-r requirements.txt
+pywebview==5.3.2
+pyinstaller>=6.16.0

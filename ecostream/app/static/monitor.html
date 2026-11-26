@@ -7,10 +7,8 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="alternate icon" href="/static/favicon.ico">
     <link rel="apple-touch-icon" href="/static/icon-192.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Offline stylesheet (Tailwind build + bundled fonts); no CDN, works without Internet -->
+    <link rel="stylesheet" href="/static/vendor/app.css">
     <style>
         :root {
             --forest: #003c33;
@@ -47,14 +45,9 @@
     <nav class="sticky top-0 z-40 bg-white border-b border-[#e2f0db]">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
             <div class="flex items-center gap-2.5">
-                <a href="/" class="w-8 h-8 rounded-lg bg-[#003c33] flex items-center justify-center text-[#9fe870] shrink-0" title="Về trang chủ">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
-                        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-                    </svg>
-                </a>
+                <a href="/" class="shrink-0" title="Về trang chủ"><img src="/static/logo.png" alt="EcoStream" class="h-8 w-auto"></a>
                 <div class="flex items-baseline gap-2.5">
-                    <span class="font-bold text-base tracking-tight text-[#091710]">EcoStream</span>
+                    <img src="/static/wordmark.png" alt="EcoStream" class="h-5 w-auto">
                     <span class="text-xs text-[#6a8978] hidden sm:inline">Nhật ký xử lý</span>
                     <span class="sr-only">LIVE WORKFLOW MONITOR</span>
                 </div>

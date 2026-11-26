@@ -1,20 +1,26 @@
 name: Build Desktop Installers (.exe & .dmg)
 
+# Builds the desktop app on every push to main (artifacts only, for testing).
+# Pushing a version tag (e.g. v0.3.0) also publishes a GitHub Release, giving
+# users one fixed download link:
+#   https://github.com/<owner>/<repo>/releases/latest
 on:
   workflow_dispatch:
   push:
     branches:
-      - web_demo
       - main
     tags:
       - 'v*'
+
+permissions:
+  contents: write
 
 env:
   PYTHONUTF8: '1'
   PYTHONIOENCODING: 'utf-8'
 
 jobs:
-  build-windows-exe:
+  build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,30 +30,34 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pyinstaller cryptography
-      - name: Build Windows .exe & Portable ZIP
+          pip install -r requirements-desktop.txt cryptography
+      - name: Build EcoStream.exe
         run: python scripts/build_desktop_app.py
-      - name: Compile Inno Setup Installer (.exe)
+      - name: Smoke test (server starts and serves the UI)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist\EcoStream\EcoStream.exe" -ArgumentList "--headless-check" -PassThru -Wait -NoNewWindow
+          if ($p.ExitCode -ne 0) { throw "Smoke test failed with exit code $($p.ExitCode)" }
+      - name: Dump app log on failure
+        if: failure()
+        shell: pwsh
+        run: Get-Content "$env:LOCALAPPDATA\EcoStream\logs\ecostream_desktop.log" -ErrorAction SilentlyContinue
+      - name: Build installer with Inno Setup
         shell: pwsh
         run: |
           choco install innosetup -y --no-progress
-          if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
-            & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" scripts/installer_windows.iss
-          } elseif (Test-Path "C:\Program Files\Inno Setup 6\ISCC.exe") {
-            & "C:\Program Files\Inno Setup 6\ISCC.exe" scripts/installer_windows.iss
-          } else {
-            Write-Warning "Inno Setup compiler not found; portable ZIP is ready in dist/"
-          }
-      - name: Upload Windows Installer Artifacts
-        uses: actions/upload-artifact@v4
+          $iscc = @("C:\Program Files (x86)\Inno Setup 6\ISCC.exe", "C:\Program Files\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "Inno Setup compiler not found" }
+          & $iscc scripts/installer_windows.iss
+      - uses: actions/upload-artifact@v4
         with:
-          name: EcoStream-Windows-Installers
+          name: EcoStream-Windows
           path: |
-            dist/*.exe
-            dist/*.zip
-          if-no-files-found: warn
+            dist/EcoStream-Windows-Setup.exe
+            dist/EcoStream-Windows-Desktop.zip
+          if-no-files-found: error
 
-  build-macos-dmg:
+  build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,14 +67,45 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pyinstaller cryptography
-      - name: Build macOS .app & .dmg
+          pip install -r requirements-desktop.txt cryptography
+      - name: Build EcoStream.app and .dmg
         run: python scripts/build_desktop_app.py
-      - name: Upload macOS Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Smoke test (server starts and serves the UI)
+        run: dist/EcoStream.app/Contents/MacOS/EcoStream --headless-check
+      - name: Dump app log on failure
+        if: failure()
+        run: cat ~/Library/Logs/EcoStream/ecostream_desktop.log || true
+      - uses: actions/upload-artifact@v4
         with:
-          name: EcoStream-macOS-Installers
+          name: EcoStream-macOS
           path: |
-            dist/*.dmg
-            dist/*.zip
-          if-no-files-found: warn
+            dist/EcoStream-Installer.dmg
+            dist/EcoStream-macOS-App.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: EcoStream ${{ github.ref_name }}
+          files: release/*
+          body: |
+            ## Tải EcoStream
+
+            | Hệ điều hành | Tệp cần tải |
+            | --- | --- |
+            | Windows 10/11 | `EcoStream-Windows-Setup.exe` (bộ cài) |
+            | macOS | `EcoStream-Installer.dmg` |
+
+            **Windows:** chạy bộ cài. Nếu hiện "Windows protected your PC", bấm **More info → Run anyway** (ứng dụng chưa ký số).
+            **macOS:** mở `.dmg`, kéo EcoStream vào Applications. Lần đầu mở: chuột phải vào EcoStream → **Open** → **Open**.
+
+            Ứng dụng chạy hoàn toàn trên máy, không gửi chứng từ ra Internet. Kết quả là bản dự thảo, cần rà soát trước khi nộp.

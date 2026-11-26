@@ -70,6 +70,7 @@ class ActivityRecord(BaseModel):
     date: Optional[str] = None
     supplier: Optional[str] = None
     cost_vnd: Optional[float] = None
+    factor_id: Optional[str] = Field(default=None, description="Explicit emission factor id; skips keyword matching when set")
     measurement_type: MeasurementType
     evidence: EvidenceProvenance
     quality: DataQualityIndicator

@@ -1,5 +1,5 @@
-"""Privacy module for PII masking and data protection in EcoStream carbon accounting pipeline."""
+"""Privacy: mã hóa dữ liệu lưu trữ (AES-256 Fernet) cho chứng từ đầu vào."""
 
-from ecostream.privacy.pii_masker import PIIMasker, MaskMapping
+from ecostream.privacy.encryption import StorageEncryption
 
-__all__ = ["PIIMasker", "MaskMapping"]
+__all__ = ["StorageEncryption"]

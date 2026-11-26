@@ -12,8 +12,10 @@ services:
     environment:
       - PORT=8000
       - HOST=0.0.0.0
-      - ECOSTREAM_PRO_KEYS=ECO-PRO-2026,ECO-ENTERPRISE-2026,USTH-INNO-2026
+      # Bắt buộc: đặt trong môi trường hoặc tệp .env cạnh docker-compose.yml (không commit tệp này)
+      - ECOSTREAM_API_KEY=${ECOSTREAM_API_KEY:?Đặt ECOSTREAM_API_KEY (≥16 ký tự)}
+      - ECOSTREAM_ENCRYPTION_KEY=${ECOSTREAM_ENCRYPTION_KEY:?Đặt ECOSTREAM_ENCRYPTION_KEY}
     volumes:
+      # Thư mục này phải ghi được bởi user uid 1000 trong container
       - ./runs:/app/runs
       - ./data/samples:/app/data/samples
-
