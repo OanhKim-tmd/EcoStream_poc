@@ -238,6 +238,11 @@ def _validate_uploaded_document(path: str, filename: str) -> int:
         raise HTTPException(status_code=422, detail=f"Tệp Office không phải ZIP hợp lệ: {filename}") from exc
 
 
+# Serve bundled UI assets (offline CSS, fonts, icons).
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
 @app.get("/", response_class=HTMLResponse)
 def serve_index():
     index_path = os.path.join(STATIC_DIR, "index.html")
