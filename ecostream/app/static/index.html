@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,23 +29,32 @@
         }
         html { font-size: 17px; }
         .text-\[11px\] { font-size: 0.75rem !important; line-height: 1.05rem !important; }
+
         body {
             font-family: 'Inter', system-ui, sans-serif;
             background-color: var(--canvas);
             color: var(--ink);
             min-height: 100vh;
         }
-        .font-mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
         .gradient-brand {
             background-color: var(--forest);
         }
+
         .gradient-brand:hover {
             background-color: var(--forest-deep);
         }
+
         .dropzone-active {
             border-color: var(--forest) !important;
             background-color: var(--surface-soft) !important;
         }
+
         .survey-preview {
             width: 100%;
             min-height: 360px;
@@ -52,62 +62,203 @@
             border-radius: 0.75rem;
             background: #ffffff;
         }
-        input:focus, select:focus {
+
+        input:focus,
+        select:focus {
             border-color: var(--forest) !important;
             box-shadow: 0 0 0 3px rgba(0, 60, 51, 0.08);
         }
 
         /* Sidebar step navigation (dashboard style: the active item merges into the canvas) */
         .step-nav {
-            display: flex; align-items: center; gap: .75rem; flex-shrink: 0;
-            padding: .7rem 1rem; border-radius: 14px; text-align: left;
-            font-size: .875rem; font-weight: 600; color: #426451;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-shrink: 0;
+            padding: .7rem 1rem;
+            border-radius: 14px;
+            text-align: left;
+            font-size: .875rem;
+            font-weight: 600;
+            color: #426451;
             transition: background-color .15s, color .15s, box-shadow .15s;
         }
-        .step-nav:not(:disabled):hover { background: #d8eadb; color: #123b2b; }
-        .step-nav:disabled { opacity: .55; cursor: not-allowed; }
-        .step-num {
-            width: 1.6rem; height: 1.6rem; border-radius: 9px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            font-size: .75rem; font-weight: 700; background: #d3e7d5; color: #315b43;
+
+        .step-nav:not(:disabled):hover {
+            background: #d8eadb;
+            color: #123b2b;
         }
-        .step-nav.is-done .step-num { background: #b9e5a2; color: #174329; }
-        .step-nav.is-active { background: #fff; color: #174b32; box-shadow: 0 4px 14px rgba(26,77,47,.08); }
-        .step-nav.is-active .step-num { background: #2f7a4a; color: #fff; }
+
+        .step-nav:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        .step-num {
+            width: 1.6rem;
+            height: 1.6rem;
+            border-radius: 9px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            font-weight: 700;
+            background: #d3e7d5;
+            color: #315b43;
+        }
+
+        .step-nav.is-done .step-num {
+            background: #b9e5a2;
+            color: #174329;
+        }
+
+        .step-nav.is-active {
+            background: #fff;
+            color: #174b32;
+            box-shadow: 0 4px 14px rgba(26, 77, 47, .08);
+        }
+
+        .step-nav.is-active .step-num {
+            background: #2f7a4a;
+            color: #fff;
+        }
+
         @media (min-width: 1024px) {
-            .step-nav { border-radius: 16px 0 0 16px; padding-right: 1.25rem; }
-            .step-nav.is-active { position: relative; }
-            .step-nav.is-active::before, .step-nav.is-active::after {
-                content: ""; position: absolute; right: 0; width: 18px; height: 18px; background: transparent;
+            .step-nav {
+                border-radius: 16px 0 0 16px;
+                padding-right: 1.25rem;
             }
-            .step-nav.is-active::before { top: -18px; border-bottom-right-radius: 18px; box-shadow: 6px 6px 0 6px #fbfdfb; }
-            .step-nav.is-active::after { bottom: -18px; border-top-right-radius: 18px; box-shadow: 6px -6px 0 6px #fbfdfb; }
+
+            .step-nav.is-active {
+                position: relative;
+            }
+
+            .step-nav.is-active::before,
+            .step-nav.is-active::after {
+                content: "";
+                position: absolute;
+                right: 0;
+                width: 18px;
+                height: 18px;
+                background: transparent;
+            }
+
+            .step-nav.is-active::before {
+                top: -18px;
+                border-bottom-right-radius: 18px;
+                box-shadow: 6px 6px 0 6px #fbfdfb;
+            }
+
+            .step-nav.is-active::after {
+                bottom: -18px;
+                border-top-right-radius: 18px;
+                box-shadow: 6px -6px 0 6px #fbfdfb;
+            }
         }
 
         /* Right-panel timeline */
-        .timeline-item { position: relative; padding-left: 1.1rem; }
-        .timeline-dot {
-            position: absolute; left: -7px; top: .9rem; width: 12px; height: 12px; border-radius: 999px;
-            background: #fff; border: 2px solid #cce5c0;
+        .timeline-item {
+            position: relative;
+            padding-left: 1.1rem;
         }
-        .timeline-card { border-radius: 14px; padding: .65rem .8rem; font-size: .8rem; color: #2c4a3c; background: #f5f9f4; }
-        .timeline-sub { font-size: .7rem; color: #6a8978; margin-top: .1rem; }
-        .timeline-item.is-done .timeline-dot { background: #b9e5a2; border-color: #4b9b60; }
-        .timeline-item.is-active .timeline-dot { background: #2f7a4a; border-color: #2f7a4a; }
-        .timeline-item.is-active .timeline-card { background: #e7f2e8; color: #174b32; box-shadow: inset 3px 0 #4b9b60; }
-        .timeline-item.is-active .timeline-sub { color: #527861; }
+
+        .timeline-dot {
+            position: absolute;
+            left: -7px;
+            top: .9rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            background: #fff;
+            border: 2px solid #cce5c0;
+        }
+
+        .timeline-card {
+            border-radius: 14px;
+            padding: .65rem .8rem;
+            font-size: .8rem;
+            color: #2c4a3c;
+            background: #f5f9f4;
+        }
+
+        .timeline-sub {
+            font-size: .7rem;
+            color: #6a8978;
+            margin-top: .1rem;
+        }
+
+        .timeline-item.is-done .timeline-dot {
+            background: #b9e5a2;
+            border-color: #4b9b60;
+        }
+
+        .timeline-item.is-active .timeline-dot {
+            background: #2f7a4a;
+            border-color: #2f7a4a;
+        }
+
+        .timeline-item.is-active .timeline-card {
+            background: #e7f2e8;
+            color: #174b32;
+            box-shadow: inset 3px 0 #4b9b60;
+        }
+
+        .timeline-item.is-active .timeline-sub {
+            color: #527861;
+        }
 
         /* Results charts */
-        .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: .3rem; flex: 1; min-width: 0; height: 100%; }
-        .bar-stack { width: 70%; max-width: 26px; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column-reverse; background: #edf5e9; }
+        .bar-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: .3rem;
+            flex: 1;
+            min-width: 0;
+            height: 100%;
+        }
+
+        .bar-stack {
+            width: 70%;
+            max-width: 26px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column-reverse;
+            background: #edf5e9;
+        }
 
         /* ── Dark Mode Overrides ── */
-        html[data-theme="dark"] body { background-color: #0b1510 !important; color: #e4f0e8 !important; }
-        html[data-theme="dark"] .app-shell { background-color: #101f17 !important; box-shadow: 0 24px 70px rgba(0, 0, 0, .55) !important; }
-        html[data-theme="dark"] aside.bg-\[\#e7f2e8\] { background-color: #13251c !important; border-color: #213d2e !important; color: #d9ece0 !important; }
-        html[data-theme="dark"] .bg-\[\#fbfdfb\] { background-color: #101f17 !important; }
-        html[data-theme="dark"] .bg-white { background-color: #162b20 !important; }
-        html[data-theme="dark"] .bg-white\/75 { background-color: rgba(22, 43, 32, 0.85) !important; }
+        html[data-theme="dark"] body {
+            background-color: #0b1510 !important;
+            color: #e4f0e8 !important;
+        }
+
+        html[data-theme="dark"] .app-shell {
+            background-color: #101f17 !important;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .55) !important;
+        }
+
+        html[data-theme="dark"] aside.bg-\[\#e7f2e8\] {
+            background-color: #13251c !important;
+            border-color: #213d2e !important;
+            color: #d9ece0 !important;
+        }
+
+        html[data-theme="dark"] .bg-\[\#fbfdfb\] {
+            background-color: #101f17 !important;
+        }
+
+        html[data-theme="dark"] .bg-white {
+            background-color: #162b20 !important;
+        }
+
+        html[data-theme="dark"] .bg-white\/75 {
+            background-color: rgba(22, 43, 32, 0.85) !important;
+        }
+
         html[data-theme="dark"] .bg-\[\#f5f9f4\],
         html[data-theme="dark"] .bg-\[\#f5f9f4\]\/40,
         html[data-theme="dark"] .bg-\[\#f5f9f4\]\/50,
@@ -145,59 +296,148 @@
         html[data-theme="dark"] .text-red-600 { color: #fca5a5 !important; }
         html[data-theme="dark"] .text-amber-950,
         html[data-theme="dark"] .text-amber-900,
-        html[data-theme="dark"] .text-amber-800 { color: #f6d58e !important; }
+        html[data-theme="dark"] .text-amber-800 {
+            color: #f6d58e !important;
+        }
+
         html[data-theme="dark"] .text-\[\#091710\],
         html[data-theme="dark"] .text-\[\#173f2f\],
-        html[data-theme="dark"] .text-\[\#183026\] { color: #e6f2ea !important; }
+        html[data-theme="dark"] .text-\[\#183026\] {
+            color: #e6f2ea !important;
+        }
+
         html[data-theme="dark"] .text-\[\#2c4a3c\],
         html[data-theme="dark"] .text-\[\#315b43\],
-        html[data-theme="dark"] .text-\[\#426451\] { color: #b7d2c0 !important; }
+        html[data-theme="dark"] .text-\[\#426451\] {
+            color: #b7d2c0 !important;
+        }
+
         html[data-theme="dark"] .text-\[\#527861\],
-        html[data-theme="dark"] .text-\[\#6a8978\] { color: #86a994 !important; }
+        html[data-theme="dark"] .text-\[\#6a8978\] {
+            color: #86a994 !important;
+        }
+
         html[data-theme="dark"] .text-\[\#235f3a\],
         html[data-theme="dark"] .text-\[\#2f7a4a\],
         html[data-theme="dark"] .text-\[\#2a5c47\],
-        html[data-theme="dark"] .text-\[\#4b8059\] { color: #8cd997 !important; }
+        html[data-theme="dark"] .text-\[\#4b8059\] {
+            color: #8cd997 !important;
+        }
+
         html[data-theme="dark"] .border-\[\#e2f0db\],
         html[data-theme="dark"] .border-\[\#e2f0db\]\/80,
         html[data-theme="dark"] .border-\[\#d4e7d6\],
         html[data-theme="dark"] .border-\[\#cce5c0\],
-        html[data-theme="dark"] .border-\[\#e0ece0\] { border-color: #244332 !important; }
+        html[data-theme="dark"] .border-\[\#e0ece0\] {
+            border-color: #244332 !important;
+        }
+
         html[data-theme="dark"] input,
         html[data-theme="dark"] select,
-        html[data-theme="dark"] textarea { background-color: #102018 !important; color: #e6f2ea !important; border-color: #2b503b !important; }
-        html[data-theme="dark"] input::placeholder { color: #6e927c !important; }
-        html[data-theme="dark"] .survey-preview { background: #102018 !important; border-color: #244332 !important; }
-        html[data-theme="dark"] .step-nav { color: #9fc0ac; }
-        html[data-theme="dark"] .step-nav:not(:disabled):hover { background: #1c3729; color: #e6f2ea; }
-        html[data-theme="dark"] .step-num { background: #214030; color: #a7cbb4; }
-        html[data-theme="dark"] .step-nav.is-done .step-num { background: #2b5e3c; color: #b9e5a2; }
-        html[data-theme="dark"] .step-nav.is-active { background: #101f17; color: #e6f2ea; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
-        html[data-theme="dark"] .step-nav.is-active .step-num { background: #3b9158; color: #fff; }
-        @media (min-width: 1024px) {
-            html[data-theme="dark"] .step-nav.is-active::before { box-shadow: 6px 6px 0 6px #101f17; }
-            html[data-theme="dark"] .step-nav.is-active::after { box-shadow: 6px -6px 0 6px #101f17; }
+        html[data-theme="dark"] textarea {
+            background-color: #102018 !important;
+            color: #e6f2ea !important;
+            border-color: #2b503b !important;
         }
-        html[data-theme="dark"] .timeline-dot { background: #162b20; border-color: #2d553f; }
-        html[data-theme="dark"] .timeline-card { background: #182e23; color: #c4ddd0; }
-        html[data-theme="dark"] .timeline-sub { color: #82a590; }
-        html[data-theme="dark"] .timeline-item.is-done .timeline-dot { background: #3b9158; border-color: #8cd997; }
-        html[data-theme="dark"] .timeline-item.is-active .timeline-card { background: #1f3d2d; color: #e6f2ea; }
-        html[data-theme="dark"] .timeline-item.is-active .timeline-sub { color: #a8ccb6; }
-        html[data-theme="dark"] .bar-stack { background: #1c3528; }
-        html[data-theme="dark"] tr:hover { background-color: #1c3528 !important; }
+
+        html[data-theme="dark"] input::placeholder {
+            color: #6e927c !important;
+        }
+
+        html[data-theme="dark"] .survey-preview {
+            background: #102018 !important;
+            border-color: #244332 !important;
+        }
+
+        html[data-theme="dark"] .step-nav {
+            color: #9fc0ac;
+        }
+
+        html[data-theme="dark"] .step-nav:not(:disabled):hover {
+            background: #1c3729;
+            color: #e6f2ea;
+        }
+
+        html[data-theme="dark"] .step-num {
+            background: #214030;
+            color: #a7cbb4;
+        }
+
+        html[data-theme="dark"] .step-nav.is-done .step-num {
+            background: #2b5e3c;
+            color: #b9e5a2;
+        }
+
+        html[data-theme="dark"] .step-nav.is-active {
+            background: #101f17;
+            color: #e6f2ea;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+        }
+
+        html[data-theme="dark"] .step-nav.is-active .step-num {
+            background: #3b9158;
+            color: #fff;
+        }
+
+        @media (min-width: 1024px) {
+            html[data-theme="dark"] .step-nav.is-active::before {
+                box-shadow: 6px 6px 0 6px #101f17;
+            }
+
+            html[data-theme="dark"] .step-nav.is-active::after {
+                box-shadow: 6px -6px 0 6px #101f17;
+            }
+        }
+
+        html[data-theme="dark"] .timeline-dot {
+            background: #162b20;
+            border-color: #2d553f;
+        }
+
+        html[data-theme="dark"] .timeline-card {
+            background: #182e23;
+            color: #c4ddd0;
+        }
+
+        html[data-theme="dark"] .timeline-sub {
+            color: #82a590;
+        }
+
+        html[data-theme="dark"] .timeline-item.is-done .timeline-dot {
+            background: #3b9158;
+            border-color: #8cd997;
+        }
+
+        html[data-theme="dark"] .timeline-item.is-active .timeline-card {
+            background: #1f3d2d;
+            color: #e6f2ea;
+        }
+
+        html[data-theme="dark"] .timeline-item.is-active .timeline-sub {
+            color: #a8ccb6;
+        }
+
+        html[data-theme="dark"] .bar-stack {
+            background: #1c3528;
+        }
+
+        html[data-theme="dark"] tr:hover {
+            background-color: #1c3528 !important;
+        }
     </style>
     <script>
-        (function() {
+        (function () {
             const t = localStorage.getItem('ecostream_theme') || 'light';
             document.documentElement.setAttribute('data-theme', t);
         })();
     </script>
 </head>
+
 <body class="antialiased bg-[#eaf3eb] lg:p-5 selection:bg-[#d2f0b7] selection:text-[#123b2b]">
 
-<!-- App frame: bright, airy canvas on a soft green backdrop -->
-<div class="app-shell max-w-[1480px] mx-auto min-h-screen lg:min-h-[calc(100vh-2.5rem)] flex flex-col lg:flex-row bg-[#fbfdfb] lg:rounded-[28px] overflow-hidden shadow-[0_24px_70px_rgba(27,69,44,.12)]">
+    <!-- App frame: bright, airy canvas on a soft green backdrop -->
+    <div
+        class="app-shell max-w-[1480px] mx-auto min-h-screen lg:min-h-[calc(100vh-2.5rem)] flex flex-col lg:flex-row bg-[#fbfdfb] lg:rounded-[28px] overflow-hidden shadow-[0_24px_70px_rgba(27,69,44,.12)]">
 
     <!-- ── Sidebar: light botanical palette + 4 workflow steps ── -->
     <aside class="bg-[#e7f2e8] text-[#173f2f] border-b lg:border-b-0 lg:border-r border-[#d4e7d6] lg:w-64 shrink-0 flex flex-col">
@@ -209,48 +449,52 @@
             </div>
         </div>
 
-        <nav id="flowStepper" aria-label="Tiến trình kiểm kê" class="flex lg:flex-col gap-1 px-3 lg:pl-3 lg:pr-0 pb-3 lg:pb-0 lg:mt-4 overflow-x-auto">
-            <button type="button" id="stepBadge1" onclick="goToStepIfAllowed(1)" class="step-nav">
-                <span class="step-num">1</span>
-                <span class="truncate" data-i18n="step1_nav">Thông tin cơ sở</span>
-            </button>
-            <button type="button" id="stepBadge2" onclick="goToStepIfAllowed(2)" disabled class="step-nav">
-                <span class="step-num">2</span>
-                <span class="truncate" data-i18n="step2_nav">Nạp chứng từ</span>
-            </button>
-            <button type="button" id="stepBadge3" onclick="goToStepIfAllowed(3)" disabled class="step-nav">
-                <span class="step-num">3</span>
-                <span class="truncate" data-i18n="step3_nav">Rà soát biểu Excel</span>
-            </button>
-            <button type="button" id="stepBadge4" onclick="goToStepIfAllowed(4)" disabled class="step-nav">
-                <span class="step-num">4</span>
-                <span class="truncate" data-i18n="step4_nav">Kết quả & báo cáo</span>
-            </button>
-        </nav>
+            <nav id="flowStepper" aria-label="Tiến trình kiểm kê"
+                class="flex lg:flex-col gap-1 px-3 lg:pl-3 lg:pr-0 pb-3 lg:pb-0 lg:mt-4 overflow-x-auto">
+                <button type="button" id="stepBadge1" onclick="goToStepIfAllowed(1)" class="step-nav">
+                    <span class="step-num">1</span>
+                    <span class="truncate" data-i18n="step1_nav">Thông tin cơ sở</span>
+                </button>
+                <button type="button" id="stepBadge2" onclick="goToStepIfAllowed(2)" disabled class="step-nav">
+                    <span class="step-num">2</span>
+                    <span class="truncate" data-i18n="step2_nav">Nạp chứng từ</span>
+                </button>
+                <button type="button" id="stepBadge3" onclick="goToStepIfAllowed(3)" disabled class="step-nav">
+                    <span class="step-num">3</span>
+                    <span class="truncate" data-i18n="step3_nav">Rà soát biểu Excel</span>
+                </button>
+                <button type="button" id="stepBadge4" onclick="goToStepIfAllowed(4)" disabled class="step-nav">
+                    <span class="step-num">4</span>
+                    <span class="truncate" data-i18n="step4_nav">Kết quả & báo cáo</span>
+                </button>
+            </nav>
 
-        <div class="hidden lg:block mt-auto p-5 space-y-3">
-            <div class="grid grid-cols-2 gap-2">
-                <button type="button" onclick="openModal('settingsModal')" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/75 hover:bg-white border border-[#d4e7d6] text-xs font-semibold text-[#173f2f] transition cursor-pointer">
-                    <span aria-hidden="true">⚙️</span>
-                    <span data-i18n="nav_settings">Cài đặt</span>
-                </button>
-                <button type="button" onclick="openModal('supportModal')" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/75 hover:bg-white border border-[#d4e7d6] text-xs font-semibold text-[#173f2f] transition cursor-pointer">
-                    <span aria-hidden="true">💬</span>
-                    <span data-i18n="nav_support">Hỗ trợ</span>
-                </button>
-            </div>
-            <div class="rounded-2xl bg-white/75 border border-[#d4e7d6] p-4 text-xs leading-relaxed">
-                <div class="flex items-center gap-2 font-semibold text-[#2f7a4a]">
-                    <span class="w-2 h-2 rounded-full bg-[#4b9b60]"></span>
-                    <span data-i18n="local_badge_title">Chạy cục bộ</span>
+            <div class="hidden lg:block mt-auto p-5 space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="openModal('settingsModal')"
+                        class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/75 hover:bg-white border border-[#d4e7d6] text-xs font-semibold text-[#173f2f] transition cursor-pointer">
+                        <span aria-hidden="true">⚙️</span>
+                        <span data-i18n="nav_settings">Cài đặt</span>
+                    </button>
+                    <button type="button" onclick="openModal('supportModal')"
+                        class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/75 hover:bg-white border border-[#d4e7d6] text-xs font-semibold text-[#173f2f] transition cursor-pointer">
+                        <span aria-hidden="true">💬</span>
+                        <span data-i18n="nav_support">Hỗ trợ</span>
+                    </button>
                 </div>
-                <p class="mt-1.5 text-[#527861]" data-i18n="local_badge_desc">Chứng từ được xử lý ngay trên máy này, không gửi ra Internet.</p>
+                <div class="rounded-2xl bg-white/75 border border-[#d4e7d6] p-4 text-xs leading-relaxed">
+                    <div class="flex items-center gap-2 font-semibold text-[#2f7a4a]">
+                        <span class="w-2 h-2 rounded-full bg-[#4b9b60]"></span>
+                        <span data-i18n="local_badge_title">Chạy cục bộ</span>
+                    </div>
+                    <p class="mt-1.5 text-[#527861]" data-i18n="local_badge_desc">Chứng từ được xử lý ngay trên máy này,
+                        không gửi ra Internet.</p>
+                </div>
             </div>
-        </div>
-    </aside>
+        </aside>
 
-    <!-- ── Main area ── -->
-    <div class="flex-1 min-w-0 flex flex-col">
+        <!-- ── Main area ── -->
+        <div class="flex-1 min-w-0 flex flex-col">
 
         <!-- Top bar -->
         <header class="h-16 lg:h-20 px-4 sm:px-8 flex items-center justify-between gap-4 border-b border-[#e2f0db]/80">
@@ -515,128 +759,168 @@
                 </div>
             </div>
 
-            <div id="surveySaveStatus" class="hidden rounded-lg px-3 py-2 text-xs font-medium"></div>
+                        <div id="reviewWarnings"
+                            class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-950"
+                            role="status"></div>
 
-            <datalist id="mobileFuelOptionsList">
-                <option value="Dầu DO (Diesel)">
-                <option value="Xăng">
-                <option value="Khí hóa lỏng (LPG)">
-                <option value="Khí tự nhiên (Natural Gas)">
-            </datalist>
-            <datalist id="surveyUnitOptionsList">
-                <option value="lít">
-                <option value="liter">
-                <option value="kg">
-                <option value="tấn">
-                <option value="m3">
-            </datalist>
-            <datalist id="coalOtherOptionsList">
-                <option value="Than antraxit (theo chứng từ)">
-                <option value="Than cám">
-            </datalist>
+                        <!-- Excel Toolbar & Sheet Tabs -->
+                        <div class="flex flex-wrap items-center justify-between gap-2.5">
+                            <div id="excelTabBar" class="flex flex-wrap gap-1.5" role="tablist"
+                                aria-label="Sheet biểu khảo sát">
+                                <button type="button" onclick="switchExcelTab('info')" id="excelTabBtn-info"
+                                    class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-[#2f7a4a] text-white border-[#003c33]">Thông
+                                    tin chung</button>
+                                <button type="button" onclick="switchExcelTab('11')" id="excelTabBtn-11"
+                                    class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">1.1
+                                    Cố định</button>
+                                <button type="button" onclick="switchExcelTab('12')" id="excelTabBtn-12"
+                                    class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">1.2
+                                    Di động</button>
+                                <button type="button" onclick="switchExcelTab('21')" id="excelTabBtn-21"
+                                    class="excel-tab-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition bg-white text-[#2c4a3c] border-[#cce5c0] hover:bg-[#edf5e9]">2.1
+                                    Điện EVN</button>
+                                <span id="excelExtraTabMount" class="contents"></span>
+                            </div>
 
-            <!-- Interactive Sheet Panels -->
-            <div class="rounded-xl border border-[#cce5c0] bg-white overflow-hidden">
-                <!-- Sheet: Thông tin chung -->
-                <div id="excelSheetPanel-info" class="excel-sheet-panel p-4 space-y-3">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="excelInfoGrid"></div>
-                </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" id="btnSaveSurveyExcel" onclick="saveSurveyEdits(false)"
+                                    class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[#235f3a] bg-[#edf5e9] hover:bg-[#dff4cc] border border-[#cce5c0] transition">
+                                    Lưu vào Excel
+                                </button>
+                                <a id="surveyDownload"
+                                    class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white gradient-brand transition"
+                                    download>Tải file Excel (.xlsx)</a>
+                                <a id="surveyOpen" target="_blank" rel="noopener noreferrer"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#6a8978] hover:text-[#091710] border border-[#e2f0db] transition">Bản
+                                    in</a>
+                            </div>
+                        </div>
 
-                <!-- Sheet: 1.1 Đốt cố định (23 rows + all columns B..U) -->
-                <div id="excelSheetPanel-11" class="excel-sheet-panel hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
-                                    <th class="p-2 text-center w-10">STT</th>
-                                    <th class="p-2.5 sticky left-0 bg-[#f5f9f4] min-w-[240px] border-r border-[#e2f0db]">Loại nhiên liệu</th>
-                                    <th class="p-1.5 min-w-[76px]">Mã VT</th>
-                                    <th class="p-1.5 min-w-[74px]">Đơn vị</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T1</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T2</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T3</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T4</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T5</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T6</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T7</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T8</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T9</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T10</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T11</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T12</th>
-                                    <th class="p-2 text-right min-w-[82px] bg-[#edf5e9]/70">Tổng</th>
-                                    <th class="p-1.5 min-w-[96px]">Nhiệt trị</th>
-                                    <th class="p-1.5 min-w-[190px]">Thiết bị sử dụng</th>
-                                    <th class="p-1.5 min-w-[165px]">Đơn vị cung cấp</th>
-                                </tr>
-                            </thead>
-                            <tbody id="excelBody11" class="divide-y divide-[#e2f0db]"></tbody>
-                        </table>
-                    </div>
-                </div>
+                        <div id="surveySaveStatus" class="hidden rounded-lg px-3 py-2 text-xs font-medium"></div>
 
-                <!-- Sheet: 1.2 Di động (18 rows + all columns B..W) -->
-                <div id="excelSheetPanel-12" class="excel-sheet-panel hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
-                                    <th class="p-2 text-center w-10">STT</th>
-                                    <th class="p-2.5 sticky left-0 bg-[#f5f9f4] min-w-[220px] border-r border-[#e2f0db]">Loại nhiên liệu (chọn hoặc tự nhập)</th>
-                                    <th class="p-1.5 min-w-[76px]">Mã VT</th>
-                                    <th class="p-1.5 min-w-[74px]">Đơn vị</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T1</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T2</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T3</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T4</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T5</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T6</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T7</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T8</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T9</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T10</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T11</th>
-                                    <th class="p-1.5 text-right min-w-[66px]">T12</th>
-                                    <th class="p-2 text-right min-w-[82px] bg-[#edf5e9]/70">Tổng</th>
-                                    <th class="p-1.5 min-w-[96px]">Nhiệt trị</th>
-                                    <th class="p-1.5 min-w-[150px]">Loại phương tiện</th>
-                                    <th class="p-1.5 min-w-[190px]">Thông tin phương tiện</th>
-                                    <th class="p-1.5 text-right min-w-[92px]">Quãng đường (km)</th>
-                                    <th class="p-1.5 min-w-[165px]">Đơn vị cung cấp</th>
-                                </tr>
-                            </thead>
-                            <tbody id="excelBody12" class="divide-y divide-[#e2f0db]"></tbody>
-                        </table>
-                    </div>
-                </div>
+                        <datalist id="mobileFuelOptionsList">
+                            <option value="Dầu DO (Diesel)">
+                            <option value="Xăng">
+                            <option value="Khí hóa lỏng (LPG)">
+                            <option value="Khí tự nhiên (Natural Gas)">
+                        </datalist>
+                        <datalist id="surveyUnitOptionsList">
+                            <option value="lít">
+                            <option value="liter">
+                            <option value="kg">
+                            <option value="tấn">
+                            <option value="m3">
+                        </datalist>
+                        <datalist id="coalOtherOptionsList">
+                            <option value="Than antraxit (theo chứng từ)">
+                            <option value="Than cám">
+                        </datalist>
 
-                <!-- Sheet: 2.1 Điện EVN -->
-                <div id="excelSheetPanel-21" class="excel-sheet-panel hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
-                                    <th class="p-2.5 min-w-[100px]">Tháng</th>
-                                    <th class="p-2 min-w-[110px]">Mã vật tư</th>
-                                    <th class="p-2 min-w-[80px]">Đơn vị</th>
-                                    <th class="p-2 text-right min-w-[160px]">Điện mua lưới EVN (kWh)</th>
-                                    <th class="p-2 text-right min-w-[160px]">Điện tự sản xuất (kWh)</th>
-                                    <th class="p-2.5 text-right min-w-[130px] bg-[#edf5e9]/70">Tổng (kWh)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="excelBody21" class="divide-y divide-[#e2f0db]"></tbody>
-                        </table>
-                    </div>
-                </div>
+                        <!-- Interactive Sheet Panels -->
+                        <div class="rounded-xl border border-[#cce5c0] bg-white overflow-hidden">
+                            <!-- Sheet: Thông tin chung -->
+                            <div id="excelSheetPanel-info" class="excel-sheet-panel p-4 space-y-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="excelInfoGrid"></div>
+                            </div>
 
-                <!-- Dynamic Panel for ALL Extra Sheets (Phạm vi 1, 1.3, 1.4, 1.5, 1.6, Phạm vi 2, 2.2, Thông tin bổ sung, Biện pháp giảm thiểu, Khai khoáng) -->
-                <div id="excelSheetPanel-extra" class="excel-sheet-panel hidden">
-                    <div id="excelExtraSheetHeader" class="px-3.5 py-2 bg-[#f5f9f4]/70 border-b border-[#e2f0db] text-xs font-semibold text-[#183026]"></div>
-                    <div class="overflow-x-auto">
-                        <table id="excelExtraTable" class="w-full text-left border-collapse text-xs"></table>
-                    </div>
-                </div>
-            </div>
+                            <!-- Sheet: 1.1 Đốt cố định (23 rows + all columns B..U) -->
+                            <div id="excelSheetPanel-11" class="excel-sheet-panel hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr
+                                                class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
+                                                <th class="p-2 text-center w-10">STT</th>
+                                                <th
+                                                    class="p-2.5 sticky left-0 bg-[#f5f9f4] min-w-[240px] border-r border-[#e2f0db]">
+                                                    Loại nhiên liệu</th>
+                                                <th class="p-1.5 min-w-[76px]">Mã VT</th>
+                                                <th class="p-1.5 min-w-[74px]">Đơn vị</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T1</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T2</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T3</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T4</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T5</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T6</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T7</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T8</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T9</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T10</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T11</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T12</th>
+                                                <th class="p-2 text-right min-w-[82px] bg-[#edf5e9]/70">Tổng</th>
+                                                <th class="p-1.5 min-w-[96px]">Nhiệt trị</th>
+                                                <th class="p-1.5 min-w-[190px]">Thiết bị sử dụng</th>
+                                                <th class="p-1.5 min-w-[165px]">Đơn vị cung cấp</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="excelBody11" class="divide-y divide-[#e2f0db]"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Sheet: 1.2 Di động (18 rows + all columns B..W) -->
+                            <div id="excelSheetPanel-12" class="excel-sheet-panel hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
+                                                <th class="p-2 text-center w-10">STT</th>
+                                                <th class="p-2.5 sticky left-0 bg-[#f5f9f4] min-w-[220px] border-r border-[#e2f0db]">Loại nhiên liệu (chọn hoặc tự nhập)</th>
+                                                <th class="p-1.5 min-w-[76px]">Mã VT</th>
+                                                <th class="p-1.5 min-w-[74px]">Đơn vị</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T1</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T2</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T3</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T4</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T5</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T6</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T7</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T8</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T9</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T10</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T11</th>
+                                                <th class="p-1.5 text-right min-w-[66px]">T12</th>
+                                                <th class="p-2 text-right min-w-[82px] bg-[#edf5e9]/70">Tổng</th>
+                                                <th class="p-1.5 min-w-[96px]">Nhiệt trị</th>
+                                                <th class="p-1.5 min-w-[150px]">Loại phương tiện</th>
+                                                <th class="p-1.5 min-w-[190px]">Thông tin phương tiện</th>
+                                                <th class="p-1.5 text-right min-w-[92px]">Quãng đường (km)</th>
+                                                <th class="p-1.5 min-w-[165px]">Đơn vị cung cấp</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="excelBody12" class="divide-y divide-[#e2f0db]"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Sheet: 2.1 Điện EVN -->
+                            <div id="excelSheetPanel-21" class="excel-sheet-panel hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr class="bg-[#f5f9f4] border-b border-[#e2f0db] text-[#183026] font-semibold text-[11px]">
+                                                <th class="p-2.5 min-w-[100px]">Tháng</th>
+                                                <th class="p-2 min-w-[110px]">Mã vật tư</th>
+                                                <th class="p-2 min-w-[80px]">Đơn vị</th>
+                                                <th class="p-2 text-right min-w-[160px]">Điện mua lưới EVN (kWh)</th>
+                                                <th class="p-2 text-right min-w-[160px]">Điện tự sản xuất (kWh)</th>
+                                                <th class="p-2.5 text-right min-w-[130px] bg-[#edf5e9]/70">Tổng (kWh)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="excelBody21" class="divide-y divide-[#e2f0db]"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Panel for ALL Extra Sheets -->
+                            <div id="excelSheetPanel-extra" class="excel-sheet-panel hidden">
+                                <div id="excelExtraSheetHeader" class="px-3.5 py-2 bg-[#f5f9f4]/70 border-b border-[#e2f0db] text-xs font-semibold text-[#183026]"></div>
+                                <div class="overflow-x-auto">
+                                    <table id="excelExtraTable" class="w-full text-left border-collapse text-xs"></table>
+                                </div>
+                            </div>
+                        </div>
 
             <form id="reviewForm" class="space-y-4 pt-1" onsubmit="handleSurveyCalculate(event)">
                 <details class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/50 p-3 text-xs">
@@ -681,12 +965,8 @@
                             </span>
                             <span id="resSector" class="text-xs text-[#6a8978] font-medium">Chưa xác nhận</span>
                         </div>
-                        <h2 id="resCompany" class="text-xl font-bold text-[#091710] tracking-tight mt-1.5">
-                            Doanh nghiệp
-                        </h2>
-                        <p id="resMeta" class="text-xs text-[#6a8978] mt-0.5">
-                            Cơ sở • Năm 2026
-                        </p>
+                        <h2 id="resCompany" class="text-xl font-bold text-[#091710] tracking-tight mt-1.5">Doanh nghiệp</h2>
+                        <p id="resMeta" class="text-xs text-[#6a8978] mt-0.5">Cơ sở • Năm 2026</p>
                     </div>
                     <span id="resRunIdBadge" class="px-2.5 py-1 rounded-md bg-[#f5f9f4] text-[#2c4a3c] font-mono text-[11px] border border-[#e2f0db]">run</span>
                 </div>
@@ -835,155 +1115,216 @@
                     </button>
                 </div>
 
+                        </div>
+                    </section>
+
+                </main>
+
+                <!-- ── Right panel: progress timeline + reminders (like the calendar column) ── -->
+                <aside class="hidden xl:flex flex-col gap-5">
+                    <section class="rounded-3xl bg-white border border-[#e2f0db] p-5">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-[#091710]" data-i18n="progress_title">Tiến trình kiểm kê
+                            </h3>
+                            <span id="sideProgressText"
+                                class="text-[11px] font-semibold text-[#2a5c47] bg-[#edf5e9] px-2 py-0.5 rounded-full">1/4</span>
+                        </div>
+                        <ol class="mt-4 relative border-l-2 border-dashed border-[#cce5c0] ml-2 space-y-4">
+                            <li id="timelineStep1" class="timeline-item"><span class="timeline-dot"></span>
+                                <div class="timeline-card">
+                                    <div class="font-semibold" data-i18n="step1_nav">Thông tin cơ sở</div>
+                                    <div class="timeline-sub" data-i18n="step1_sub">Phiếu thông tin chung</div>
+                                </div>
+                            </li>
+                            <li id="timelineStep2" class="timeline-item"><span class="timeline-dot"></span>
+                                <div class="timeline-card">
+                                    <div class="font-semibold" data-i18n="step2_nav">Nạp chứng từ</div>
+                                    <div class="timeline-sub" data-i18n="step2_sub">PDF có chữ, Excel, Word, CSV</div>
+                                </div>
+                            </li>
+                            <li id="timelineStep3" class="timeline-item"><span class="timeline-dot"></span>
+                                <div class="timeline-card">
+                                    <div class="font-semibold" data-i18n="step3_nav">Rà soát biểu Excel</div>
+                                    <div class="timeline-sub" data-i18n="step3_sub">Sửa, bổ sung ô còn trống</div>
+                                </div>
+                            </li>
+                            <li id="timelineStep4" class="timeline-item"><span class="timeline-dot"></span>
+                                <div class="timeline-card">
+                                    <div class="font-semibold" data-i18n="step4_nav">Kết quả & báo cáo</div>
+                                    <div class="timeline-sub" data-i18n="step4_sub">Scope 1/2, tải 3 tệp</div>
+                                </div>
+                            </li>
+                        </ol>
+                    </section>
+
+                    <section class="rounded-3xl bg-white border border-[#e2f0db] p-5 space-y-3">
+                        <h3 class="text-sm font-bold text-[#091710]" data-i18n="notes_title">Lưu ý khi dùng</h3>
+                        <div class="flex gap-3 text-xs text-[#2c4a3c]">
+                            <span
+                                class="w-8 h-8 rounded-xl bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0 font-bold">PDF</span>
+                            <p data-i18n="note_pdf">Chỉ đọc <b>PDF có chữ</b> (hóa đơn điện tử). PDF scan cần nhập tay ở
+                                bước 3.</p>
+                        </div>
+                        <div class="flex gap-3 text-xs text-[#2c4a3c]">
+                            <span
+                                class="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center shrink-0 font-bold">!</span>
+                            <p data-i18n="note_missing">Sinh khối, chất thải, LNG… chưa có hệ số riêng nên được ghi
+                                <b>CHƯA TÍNH</b>, không cộng vào tổng.
+                            </p>
+                        </div>
+                        <div class="flex gap-3 text-xs text-[#2c4a3c]">
+                            <span
+                                class="w-8 h-8 rounded-xl bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0 font-bold">✓</span>
+                            <p data-i18n="note_draft">Kết quả là <b>bản dự thảo</b>, cần đối chiếu chứng từ gốc trước
+                                khi nộp.</p>
+                        </div>
+                    </section>
+                </aside>
+
+            </div><!-- /grid -->
+
+            <footer class="px-8 py-4 text-center text-xs text-[#6a8978]" data-i18n="footer_text">
+                EcoStream · Kiểm kê khí nhà kính cấp cơ sở (NĐ 06/2022/NĐ-CP)
+            </footer>
+        </div><!-- /main area -->
+    </div><!-- /app frame -->
+
+    <!-- ── Settings Modal ── -->
+    <div id="settingsModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+        role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle"
+        onclick="if(event.target===this) closeModal('settingsModal')">
+        <div class="w-full max-w-md rounded-2xl bg-white border border-[#d4e7d6] shadow-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-[#e2f0db] pb-3">
+                <h2 id="settingsModalTitle" class="text-base font-bold text-[#091710] flex items-center gap-2">
+                    <span aria-hidden="true">⚙️</span>
+                    <span data-i18n="settings_title">Cài đặt</span>
+                </h2>
+                <button type="button" onclick="closeModal('settingsModal')"
+                    class="w-7 h-7 rounded-lg text-[#6a8978] hover:bg-[#edf5e9] flex items-center justify-center transition cursor-pointer"
+                    aria-label="Close">✕</button>
             </div>
-        </section>
 
-    </main>
+            <div class="space-y-4">
+                <!-- Theme -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#4b8059]"
+                        data-i18n="settings_theme_label">Giao diện (Theme)</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button" id="btnThemeLight" onclick="setTheme('light')"
+                            class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
+                            <span aria-hidden="true">☀️</span>
+                            <span data-i18n="theme_light">Sáng</span>
+                        </button>
+                        <button type="button" id="btnThemeDark" onclick="setTheme('dark')"
+                            class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
+                            <span aria-hidden="true">🌙</span>
+                            <span data-i18n="theme_dark">Tối</span>
+                        </button>
+                    </div>
+                </div>
 
-    <!-- ── Right panel: progress timeline + reminders (like the calendar column) ── -->
-    <aside class="hidden xl:flex flex-col gap-5">
-        <section class="rounded-3xl bg-white border border-[#e2f0db] p-5">
-            <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-[#091710]" data-i18n="progress_title">Tiến trình kiểm kê</h3>
-                <span id="sideProgressText" class="text-[11px] font-semibold text-[#2a5c47] bg-[#edf5e9] px-2 py-0.5 rounded-full">1/4</span>
-            </div>
-            <ol class="mt-4 relative border-l-2 border-dashed border-[#cce5c0] ml-2 space-y-4">
-                <li id="timelineStep1" class="timeline-item"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold" data-i18n="step1_nav">Thông tin cơ sở</div><div class="timeline-sub" data-i18n="step1_sub">Phiếu thông tin chung</div></div></li>
-                <li id="timelineStep2" class="timeline-item"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold" data-i18n="step2_nav">Nạp chứng từ</div><div class="timeline-sub" data-i18n="step2_sub">PDF có chữ, Excel, Word, CSV</div></div></li>
-                <li id="timelineStep3" class="timeline-item"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold" data-i18n="step3_nav">Rà soát biểu Excel</div><div class="timeline-sub" data-i18n="step3_sub">Sửa, bổ sung ô còn trống</div></div></li>
-                <li id="timelineStep4" class="timeline-item"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold" data-i18n="step4_nav">Kết quả & báo cáo</div><div class="timeline-sub" data-i18n="step4_sub">Scope 1/2, tải 3 tệp</div></div></li>
-            </ol>
-        </section>
-
-        <section class="rounded-3xl bg-white border border-[#e2f0db] p-5 space-y-3">
-            <h3 class="text-sm font-bold text-[#091710]" data-i18n="notes_title">Lưu ý khi dùng</h3>
-            <div class="flex gap-3 text-xs text-[#2c4a3c]">
-                <span class="w-8 h-8 rounded-xl bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0 font-bold">PDF</span>
-                <p data-i18n="note_pdf">Chỉ đọc <b>PDF có chữ</b> (hóa đơn điện tử). PDF scan cần nhập tay ở bước 3.</p>
-            </div>
-            <div class="flex gap-3 text-xs text-[#2c4a3c]">
-                <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center shrink-0 font-bold">!</span>
-                <p data-i18n="note_missing">Sinh khối, chất thải, LNG… chưa có hệ số riêng nên được ghi <b>CHƯA TÍNH</b>, không cộng vào tổng.</p>
-            </div>
-            <div class="flex gap-3 text-xs text-[#2c4a3c]">
-                <span class="w-8 h-8 rounded-xl bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0 font-bold">✓</span>
-                <p data-i18n="note_draft">Kết quả là <b>bản dự thảo</b>, cần đối chiếu chứng từ gốc trước khi nộp.</p>
-            </div>
-        </section>
-    </aside>
-
-        </div><!-- /grid -->
-
-        <footer class="px-8 py-4 text-center text-xs text-[#6a8978]" data-i18n="footer_text">
-            EcoStream · Kiểm kê khí nhà kính cấp cơ sở (NĐ 06/2022/NĐ-CP)
-        </footer>
-    </div><!-- /main area -->
-</div><!-- /app frame -->
-
-<!-- ── Settings Modal ── -->
-<div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle" onclick="if(event.target===this) closeModal('settingsModal')">
-    <div class="w-full max-w-md rounded-2xl bg-white border border-[#d4e7d6] shadow-2xl p-6 space-y-5">
-        <div class="flex items-center justify-between border-b border-[#e2f0db] pb-3">
-            <h2 id="settingsModalTitle" class="text-base font-bold text-[#091710] flex items-center gap-2">
-                <span aria-hidden="true">⚙️</span>
-                <span data-i18n="settings_title">Cài đặt</span>
-            </h2>
-            <button type="button" onclick="closeModal('settingsModal')" class="w-7 h-7 rounded-lg text-[#6a8978] hover:bg-[#edf5e9] flex items-center justify-center transition cursor-pointer" aria-label="Close">✕</button>
-        </div>
-
-        <div class="space-y-4">
-            <!-- Theme -->
-            <div class="space-y-2">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="settings_theme_label">Giao diện (Theme)</label>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <button type="button" id="btnThemeLight" onclick="setTheme('light')" class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
-                        <span aria-hidden="true">☀️</span>
-                        <span data-i18n="theme_light">Sáng</span>
-                    </button>
-                    <button type="button" id="btnThemeDark" onclick="setTheme('dark')" class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
-                        <span aria-hidden="true">🌙</span>
-                        <span data-i18n="theme_dark">Tối</span>
-                    </button>
+                <!-- Language -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#4b8059]"
+                        data-i18n="settings_lang_label">Ngôn ngữ (Language)</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button type="button" id="btnLangVi" onclick="setLanguage('vi')"
+                            class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
+                            <span aria-hidden="true">🇻🇳</span>
+                            <span>Tiếng Việt</span>
+                        </button>
+                        <button type="button" id="btnLangEn" onclick="setLanguage('en')"
+                            class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
+                            <span aria-hidden="true">🇬🇧</span>
+                            <span>English</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Language -->
-            <div class="space-y-2">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="settings_lang_label">Ngôn ngữ (Language)</label>
-                <div class="grid grid-cols-2 gap-2.5">
-                    <button type="button" id="btnLangVi" onclick="setLanguage('vi')" class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
-                        <span aria-hidden="true">🇻🇳</span>
-                        <span>Tiếng Việt</span>
-                    </button>
-                    <button type="button" id="btnLangEn" onclick="setLanguage('en')" class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
-                        <span aria-hidden="true">🇬🇧</span>
-                        <span>English</span>
-                    </button>
-                </div>
+            <div class="pt-3 border-t border-[#e2f0db] flex justify-end">
+                <button type="button" onclick="closeModal('settingsModal')"
+                    class="px-5 py-2 rounded-lg text-xs font-semibold text-white gradient-brand transition cursor-pointer"
+                    data-i18n="btn_done">Xong</button>
             </div>
-        </div>
-
-        <div class="pt-3 border-t border-[#e2f0db] flex justify-end">
-            <button type="button" onclick="closeModal('settingsModal')" class="px-5 py-2 rounded-lg text-xs font-semibold text-white gradient-brand transition cursor-pointer" data-i18n="btn_done">Xong</button>
         </div>
     </div>
-</div>
 
-<!-- ── Support Modal ── -->
-<div id="supportModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="supportModalTitle" onclick="if(event.target===this) closeModal('supportModal')">
-    <div class="w-full max-w-md rounded-2xl bg-white border border-[#d4e7d6] shadow-2xl p-6 space-y-5">
-        <div class="flex items-center justify-between border-b border-[#e2f0db] pb-3">
-            <h2 id="supportModalTitle" class="text-base font-bold text-[#091710] flex items-center gap-2">
-                <span aria-hidden="true">💬</span>
-                <span data-i18n="support_title">Hỗ trợ & Báo lỗi</span>
-            </h2>
-            <button type="button" onclick="closeModal('supportModal')" class="w-7 h-7 rounded-lg text-[#6a8978] hover:bg-[#edf5e9] flex items-center justify-center transition cursor-pointer" aria-label="Close">✕</button>
-        </div>
+    <!-- ── Support Modal ── -->
+    <div id="supportModal"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+        role="dialog" aria-modal="true" aria-labelledby="supportModalTitle"
+        onclick="if(event.target===this) closeModal('supportModal')">
+        <div class="w-full max-w-md rounded-2xl bg-white border border-[#d4e7d6] shadow-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-[#e2f0db] pb-3">
+                <h2 id="supportModalTitle" class="text-base font-bold text-[#091710] flex items-center gap-2">
+                    <span aria-hidden="true">💬</span>
+                    <span data-i18n="support_title">Hỗ trợ & Báo lỗi</span>
+                </h2>
+                <button type="button" onclick="closeModal('supportModal')"
+                    class="w-7 h-7 rounded-lg text-[#6a8978] hover:bg-[#edf5e9] flex items-center justify-center transition cursor-pointer"
+                    aria-label="Close">✕</button>
+            </div>
 
-        <p class="text-xs text-[#2c4a3c] leading-relaxed" data-i18n="support_desc">
-            Gặp sự cố khi nạp chứng từ, xuất Excel hoặc chạy ứng dụng? Liên hệ trực tiếp với đội ngũ EcoStream qua các kênh bên dưới.
-        </p>
+            <p class="text-xs text-[#2c4a3c] leading-relaxed" data-i18n="support_desc">
+                Gặp sự cố khi nạp chứng từ, xuất Excel hoặc chạy ứng dụng? Liên hệ trực tiếp với đội ngũ EcoStream qua
+                các kênh bên dưới.
+            </p>
 
-        <div class="space-y-2.5">
-            <a href="mailto:support@ecostream.vn?subject=%5BEcoStream%5D%20B%C3%A1o%20l%E1%BB%97i%20%2F%20H%E1%BB%97%20tr%E1%BB%A3" class="flex items-center justify-between p-3.5 rounded-xl bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#d4e7d6] transition">
-                <div class="flex items-center gap-3 min-w-0">
-                    <span class="w-8 h-8 rounded-lg bg-[#e5f2e5] text-[#235f3a] flex items-center justify-center shrink-0">✉️</span>
-                    <div class="min-w-0">
-                        <div class="text-xs font-bold text-[#091710]" data-i18n="support_email_title">Gửi Email hỗ trợ</div>
-                        <div class="text-[11px] text-[#6a8978] truncate">support@ecostream.vn</div>
+            <div class="space-y-2.5">
+                <a href="mailto:support@ecostream.vn?subject=%5BEcoStream%5D%20B%C3%A1o%20l%E1%BB%97i%20%2F%20H%E1%BB%97%20tr%E1%BB%A3"
+                    class="flex items-center justify-between p-3.5 rounded-xl bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#d4e7d6] transition">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span
+                            class="w-8 h-8 rounded-lg bg-[#e5f2e5] text-[#235f3a] flex items-center justify-center shrink-0">✉️</span>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-[#091710]" data-i18n="support_email_title">Gửi Email hỗ
+                                trợ</div>
+                            <div class="text-[11px] text-[#6a8978] truncate">support@ecostream.vn</div>
+                        </div>
                     </div>
-                </div>
-                <span class="text-xs text-[#2f7a4a] font-semibold">↗</span>
-            </a>
+                    <span class="text-xs text-[#2f7a4a] font-semibold">↗</span>
+                </a>
 
-            <a href="https://github.com/OanhKim-tmd/EcoStream_poc/issues/new" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3.5 rounded-xl bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#d4e7d6] transition">
-                <div class="flex items-center gap-3 min-w-0">
-                    <span class="w-8 h-8 rounded-lg bg-[#e5f2e5] text-[#235f3a] flex items-center justify-center shrink-0">🐛</span>
-                    <div class="min-w-0">
-                        <div class="text-xs font-bold text-[#091710]" data-i18n="support_github_title">Báo lỗi trên GitHub Issues</div>
-                        <div class="text-[11px] text-[#6a8978] truncate">github.com/OanhKim-tmd/EcoStream_poc</div>
+                <a href="https://github.com/OanhKim-tmd/EcoStream_poc/issues/new" target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center justify-between p-3.5 rounded-xl bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#d4e7d6] transition">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span
+                            class="w-8 h-8 rounded-lg bg-[#e5f2e5] text-[#235f3a] flex items-center justify-center shrink-0">🐛</span>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-[#091710]" data-i18n="support_github_title">Báo lỗi trên
+                                GitHub Issues</div>
+                            <div class="text-[11px] text-[#6a8978] truncate">github.com/OanhKim-tmd/EcoStream_poc</div>
+                        </div>
                     </div>
-                </div>
-                <span class="text-xs text-[#2f7a4a] font-semibold">↗</span>
-            </a>
+                    <span class="text-xs text-[#2f7a4a] font-semibold">↗</span>
+                </a>
 
-            <button type="button" onclick="copyDiagnostics()" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#d4e7d6] transition text-left cursor-pointer">
-                <div class="flex items-center gap-3 min-w-0">
-                    <span class="w-8 h-8 rounded-lg bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0">📋</span>
-                    <div class="min-w-0">
-                        <div class="text-xs font-bold text-[#091710]" data-i18n="support_diag_title">Sao chép thông tin chẩn đoán</div>
-                        <div id="diagCopyStatus" class="text-[11px] text-[#6a8978]" data-i18n="support_diag_desc">Kèm thông số hệ thống khi gửi báo lỗi</div>
+                <button type="button" onclick="copyDiagnostics()"
+                    class="w-full flex items-center justify-between p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#d4e7d6] transition text-left cursor-pointer">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span
+                            class="w-8 h-8 rounded-lg bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0">📋</span>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-[#091710]" data-i18n="support_diag_title">Sao chép thông
+                                tin chẩn đoán</div>
+                            <div id="diagCopyStatus" class="text-[11px] text-[#6a8978]" data-i18n="support_diag_desc">
+                                Kèm thông số hệ thống khi gửi báo lỗi</div>
+                        </div>
                     </div>
-                </div>
-                <span class="text-xs text-[#2f7a4a] font-semibold" data-i18n="btn_copy">Copy</span>
-            </button>
-        </div>
+                    <span class="text-xs text-[#2f7a4a] font-semibold" data-i18n="btn_copy">Copy</span>
+                </button>
+            </div>
 
-        <div class="pt-3 border-t border-[#e2f0db] flex justify-end">
-            <button type="button" onclick="closeModal('supportModal')" class="px-5 py-2 rounded-lg text-xs font-semibold text-white gradient-brand transition cursor-pointer" data-i18n="btn_close">Đóng</button>
+            <div class="pt-3 border-t border-[#e2f0db] flex justify-end">
+                <button type="button" onclick="closeModal('supportModal')"
+                    class="px-5 py-2 rounded-lg text-xs font-semibold text-white gradient-brand transition cursor-pointer"
+                    data-i18n="btn_close">Đóng</button>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- Direct & Clean Logic Script -->
     <script>
@@ -992,7 +1333,7 @@
         let activeRequest = false;
         const byId = id => document.getElementById(id);
         const surveyPath = (runId, suffix) => `/api/survey/runs/${encodeURIComponent(runId)}/${suffix}`;
-        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
+        const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
         const formatNumber = value => Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         async function readApiResponse(response) {
@@ -1118,7 +1459,7 @@
                     if (el) draft[id] = el.value;
                 });
                 sessionStorage.setItem(FACILITY_DRAFT_KEY, JSON.stringify(draft));
-            } catch (_) {}
+            } catch (_) { }
         }
 
         function restoreFacilityDraft() {
@@ -1134,7 +1475,7 @@
                         }
                     });
                 }
-            } catch (_) {}
+            } catch (_) { }
         }
 
         function clearFacilityInfo() {
@@ -1143,7 +1484,7 @@
                 if (!el) return;
                 el.value = id === 'periodInput' ? '2026' : '';
             });
-            try { sessionStorage.removeItem(FACILITY_DRAFT_KEY); } catch (_) {}
+            try { sessionStorage.removeItem(FACILITY_DRAFT_KEY); } catch (_) { }
         }
 
         function renderFacilitySummaryStrip() {
@@ -2361,7 +2702,7 @@
             navigator.clipboard?.writeText(info).then(() => {
                 const st = byId('diagCopyStatus');
                 if (st) st.textContent = I18N[currentLang].support_diag_copied;
-            }).catch(() => {});
+            }).catch(() => { });
         }
 
         document.addEventListener('keydown', e => {
@@ -2375,4 +2716,5 @@
         setLanguage(currentLang);
     </script>
 </body>
+
 </html>
