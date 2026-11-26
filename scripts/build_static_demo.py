@@ -233,6 +233,8 @@ def write_html(kpi: dict) -> None:
             --body: #426451;
             --muted: #698574;
         }}
+        html {{ font-size: 17px; }}
+        .text-\[11px\] {{ font-size: 0.75rem !important; line-height: 1.05rem !important; }}
         body {{
             font-family: 'Inter', system-ui, sans-serif;
             background-color: var(--canvas);
@@ -295,12 +297,20 @@ def write_html(kpi: dict) -> None:
         html[data-theme="dark"] .bg-white {{ background-color: #162b20 !important; }}
         html[data-theme="dark"] .bg-white\/75 {{ background-color: rgba(22, 43, 32, 0.85) !important; }}
         html[data-theme="dark"] .bg-\[\#f5f9f4\],
+        html[data-theme="dark"] .bg-\[\#f5f9f4\]\/60,
         html[data-theme="dark"] .bg-\[\#f6faf6\],
         html[data-theme="dark"] .bg-\[\#f7faf7\],
         html[data-theme="dark"] .bg-\[\#edf5e9\],
         html[data-theme="dark"] .bg-\[\#eaf3eb\],
+        html[data-theme="dark"] .bg-\[\#eaf4ea\],
         html[data-theme="dark"] .bg-\[\#e5f2e5\],
-        html[data-theme="dark"] .bg-\[\#e8f4e8\] {{ background-color: #1b3427 !important; }}
+        html[data-theme="dark"] .bg-\[\#e8f4e8\],
+        html[data-theme="dark"] .bg-\[\#dff0d9\] {{ background-color: #1b3427 !important; }}
+        html[data-theme="dark"] .hover\:bg-\[\#edf5e9\]:hover,
+        html[data-theme="dark"] .hover\:bg-\[\#eaf4ea\]:hover,
+        html[data-theme="dark"] .hover\:bg-\[\#f7faf7\]:hover,
+        html[data-theme="dark"] .hover\:bg-\[\#f5f9f4\]:hover,
+        html[data-theme="dark"] .hover\:bg-white:hover {{ background-color: #234332 !important; }}
         html[data-theme="dark"] .bg-amber-50 {{ background-color: #2c2414 !important; border-color: #5c481c !important; }}
         html[data-theme="dark"] .text-amber-950,
         html[data-theme="dark"] .text-amber-900,
@@ -359,7 +369,7 @@ def write_html(kpi: dict) -> None:
             <img src="static/logo.png" alt="EcoStream" class="h-9 w-auto shrink-0">
             <div class="leading-tight">
                 <img src="static/wordmark.png" alt="EcoStream" class="h-6 w-auto mb-0.5">
-                <div class="text-[11px] text-[#527861]" data-i18n="brand_sub">Kiểm kê KNK cấp cơ sở</div>
+                <div class="text-[11px] font-medium text-[#527861] whitespace-nowrap">Ingest  •  Verify  •  Report</div>
             </div>
         </div>
 
@@ -457,37 +467,37 @@ def write_html(kpi: dict) -> None:
                 <section id="sectionStep1" class="hidden bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5">
                     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#e2f0db] pb-4">
                         <div class="space-y-1">
-                            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Bước 1 / 4 · Phiếu thu thập (CV 1790/VNL-P16)</p>
-                            <h2 class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">Thông tin cơ sở trước khi nạp chứng từ</h2>
-                            <p class="text-xs text-[#6a8978]">Dữ liệu mẫu đã điền sẵn cho sheet <span class="font-mono text-[#183026]">Thông tin chung</span>.</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="s1_kicker">Bước 1 / 4 · Phiếu thu thập (CV 1790/VNL-P16)</p>
+                            <h2 class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight" data-i18n="s1_heading">Thông tin cơ sở trước khi nạp chứng từ</h2>
+                            <p class="text-xs text-[#6a8978]" data-i18n-html="s1_desc">Dữ liệu mẫu đã điền sẵn cho sheet <span class="font-mono text-[#183026]">Thông tin chung</span>.</p>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0] self-start">Đã điền mẫu</span>
+                        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0] self-start" data-i18n="s1_prefilled">Đã điền mẫu</span>
                     </div>
 
                     <div class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/60 p-4 space-y-3">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#183026]">Người cung cấp thông tin</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#183026]" data-i18n="s1_contact_title">Người cung cấp thông tin</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                            <div><span class="block text-[#6a8978] mb-1">Họ và tên</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['contact_name']}</div></div>
-                            <div><span class="block text-[#6a8978] mb-1">Chức vụ / Bộ phận</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['contact_role']}</div></div>
-                            <div><span class="block text-[#6a8978] mb-1">Điện thoại</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium font-mono">{FACILITY_INFO['contact_phone']}</div></div>
-                            <div><span class="block text-[#6a8978] mb-1">Email</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['contact_email']}</div></div>
+                            <div><span class="block text-[#6a8978] mb-1" data-i18n="s1_contact_name">Họ và tên</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['contact_name']}</div></div>
+                            <div><span class="block text-[#6a8978] mb-1" data-i18n="s1_contact_role">Chức vụ / Bộ phận</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['contact_role']}</div></div>
+                            <div><span class="block text-[#6a8978] mb-1" data-i18n="s1_contact_phone">Điện thoại</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium font-mono">{FACILITY_INFO['contact_phone']}</div></div>
+                            <div><span class="block text-[#6a8978] mb-1" data-i18n="s1_contact_email">Email</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['contact_email']}</div></div>
                         </div>
                     </div>
 
                     <div class="rounded-xl border border-[#e2f0db] bg-[#f5f9f4]/60 p-4 space-y-3">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#183026]">Phần I. Thông tin chung của cơ sở</h3>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-[#183026]" data-i18n="s1_part1_title">Phần I. Thông tin chung của cơ sở</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                            <div class="sm:col-span-2"><span class="block text-[#6a8978] mb-1">1. Tên cơ sở</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-semibold text-[#091710]">{FACILITY_INFO['facility']}</div></div>
-                            <div><span class="block text-[#6a8978] mb-1">Năm kiểm kê</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-mono font-semibold">{FACILITY_INFO['year']}</div></div>
-                            <div class="sm:col-span-2"><span class="block text-[#6a8978] mb-1">2. Doanh nghiệp chủ quản</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['company']}</div></div>
-                            <div><span class="block text-[#6a8978] mb-1">Ngành nghề SX/KD</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['sector']}</div></div>
-                            <div class="sm:col-span-2"><span class="block text-[#6a8978] mb-1">3. Địa điểm thực hiện</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['address']}</div></div>
-                            <div><span class="block text-[#6a8978] mb-1">Tình trạng hoạt động</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['operating_status']}</div></div>
+                            <div class="sm:col-span-2"><span class="block text-[#6a8978] mb-1" data-i18n="s1_facility_name">1. Tên cơ sở</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-semibold text-[#091710]">{FACILITY_INFO['facility']}</div></div>
+                            <div><span class="block text-[#6a8978] mb-1" data-i18n="s1_period">Năm kiểm kê</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-mono font-semibold">{FACILITY_INFO['year']}</div></div>
+                            <div class="sm:col-span-2"><span class="block text-[#6a8978] mb-1" data-i18n="s1_company">2. Doanh nghiệp chủ quản</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['company']}</div></div>
+                            <div><span class="block text-[#6a8978] mb-1" data-i18n="s1_sector">Ngành nghề SX/KD</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['sector']}</div></div>
+                            <div class="sm:col-span-2"><span class="block text-[#6a8978] mb-1" data-i18n="s1_address">3. Địa điểm thực hiện</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['address']}</div></div>
+                            <div><span class="block text-[#6a8978] mb-1" data-i18n="s1_status">Tình trạng hoạt động</span><div class="px-3 py-2 rounded-lg bg-white border border-[#cce5c0] font-medium">{FACILITY_INFO['operating_status']}</div></div>
                         </div>
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button type="button" onclick="goToStep(2)" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white gradient-brand shadow-xs transition">
+                        <button type="button" onclick="goToStep(2)" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white gradient-brand shadow-xs transition" data-i18n="s1_next">
                             Tiếp tục: Nạp chứng từ →
                         </button>
                     </div>
@@ -497,20 +507,20 @@ def write_html(kpi: dict) -> None:
                 <section id="sectionStep2" class="hidden bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5">
                     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#e2f0db] pb-4">
                         <div class="space-y-1">
-                            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Bước 2 / 4 · Thu thập chứng từ</p>
-                            <h2 class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">Chứng từ đầu vào đã trích xuất</h2>
-                            <p class="text-xs text-[#6a8978]">Hệ thống đọc trực tiếp PDF có chữ, Excel, Word và CSV để đưa vào biểu khảo sát.</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="s2_kicker">Bước 2 / 4 · Thu thập chứng từ</p>
+                            <h2 class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight" data-i18n="s2_heading">Chứng từ đầu vào đã trích xuất</h2>
+                            <p class="text-xs text-[#6a8978]" data-i18n="s2_desc">Hệ thống đọc trực tiếp PDF có chữ, Excel, Word và CSV để đưa vào biểu khảo sát.</p>
                         </div>
-                        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0] self-start">5 tệp hợp lệ</span>
+                        <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0] self-start" data-i18n="s2_valid_badge">5 tệp hợp lệ</span>
                     </div>
 
                     <div id="inputFilesList" class="space-y-2.5"></div>
 
                     <div class="flex items-center justify-between pt-2">
-                        <button type="button" onclick="goToStep(1)" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">
+                        <button type="button" onclick="goToStep(1)" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition" data-i18n="s2_back">
                             ← Quay lại Bước 1
                         </button>
-                        <button type="button" onclick="goToStep(3)" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white gradient-brand shadow-xs transition">
+                        <button type="button" onclick="goToStep(3)" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white gradient-brand shadow-xs transition" data-i18n="s2_next">
                             Tiếp tục: Rà soát biểu Excel →
                         </button>
                     </div>
@@ -520,11 +530,11 @@ def write_html(kpi: dict) -> None:
                 <section id="sectionStep3" class="hidden bg-white rounded-2xl border border-[#e2f0db] shadow-xs p-5 sm:p-7 space-y-5">
                     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-[#e2f0db] pb-4">
                         <div class="space-y-1">
-                            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Bước 3 / 4 · Đối chiếu trước khi tính</p>
-                            <h2 class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight">Rà soát số liệu biểu khảo sát</h2>
-                            <p class="text-xs text-[#6a8978]">Kiểm tra các dòng dữ liệu Scope 1 &amp; 2 đã được điền tự động vào <span class="font-mono text-[#183026]">Bang_khao_sat_da_dien.xlsx</span>.</p>
+                            <p class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="s3_kicker">Bước 3 / 4 · Đối chiếu trước khi tính</p>
+                            <h2 class="text-lg sm:text-xl font-bold text-[#091710] tracking-tight" data-i18n="s3_heading">Rà soát số liệu biểu khảo sát</h2>
+                            <p class="text-xs text-[#6a8978]" data-i18n-html="s3_desc">Kiểm tra các dòng dữ liệu Scope 1 &amp; 2 đã được điền tự động vào <span class="font-mono text-[#183026]">Bang_khao_sat_da_dien.xlsx</span>.</p>
                         </div>
-                        <a href="demo-assets/Bang_khao_sat_da_dien.xlsx" download class="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#235f3a] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition whitespace-nowrap self-start">
+                        <a href="demo-assets/Bang_khao_sat_da_dien.xlsx" download class="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#235f3a] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition whitespace-nowrap self-start" data-i18n="s3_dl_survey">
                             ↓ Tải biểu khảo sát (.xlsx)
                         </a>
                     </div>
@@ -533,11 +543,11 @@ def write_html(kpi: dict) -> None:
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-[#f5f9f4] text-[#2c4a3c] font-semibold border-b border-[#e2f0db] text-[11px]">
-                                    <th class="py-2.5 px-3">Mã dòng</th>
-                                    <th class="py-2.5 px-3">Nguồn phát thải</th>
-                                    <th class="py-2.5 px-3">Phạm vi</th>
-                                    <th class="py-2.5 px-3 text-right">Số lượng</th>
-                                    <th class="py-2.5 px-3">Đơn vị</th>
+                                    <th class="py-2.5 px-3" data-i18n="th_row_id">Mã dòng</th>
+                                    <th class="py-2.5 px-3" data-i18n="th_source">Nguồn phát thải</th>
+                                    <th class="py-2.5 px-3" data-i18n="th_scope">Phạm vi</th>
+                                    <th class="py-2.5 px-3 text-right" data-i18n="th_amount">Số lượng</th>
+                                    <th class="py-2.5 px-3" data-i18n="th_unit">Đơn vị</th>
                                 </tr>
                             </thead>
                             <tbody id="reviewTableBody"></tbody>
@@ -545,10 +555,10 @@ def write_html(kpi: dict) -> None:
                     </div>
 
                     <div class="flex items-center justify-between pt-2">
-                        <button type="button" onclick="goToStep(2)" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">
+                        <button type="button" onclick="goToStep(2)" class="px-4 py-2 rounded-xl text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition" data-i18n="s3_back">
                             ← Quay lại Bước 2
                         </button>
-                        <button type="button" onclick="goToStep(4)" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white gradient-brand shadow-xs transition">
+                        <button type="button" onclick="goToStep(4)" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white gradient-brand shadow-xs transition" data-i18n="s3_next">
                             Xem kết quả &amp; báo cáo →
                         </button>
                     </div>
@@ -562,7 +572,7 @@ def write_html(kpi: dict) -> None:
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-[#e2f0db]">
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0]">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-[#edf5e9] text-[#235f3a] border border-[#cce5c0]" data-i18n="s4_done_badge">
                                         Hoàn tất kiểm kê
                                     </span>
                                     <span class="text-xs text-[#6a8978] font-medium">{FACILITY_INFO['sector']}</span>
@@ -571,20 +581,20 @@ def write_html(kpi: dict) -> None:
                                     {FACILITY_INFO['company']}
                                 </h2>
                                 <p class="text-xs text-[#6a8978] mt-0.5">
-                                    {FACILITY_INFO['facility']} • Năm {FACILITY_INFO['year']}
+                                    {FACILITY_INFO['facility']} • {FACILITY_INFO['year']}
                                 </p>
                             </div>
                             <span class="px-2.5 py-1 rounded-md bg-[#f5f9f4] text-[#2c4a3c] font-mono text-[11px] border border-[#e2f0db]">demo_full_2026</span>
                         </div>
 
-                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-950" role="status">
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-950" role="status" data-i18n-html="s4_scope_notice">
                             Bản kiểm kê giới hạn <b>Phạm vi 1 &amp; Phạm vi 2</b> từ dữ liệu mẫu 2026. Môi chất lạnh, nước thải và Phạm vi 3 chưa tính trong phiên bản hiện tại.
                         </div>
 
                         <!-- 4 Clean Metric Cards -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                             <div class="min-w-0 p-4 rounded-xl bg-[#e8f4e8] border border-[#cfe4d0] text-[#173f2f] flex flex-col justify-between">
-                                <span class="text-[11px] font-semibold uppercase tracking-wider text-[#2f7a4a]">Tổng phát thải</span>
+                                <span class="text-[11px] font-semibold uppercase tracking-wider text-[#2f7a4a]" data-i18n="kpi_total_label">Tổng phát thải</span>
                                 <div class="my-2 flex items-baseline gap-1.5 flex-wrap">
                                     <span id="resTotal" class="text-2xl sm:text-[26px] font-bold font-mono tracking-tight">{kpi['total_tco2e']:,.2f}</span>
                                     <span class="text-xs font-medium text-[#527861]">tCO₂e</span>
@@ -593,32 +603,32 @@ def write_html(kpi: dict) -> None:
                             </div>
 
                             <div class="min-w-0 p-4 rounded-xl bg-[#f5f9f4] border border-[#cce5c0] flex flex-col justify-between">
-                                <span class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Phạm vi 1 · Trực tiếp</span>
+                                <span class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="kpi_s1_label">Phạm vi 1 · Trực tiếp</span>
                                 <div class="my-2 flex items-baseline gap-1.5 flex-wrap">
                                     <span id="resScope1" class="text-2xl sm:text-[26px] font-bold font-mono tracking-tight text-[#091710]">{kpi['scope1_tco2e']:,.2f}</span>
                                     <span class="text-xs font-medium text-[#2c4a3c]">tCO₂e</span>
                                 </div>
-                                <span class="text-[11px] text-[#6a8978]">Than, nhiên liệu cố định &amp; di động</span>
+                                <span class="text-[11px] text-[#6a8978]" data-i18n="kpi_s1_sub">Than, nhiên liệu cố định &amp; di động</span>
                             </div>
 
                             <div class="min-w-0 p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
-                                <span class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Phạm vi 2 · Gián tiếp</span>
+                                <span class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="kpi_s2_label">Phạm vi 2 · Gián tiếp</span>
                                 <div class="my-2 flex items-baseline gap-1.5 flex-wrap">
                                     <span id="resScope2" class="text-2xl sm:text-[26px] font-bold font-mono tracking-tight text-[#091710]">{kpi['scope2_tco2e']:,.2f}</span>
                                     <span class="text-xs font-medium text-[#2c4a3c]">tCO₂e</span>
                                 </div>
-                                <span class="text-[11px] text-[#6a8978]">Điện mua lưới EVN (0.7221 kgCO₂e/kWh)</span>
+                                <span class="text-[11px] text-[#6a8978]" data-i18n="kpi_s2_sub">Điện mua lưới EVN (0.7221 kgCO₂e/kWh)</span>
                             </div>
 
                             <div class="min-w-0 p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="text-[11px] font-semibold uppercase tracking-wider text-[#6a8978]">Độ tin cậy</span>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#dff0d9] text-[#235f3a]">Hạng {kpi['reliability']}</span>
+                                    <span class="text-[11px] font-semibold uppercase tracking-wider text-[#6a8978]" data-i18n="kpi_rel_label">Độ tin cậy</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#dff0d9] text-[#235f3a]" data-i18n="kpi_rel_grade">Hạng {kpi['reliability']}</span>
                                 </div>
                                 <div class="my-2">
                                     <span class="text-2xl sm:text-[26px] font-bold font-mono tracking-tight text-[#091710]">{kpi['confidence_pct']}%</span>
                                 </div>
-                                <span class="text-[11px] text-[#6a8978]">Đầy đủ 12 tháng chứng từ</span>
+                                <span class="text-[11px] text-[#6a8978]" data-i18n="kpi_rel_sub">Đầy đủ 12 tháng chứng từ</span>
                             </div>
                         </div>
 
@@ -626,7 +636,7 @@ def write_html(kpi: dict) -> None:
                         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_220px] gap-4">
                             <div class="rounded-2xl bg-[#f7faf7] border border-[#e0ece0] p-4 min-w-0">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <h3 class="text-sm font-bold text-[#091710] whitespace-nowrap">Phát thải theo tháng</h3>
+                                    <h3 class="text-sm font-bold text-[#091710] whitespace-nowrap" data-i18n="chart_monthly">Phát thải theo tháng</h3>
                                     <div class="flex items-center gap-3 text-[11px] text-[#2c4a3c] whitespace-nowrap">
                                         <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#2f7a4a]"></span>Scope 1</span>
                                         <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#a8d987]"></span>Scope 2</span>
@@ -635,7 +645,7 @@ def write_html(kpi: dict) -> None:
                                 <div id="monthlyChart" class="mt-3 h-44 flex items-end gap-1.5" role="img" aria-label="Biểu đồ phát thải theo tháng"></div>
                             </div>
                             <div class="rounded-2xl bg-[#f7faf7] border border-[#e0ece0] p-4 flex flex-col items-center justify-center gap-3">
-                                <h3 class="text-sm font-bold text-[#091710] self-start">Tỷ trọng phạm vi</h3>
+                                <h3 class="text-sm font-bold text-[#091710] self-start" data-i18n="chart_share">Tỷ trọng phạm vi</h3>
                                 <div id="scopeDonut" class="relative w-36 h-36" role="img" aria-label="Tỷ trọng Scope 1 và Scope 2"></div>
                                 <div id="scopeDonutLegend" class="w-full space-y-1 text-[11px] text-[#2c4a3c]"></div>
                             </div>
@@ -644,28 +654,28 @@ def write_html(kpi: dict) -> None:
                         <!-- Deliverables -->
                         <div class="pt-4 border-t border-[#e2f0db] space-y-3">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <h3 class="text-xs font-bold uppercase tracking-wider text-[#183026]">4. Tải hồ sơ &amp; báo cáo</h3>
-                                <span class="text-[11px] text-[#6a8978]">Bản dự thảo — cần rà soát trước khi nộp</span>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-[#183026]" data-i18n="dl_heading">4. Tải hồ sơ &amp; báo cáo</h3>
+                                <span class="text-[11px] text-[#6a8978]" data-i18n="dl_draft_note">Bản dự thảo — cần rà soát trước khi nộp</span>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                                 <a href="demo-assets/Bang_khao_sat_da_dien.xlsx" download class="p-3.5 rounded-xl bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition text-left flex flex-col justify-between gap-1.5">
                                     <div class="text-xs font-bold text-[#235f3a] flex items-center justify-between gap-1">
-                                        <span>Biểu khảo sát</span><span aria-hidden="true">↓</span>
+                                        <span data-i18n="dl_survey">Biểu khảo sát</span><span aria-hidden="true">↓</span>
                                     </div>
                                     <div class="text-[11px] text-[#2c4a3c] truncate">Bang_khao_sat_da_dien.xlsx</div>
                                 </a>
 
                                 <a href="demo-assets/GHGs_inventory_da_tinh.xlsx" download class="p-3.5 rounded-xl bg-white hover:bg-[#f7faf7] border border-[#e0ece0] transition text-left flex flex-col justify-between gap-1.5">
                                     <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
-                                        <span>Workbook kiểm kê</span><span aria-hidden="true">↓</span>
+                                        <span data-i18n="dl_workbook">Workbook kiểm kê</span><span aria-hidden="true">↓</span>
                                     </div>
                                     <div class="text-[11px] text-[#6a8978] truncate">GHGs_inventory_da_tinh.xlsx</div>
                                 </a>
 
                                 <a href="demo-assets/Bao_cao_kiem_ke_KNK.docx" download class="p-3.5 rounded-xl bg-white hover:bg-[#f7faf7] border border-[#e0ece0] transition text-left flex flex-col justify-between gap-1.5">
                                     <div class="text-xs font-bold text-[#091710] flex items-center justify-between gap-1">
-                                        <span>Báo cáo Word</span><span aria-hidden="true">↓</span>
+                                        <span data-i18n="dl_word">Báo cáo Word</span><span aria-hidden="true">↓</span>
                                     </div>
                                     <div class="text-[11px] text-[#6a8978] truncate">Bao_cao_kiem_ke_KNK.docx</div>
                                 </a>
@@ -675,19 +685,19 @@ def write_html(kpi: dict) -> None:
                         <!-- Collapsible Clean Details Table -->
                         <div class="pt-4 border-t border-[#e2f0db]">
                             <button type="button" onclick="toggleDetailsTable()" class="w-full flex items-center justify-between text-xs font-semibold text-[#183026] hover:text-[#235f3a] py-1.5">
-                                <span>Chi tiết hoạt động đã tính ({kpi['total_rows']} dòng · hiển thị 24 dòng mẫu)</span>
-                                <span id="detailsToggleIcon" class="text-[#6a8978]">▼ Xem chi tiết</span>
+                                <span data-i18n="s4_details_title">Chi tiết hoạt động đã tính ({kpi['total_rows']} dòng · hiển thị 24 dòng mẫu)</span>
+                                <span id="detailsToggleIcon" class="text-[#6a8978]" data-i18n="s4_details_open">▼ Xem chi tiết</span>
                             </button>
 
                             <div id="detailsTableWrapper" class="hidden mt-3 overflow-x-auto rounded-xl border border-[#e2f0db]">
                                 <table class="w-full text-left border-collapse text-xs">
                                     <thead>
                                         <tr class="bg-[#f5f9f4] text-[#2c4a3c] font-semibold border-b border-[#e2f0db] text-[11px]">
-                                            <th class="py-2.5 px-3">Mã</th>
-                                            <th class="py-2.5 px-3">Nguồn phát thải</th>
-                                            <th class="py-2.5 px-3">Phạm vi</th>
-                                            <th class="py-2.5 px-3 text-right">Lượng hoạt động</th>
-                                            <th class="py-2.5 px-3 text-right">Hệ số EF</th>
+                                            <th class="py-2.5 px-3" data-i18n="th_code">Mã</th>
+                                            <th class="py-2.5 px-3" data-i18n="th_source">Nguồn phát thải</th>
+                                            <th class="py-2.5 px-3" data-i18n="th_scope">Phạm vi</th>
+                                            <th class="py-2.5 px-3 text-right" data-i18n="th_qty">Lượng hoạt động</th>
+                                            <th class="py-2.5 px-3 text-right" data-i18n="th_ef">Hệ số EF</th>
                                             <th class="py-2.5 px-3 text-right">tCO₂e</th>
                                         </tr>
                                     </thead>
@@ -698,9 +708,9 @@ def write_html(kpi: dict) -> None:
 
                         <!-- Bottom Navigation -->
                         <div class="pt-4 border-t border-[#e2f0db] flex flex-wrap items-center gap-2">
-                            <button type="button" onclick="goToStep(1)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">← Bước 1: Thông tin</button>
-                            <button type="button" onclick="goToStep(2)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">← Bước 2: Chứng từ</button>
-                            <button type="button" onclick="goToStep(3)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition">← Bước 3: Rà soát</button>
+                            <button type="button" onclick="goToStep(1)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition" data-i18n="back_step1">← Bước 1: Thông tin</button>
+                            <button type="button" onclick="goToStep(2)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition" data-i18n="back_step2">← Bước 2: Chứng từ</button>
+                            <button type="button" onclick="goToStep(3)" class="px-3 py-2 rounded-lg text-xs font-semibold text-[#2c4a3c] bg-[#f6faf6] hover:bg-[#eaf4ea] border border-[#d4e7d6] transition" data-i18n="back_step3">← Bước 3: Rà soát</button>
                         </div>
 
                     </div>
@@ -860,7 +870,6 @@ let currentLang = localStorage.getItem('ecostream_lang') || 'vi';
 
 const I18N = {{
     vi: {{
-        brand_sub: 'Kiểm kê KNK cấp cơ sở',
         step1_nav: 'Thông tin cơ sở',
         step2_nav: 'Nạp chứng từ',
         step3_nav: 'Rà soát biểu Excel',
@@ -897,6 +906,65 @@ const I18N = {{
         btn_copy: 'Copy',
         btn_close: 'Đóng',
         step_label: 'Bước',
+        s1_kicker: 'Bước 1 / 4 · Phiếu thu thập (CV 1790/VNL-P16)',
+        s1_heading: 'Thông tin cơ sở trước khi nạp chứng từ',
+        s1_desc: 'Dữ liệu mẫu đã điền sẵn cho sheet <span class="font-mono text-[#183026]">Thông tin chung</span>.',
+        s1_prefilled: 'Đã điền mẫu',
+        s1_contact_title: 'Người cung cấp thông tin',
+        s1_contact_name: 'Họ và tên',
+        s1_contact_role: 'Chức vụ / Bộ phận',
+        s1_contact_phone: 'Điện thoại',
+        s1_contact_email: 'Email',
+        s1_part1_title: 'Phần I. Thông tin chung của cơ sở',
+        s1_facility_name: '1. Tên cơ sở',
+        s1_period: 'Năm kiểm kê',
+        s1_company: '2. Doanh nghiệp chủ quản',
+        s1_sector: 'Ngành nghề SX/KD',
+        s1_address: '3. Địa điểm thực hiện',
+        s1_status: 'Tình trạng hoạt động',
+        s1_next: 'Tiếp tục: Nạp chứng từ →',
+        s2_kicker: 'Bước 2 / 4 · Thu thập chứng từ',
+        s2_heading: 'Chứng từ đầu vào đã trích xuất',
+        s2_desc: 'Hệ thống đọc trực tiếp PDF có chữ, Excel, Word và CSV để đưa vào biểu khảo sát.',
+        s2_valid_badge: '5 tệp hợp lệ',
+        s2_back: '← Quay lại Bước 1',
+        s2_next: 'Tiếp tục: Rà soát biểu Excel →',
+        s3_kicker: 'Bước 3 / 4 · Đối chiếu trước khi tính',
+        s3_heading: 'Rà soát số liệu biểu khảo sát',
+        s3_desc: 'Kiểm tra các dòng dữ liệu Scope 1 & 2 đã được điền tự động vào <span class="font-mono text-[#183026]">Bang_khao_sat_da_dien.xlsx</span>.',
+        s3_dl_survey: '↓ Tải biểu khảo sát (.xlsx)',
+        th_row_id: 'Mã dòng',
+        th_code: 'Mã',
+        th_source: 'Nguồn phát thải',
+        th_scope: 'Phạm vi',
+        th_amount: 'Số lượng',
+        th_unit: 'Đơn vị',
+        th_qty: 'Lượng hoạt động',
+        th_ef: 'Hệ số EF',
+        s3_back: '← Quay lại Bước 2',
+        s3_next: 'Xem kết quả & báo cáo →',
+        s4_done_badge: 'Hoàn tất kiểm kê',
+        s4_scope_notice: 'Bản kiểm kê giới hạn <b>Phạm vi 1 & Phạm vi 2</b> từ dữ liệu mẫu 2026. Môi chất lạnh, nước thải và Phạm vi 3 chưa tính trong phiên bản hiện tại.',
+        kpi_total_label: 'Tổng phát thải',
+        kpi_s1_label: 'Phạm vi 1 · Trực tiếp',
+        kpi_s1_sub: 'Than, nhiên liệu cố định & di động',
+        kpi_s2_label: 'Phạm vi 2 · Gián tiếp',
+        kpi_s2_sub: 'Điện mua lưới EVN (0.7221 kgCO₂e/kWh)',
+        kpi_rel_label: 'Độ tin cậy',
+        kpi_rel_grade: 'Hạng {kpi['reliability']}',
+        kpi_rel_sub: 'Đầy đủ 12 tháng chứng từ',
+        chart_monthly: 'Phát thải theo tháng',
+        chart_share: 'Tỷ trọng phạm vi',
+        dl_heading: '4. Tải hồ sơ & báo cáo',
+        dl_draft_note: 'Bản dự thảo — cần rà soát trước khi nộp',
+        dl_survey: 'Biểu khảo sát',
+        dl_workbook: 'Workbook kiểm kê',
+        dl_word: 'Báo cáo Word',
+        s4_details_title: 'Chi tiết hoạt động đã tính ({kpi['total_rows']} dòng · hiển thị 24 dòng mẫu)',
+        s4_details_open: '▼ Xem chi tiết',
+        back_step1: '← Bước 1: Thông tin',
+        back_step2: '← Bước 2: Chứng từ',
+        back_step3: '← Bước 3: Rà soát',
         steps: {{
             1: {{ title: 'Thông tin cơ sở', hint: 'Thông tin chung của cơ sở được điền sẵn vào biểu khảo sát theo CV 1790/VNL-P16.' }},
             2: {{ title: 'Nạp chứng từ', hint: '5 tệp chứng từ mẫu (PDF, CSV, Excel, Word) đã được đọc và trích xuất số liệu hoạt động.' }},
@@ -905,7 +973,6 @@ const I18N = {{
         }},
     }},
     en: {{
-        brand_sub: 'Facility-level GHG Inventory',
         step1_nav: 'Facility Info',
         step2_nav: 'Upload Evidence',
         step3_nav: 'Review Survey',
@@ -942,6 +1009,65 @@ const I18N = {{
         btn_copy: 'Copy',
         btn_close: 'Close',
         step_label: 'Step',
+        s1_kicker: 'Step 1 / 4 · Collection Form (CV 1790/VNL-P16)',
+        s1_heading: 'Facility information before uploading documents',
+        s1_desc: 'Sample data pre-filled for the <span class="font-mono text-[#183026]">General Info</span> sheet.',
+        s1_prefilled: 'Pre-filled',
+        s1_contact_title: 'Contact Person',
+        s1_contact_name: 'Full Name',
+        s1_contact_role: 'Role / Department',
+        s1_contact_phone: 'Phone',
+        s1_contact_email: 'Email',
+        s1_part1_title: 'Part I. General Facility Information',
+        s1_facility_name: '1. Facility Name',
+        s1_period: 'Inventory Year',
+        s1_company: '2. Parent Company',
+        s1_sector: 'Industry Sector',
+        s1_address: '3. Facility Address',
+        s1_status: 'Operating Status',
+        s1_next: 'Continue: Upload Evidence →',
+        s2_kicker: 'Step 2 / 4 · Document Ingestion',
+        s2_heading: 'Extracted input documents',
+        s2_desc: 'EcoStream reads text-layer PDFs, Excel, Word, and CSV directly into the survey workbook.',
+        s2_valid_badge: '5 valid files',
+        s2_back: '← Back to Step 1',
+        s2_next: 'Continue: Review Survey Sheet →',
+        s3_kicker: 'Step 3 / 4 · Verify Before Calculation',
+        s3_heading: 'Review survey sheet activity data',
+        s3_desc: 'Inspect Scope 1 & 2 activity rows auto-filled into <span class="font-mono text-[#183026]">Bang_khao_sat_da_dien.xlsx</span>.',
+        s3_dl_survey: '↓ Download survey (.xlsx)',
+        th_row_id: 'Row ID',
+        th_code: 'Code',
+        th_source: 'Emission Source',
+        th_scope: 'Scope',
+        th_amount: 'Quantity',
+        th_unit: 'Unit',
+        th_qty: 'Activity Data',
+        th_ef: 'Emission Factor',
+        s3_back: '← Back to Step 2',
+        s3_next: 'View Results & Reports →',
+        s4_done_badge: 'Inventory Complete',
+        s4_scope_notice: 'This inventory covers <b>Scope 1 & Scope 2</b> from the 2026 sample dataset. Refrigerants, wastewater, and Scope 3 are not included in this version.',
+        kpi_total_label: 'Total Emissions',
+        kpi_s1_label: 'Scope 1 · Direct',
+        kpi_s1_sub: 'Coal, stationary & mobile fuels',
+        kpi_s2_label: 'Scope 2 · Indirect',
+        kpi_s2_sub: 'Purchased EVN electricity (0.7221 kgCO₂e/kWh)',
+        kpi_rel_label: 'Reliability',
+        kpi_rel_grade: 'Grade {kpi['reliability']}',
+        kpi_rel_sub: 'Complete 12-month evidence',
+        chart_monthly: 'Monthly Emissions',
+        chart_share: 'Scope Share',
+        dl_heading: '4. Download Deliverables & Reports',
+        dl_draft_note: 'Draft — verify before official submission',
+        dl_survey: 'Survey Workbook',
+        dl_workbook: 'Inventory Workbook',
+        dl_word: 'Word Report',
+        s4_details_title: 'Calculated Activity Details ({kpi['total_rows']} rows · showing 24 sample rows)',
+        s4_details_open: '▼ View details',
+        back_step1: '← Step 1: Info',
+        back_step2: '← Step 2: Evidence',
+        back_step3: '← Step 3: Review',
         steps: {{
             1: {{ title: 'Facility Info', hint: 'General facility profile pre-filled into the survey template per CV 1790/VNL-P16.' }},
             2: {{ title: 'Upload Evidence', hint: '5 sample files (PDF, CSV, Excel, Word) have been parsed and extracted.' }},
@@ -1000,6 +1126,12 @@ function setLanguage(lang) {{
     localStorage.setItem('ecostream_lang', currentLang);
     document.documentElement.lang = currentLang;
     const dict = I18N[currentLang];
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {{
+        const key = el.getAttribute('data-i18n-html');
+        if (dict[key] !== undefined) {{
+            el.innerHTML = dict[key];
+        }}
+    }});
     document.querySelectorAll('[data-i18n]').forEach(el => {{
         const key = el.getAttribute('data-i18n');
         if (dict[key] !== undefined) {{
