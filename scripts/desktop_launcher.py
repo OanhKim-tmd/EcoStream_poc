@@ -154,9 +154,6 @@ def _headless_check(host: str = "127.0.0.1") -> int:
 def main() -> None:
     host = "127.0.0.1"
 
-    if "--headless-check" in sys.argv:
-        sys.exit(_headless_check(host))
-
     # When frozen as GUI app (.app / .exe without console), redirect stdout/stderr to log file
     if getattr(sys, "frozen", False) and (sys.stdout is None or sys.stderr is None):
         if sys.platform == "darwin":
@@ -169,6 +166,9 @@ def main() -> None:
         log_file = open(os.path.join(log_dir, "ecostream_desktop.log"), "a", encoding="utf-8")
         sys.stdout = log_file
         sys.stderr = log_file
+
+    if "--headless-check" in sys.argv:
+        sys.exit(_headless_check(host))
 
     # 1. If EcoStream is already running on port 8000, bring window to front
     if _is_ecostream_running(host, 8000):

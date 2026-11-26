@@ -38,6 +38,10 @@ jobs:
         run: |
           $p = Start-Process -FilePath "dist\EcoStream\EcoStream.exe" -ArgumentList "--headless-check" -PassThru -Wait -NoNewWindow
           if ($p.ExitCode -ne 0) { throw "Smoke test failed with exit code $($p.ExitCode)" }
+      - name: Dump app log on failure
+        if: failure()
+        shell: pwsh
+        run: Get-Content "$env:LOCALAPPDATA\EcoStream\logs\ecostream_desktop.log" -ErrorAction SilentlyContinue
       - name: Build installer with Inno Setup
         shell: pwsh
         run: |
@@ -68,6 +72,9 @@ jobs:
         run: python scripts/build_desktop_app.py
       - name: Smoke test (server starts and serves the UI)
         run: dist/EcoStream.app/Contents/MacOS/EcoStream --headless-check
+      - name: Dump app log on failure
+        if: failure()
+        run: cat ~/Library/Logs/EcoStream/ecostream_desktop.log || true
       - uses: actions/upload-artifact@v4
         with:
           name: EcoStream-macOS
