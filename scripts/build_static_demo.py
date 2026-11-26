@@ -17,7 +17,7 @@ from pathlib import Path
 import openpyxl
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEMO_SRC = REPO_ROOT / "data" / "demo" / "ecogarment_2026"
+DEMO_SRC = REPO_ROOT / "data" / "dataset_01_ecogarment_2026"
 WEB_STATIC_SRC = REPO_ROOT / "ecostream" / "app" / "static"
 DOCS_DIR = REPO_ROOT / "docs"
 DOCS_STATIC_DIR = DOCS_DIR / "static"
