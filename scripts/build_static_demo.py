@@ -2,19 +2,16 @@
 """
 build_static_demo.py
 Builds the static GitHub Pages demo in docs/ matching the EcoStream web UI
-(ecostream/app/static/index.html) using pre-computed data from data/demo_full_2026/.
+(ecostream/app/static/index.html) using pre-computed demo data.
 
 Usage:
     python scripts/build_static_demo.py
 """
 
 import json
-import re
 import shutil
 import sys
 from pathlib import Path
-
-import openpyxl
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEMO_SRC = REPO_ROOT / "data" / "dataset_01_ecogarment_2026"
@@ -102,79 +99,61 @@ OUTPUT_FILES = [
 ]
 
 
+KPI_SUMMARY = {
+    "scope1_tco2e": 7113.22,
+    "scope2_tco2e": 473.16,
+    "total_tco2e": 7586.37,
+    "ci_lower": 7169.12,
+    "ci_upper": 8003.62,
+    "reliability": "A",
+    "confidence_pct": 92.4,
+    "total_rows": 504,
+    "monthly": [
+        {"month": 1, "s1": 531.31, "s2": 32.67},
+        {"month": 2, "s1": 542.49, "s2": 30.4},
+        {"month": 3, "s1": 553.66, "s2": 35.09},
+        {"month": 4, "s1": 564.83, "s2": 37.77},
+        {"month": 5, "s1": 576.01, "s2": 42.17},
+        {"month": 6, "s1": 587.18, "s2": 46.79},
+        {"month": 7, "s1": 598.35, "s2": 48.74},
+        {"month": 8, "s1": 609.53, "s2": 47.8},
+        {"month": 9, "s1": 620.7, "s2": 42.68},
+        {"month": 10, "s1": 631.87, "s2": 38.63},
+        {"month": 11, "s1": 643.05, "s2": 35.89},
+        {"month": 12, "s1": 654.22, "s2": 34.52},
+    ],
+    "sample_rows": [
+        {"id": "SURVEY-0001", "source": "Than trộn (antraxit + bitum) tháng 01/2026", "scope": "Scope 1", "qty": 18850.0, "unit": "kg", "ef": 2.42, "tco2e": 45.617},
+        {"id": "SURVEY-0002", "source": "Than trộn (antraxit + bitum) tháng 02/2026", "scope": "Scope 1", "qty": 19200.0, "unit": "kg", "ef": 2.42, "tco2e": 46.464},
+        {"id": "SURVEY-0003", "source": "Than trộn (antraxit + bitum) tháng 03/2026", "scope": "Scope 1", "qty": 19550.0, "unit": "kg", "ef": 2.42, "tco2e": 47.311},
+        {"id": "SURVEY-0004", "source": "Than trộn (antraxit + bitum) tháng 04/2026", "scope": "Scope 1", "qty": 19900.0, "unit": "kg", "ef": 2.42, "tco2e": 48.158},
+        {"id": "SURVEY-0005", "source": "Than trộn (antraxit + bitum) tháng 05/2026", "scope": "Scope 1", "qty": 20250.0, "unit": "kg", "ef": 2.42, "tco2e": 49.005},
+        {"id": "SURVEY-0006", "source": "Than trộn (antraxit + bitum) tháng 06/2026", "scope": "Scope 1", "qty": 20600.0, "unit": "kg", "ef": 2.42, "tco2e": 49.852},
+        {"id": "SURVEY-0007", "source": "Than trộn (antraxit + bitum) tháng 07/2026", "scope": "Scope 1", "qty": 20950.0, "unit": "kg", "ef": 2.42, "tco2e": 50.699},
+        {"id": "SURVEY-0008", "source": "Than trộn (antraxit + bitum) tháng 08/2026", "scope": "Scope 1", "qty": 21300.0, "unit": "kg", "ef": 2.42, "tco2e": 51.546},
+        {"id": "SURVEY-0009", "source": "Than trộn (antraxit + bitum) tháng 09/2026", "scope": "Scope 1", "qty": 21650.0, "unit": "kg", "ef": 2.42, "tco2e": 52.393},
+        {"id": "SURVEY-0010", "source": "Than trộn (antraxit + bitum) tháng 10/2026", "scope": "Scope 1", "qty": 22000.0, "unit": "kg", "ef": 2.42, "tco2e": 53.24},
+        {"id": "SURVEY-0011", "source": "Than trộn (antraxit + bitum) tháng 11/2026", "scope": "Scope 1", "qty": 22350.0, "unit": "kg", "ef": 2.42, "tco2e": 54.087},
+        {"id": "SURVEY-0012", "source": "Than trộn (antraxit + bitum) tháng 12/2026", "scope": "Scope 1", "qty": 22700.0, "unit": "kg", "ef": 2.42, "tco2e": 54.934},
+        {"id": "SURVEY-0013", "source": "Than bitum tháng 01/2026", "scope": "Scope 1", "qty": 24450.0, "unit": "kg", "ef": 2.42, "tco2e": 59.169},
+        {"id": "SURVEY-0014", "source": "Than bitum tháng 02/2026", "scope": "Scope 1", "qty": 24900.0, "unit": "kg", "ef": 2.42, "tco2e": 60.258},
+        {"id": "SURVEY-0015", "source": "Than bitum tháng 03/2026", "scope": "Scope 1", "qty": 25350.0, "unit": "kg", "ef": 2.42, "tco2e": 61.347},
+        {"id": "SURVEY-0016", "source": "Than bitum tháng 04/2026", "scope": "Scope 1", "qty": 25800.0, "unit": "kg", "ef": 2.42, "tco2e": 62.436},
+        {"id": "SURVEY-0017", "source": "Than bitum tháng 05/2026", "scope": "Scope 1", "qty": 26250.0, "unit": "kg", "ef": 2.42, "tco2e": 63.525},
+        {"id": "SURVEY-0018", "source": "Than bitum tháng 06/2026", "scope": "Scope 1", "qty": 26700.0, "unit": "kg", "ef": 2.42, "tco2e": 64.614},
+        {"id": "SURVEY-0019", "source": "Than bitum tháng 07/2026", "scope": "Scope 1", "qty": 27150.0, "unit": "kg", "ef": 2.42, "tco2e": 65.703},
+        {"id": "SURVEY-0020", "source": "Than bitum tháng 08/2026", "scope": "Scope 1", "qty": 27600.0, "unit": "kg", "ef": 2.42, "tco2e": 66.792},
+        {"id": "SURVEY-0021", "source": "Than bitum tháng 09/2026", "scope": "Scope 1", "qty": 28050.0, "unit": "kg", "ef": 2.42, "tco2e": 67.881},
+        {"id": "SURVEY-0022", "source": "Than bitum tháng 10/2026", "scope": "Scope 1", "qty": 28500.0, "unit": "kg", "ef": 2.42, "tco2e": 68.97},
+        {"id": "SURVEY-0023", "source": "Than bitum tháng 11/2026", "scope": "Scope 1", "qty": 28950.0, "unit": "kg", "ef": 2.42, "tco2e": 70.059},
+        {"id": "SURVEY-0024", "source": "Than bitum tháng 12/2026", "scope": "Scope 1", "qty": 29400.0, "unit": "kg", "ef": 2.42, "tco2e": 71.148},
+    ],
+}
+
+
 def extract_inventory_summary() -> dict:
-    """Read actual computed Scope 1/2 totals, monthly breakdown, and sample rows from GHGs_inventory_da_tinh.xlsx."""
-    inv_path = DEMO_SRC / "GHGs_inventory_da_tinh.xlsx"
-    wb = openpyxl.load_workbook(inv_path, data_only=True)
-    ws = wb["EcoStream đối soát"]
-
-    scope1 = 0.0
-    scope2 = 0.0
-    total = 0.0
-    monthly = {m: {"month": m, "s1": 0.0, "s2": 0.0} for m in range(1, 13)}
-    rows = []
-
-    for r in range(1, 20):
-        label = str(ws.cell(r, 1).value or "").strip()
-        val = ws.cell(r, 2).value
-        if label == "Scope 1 (tCO2e)" and isinstance(val, (int, float)):
-            scope1 = round(float(val), 2)
-        elif label == "Scope 2 (tCO2e)" and isinstance(val, (int, float)):
-            scope2 = round(float(val), 2)
-        elif label == "Tổng EcoStream (tCO2e)" and isinstance(val, (int, float)):
-            total = round(float(val), 2)
-
-    total_rows = 0
-    for r in range(21, ws.max_row + 1):
-        row_id = ws.cell(r, 1).value
-        src = ws.cell(r, 2).value
-        scope = ws.cell(r, 3).value
-        qty = ws.cell(r, 4).value
-        unit = ws.cell(r, 5).value
-        ef = ws.cell(r, 6).value
-        tco2 = ws.cell(r, 7).value
-        if not row_id or not src:
-            continue
-        total_rows += 1
-        if len(rows) < 24:
-            rows.append({
-                "id": str(row_id),
-                "source": str(src),
-                "scope": str(scope or ""),
-                "qty": round(float(qty), 2) if isinstance(qty, (int, float)) else str(qty or ""),
-                "unit": str(unit or ""),
-                "ef": round(float(ef), 4) if isinstance(ef, (int, float)) else str(ef or ""),
-                "tco2e": round(float(tco2), 3) if isinstance(tco2, (int, float)) else 0.0,
-            })
-        m = re.search(r"tháng\s*(\d{1,2})", str(src), re.I)
-        if m and isinstance(tco2, (int, float)):
-            mo = int(m.group(1))
-            if 1 <= mo <= 12:
-                if scope == "Scope 1":
-                    monthly[mo]["s1"] += float(tco2)
-                elif scope == "Scope 2":
-                    monthly[mo]["s2"] += float(tco2)
-
-    monthly_list = [
-        {"month": m, "s1": round(v["s1"], 2), "s2": round(v["s2"], 2)}
-        for m, v in monthly.items()
-    ]
-
-    ci_lo = round(total * 0.945, 2)
-    ci_hi = round(total * 1.055, 2)
-
-    return {
-        "scope1_tco2e": scope1,
-        "scope2_tco2e": scope2,
-        "total_tco2e": total,
-        "ci_lower": ci_lo,
-        "ci_upper": ci_hi,
-        "reliability": "A",
-        "confidence_pct": 92.4,
-        "total_rows": total_rows,
-        "monthly": monthly_list,
-        "sample_rows": rows,
-    }
+    """Return pre-computed Scope 1/2 totals, monthly breakdown, and sample rows."""
+    return KPI_SUMMARY
 
 
 def copy_assets() -> None:
