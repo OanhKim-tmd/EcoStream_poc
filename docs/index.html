@@ -300,52 +300,52 @@
                         </div>
 
                         <!-- 4 Clean Metric Cards -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                            <div class="p-4 rounded-xl bg-[#e8f4e8] border border-[#cfe4d0] text-[#173f2f] flex flex-col justify-between">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div class="min-w-0 p-4 rounded-xl bg-[#e8f4e8] border border-[#cfe4d0] text-[#173f2f] flex flex-col justify-between">
                                 <span class="text-[11px] font-semibold uppercase tracking-wider text-[#2f7a4a]">Tổng phát thải</span>
-                                <div class="my-2">
-                                    <span id="resTotal" class="text-2xl sm:text-3xl font-bold font-mono">7,586.37</span>
+                                <div class="my-2 flex items-baseline gap-1.5 flex-wrap">
+                                    <span id="resTotal" class="text-2xl font-bold font-mono tracking-tight">7,586.37</span>
                                     <span class="text-xs text-[#527861]">tCO₂e</span>
                                 </div>
-                                <span class="text-[11px] font-mono text-[#527861] truncate">95% CI: 7,169 – 8,004</span>
+                                <span class="text-[11px] font-mono text-[#527861]">95% CI: 7,169 – 8,004</span>
                             </div>
 
-                            <div class="p-4 rounded-xl bg-[#f5f9f4] border border-[#cce5c0] flex flex-col justify-between">
+                            <div class="min-w-0 p-4 rounded-xl bg-[#f5f9f4] border border-[#cce5c0] flex flex-col justify-between">
                                 <span class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Phạm vi 1 · Trực tiếp</span>
-                                <div class="my-2">
-                                    <span id="resScope1" class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">7,113.22</span>
+                                <div class="my-2 flex items-baseline gap-1.5 flex-wrap">
+                                    <span id="resScope1" class="text-2xl font-bold font-mono tracking-tight text-[#091710]">7,113.22</span>
                                     <span class="text-xs text-[#2c4a3c]">tCO₂e</span>
                                 </div>
                                 <span class="text-[11px] text-[#6a8978]">Than, nhiên liệu cố định &amp; di động</span>
                             </div>
 
-                            <div class="p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
+                            <div class="min-w-0 p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
                                 <span class="text-[11px] font-semibold uppercase tracking-wider text-[#4b8059]">Phạm vi 2 · Gián tiếp</span>
-                                <div class="my-2">
-                                    <span id="resScope2" class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">473.16</span>
+                                <div class="my-2 flex items-baseline gap-1.5 flex-wrap">
+                                    <span id="resScope2" class="text-2xl font-bold font-mono tracking-tight text-[#091710]">473.16</span>
                                     <span class="text-xs text-[#2c4a3c]">tCO₂e</span>
                                 </div>
                                 <span class="text-[11px] text-[#6a8978]">Điện mua lưới EVN (0.7221 kgCO₂e/kWh)</span>
                             </div>
 
-                            <div class="p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
+                            <div class="min-w-0 p-4 rounded-xl bg-white border border-[#e2f0db] flex flex-col justify-between">
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-[11px] font-semibold uppercase tracking-wider text-[#6a8978]">Độ tin cậy</span>
                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#dff0d9] text-[#235f3a]">A</span>
                                 </div>
                                 <div class="my-2">
-                                    <span class="text-2xl sm:text-3xl font-bold font-mono text-[#091710]">92.4%</span>
+                                    <span class="text-2xl font-bold font-mono tracking-tight text-[#091710]">92.4%</span>
                                 </div>
-                                <span class="text-[11px] text-[#6a8978] truncate">Đầy đủ 12 tháng chứng từ</span>
+                                <span class="text-[11px] text-[#6a8978]">Đầy đủ 12 tháng chứng từ</span>
                             </div>
                         </div>
 
                         <!-- Charts: monthly emissions + scope share -->
                         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_240px] gap-4">
-                            <div class="rounded-2xl bg-[#f7faf7] border border-[#e0ece0] p-4">
-                                <div class="flex items-center justify-between gap-2">
-                                    <h3 class="text-sm font-bold text-[#091710]">Phát thải theo tháng</h3>
-                                    <div class="flex items-center gap-3 text-[11px] text-[#2c4a3c]">
+                            <div class="min-w-0 rounded-2xl bg-[#f7faf7] border border-[#e0ece0] p-4">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <h3 class="text-sm font-bold text-[#091710] whitespace-nowrap">Phát thải theo tháng</h3>
+                                    <div class="flex items-center gap-3 text-[11px] text-[#2c4a3c] whitespace-nowrap">
                                         <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#2f7a4a]"></span>Scope 1</span>
                                         <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#a8d987]"></span>Scope 2</span>
                                     </div>
