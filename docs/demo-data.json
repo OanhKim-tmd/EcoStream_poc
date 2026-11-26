@@ -1,97 +1,367 @@
 {
-  "kpi": {
-    "company": "Nhà máy May & Năng lượng Hà Nam — Công ty CP May mặc EcoGarment Việt Nam",
-    "facility": "KCN Đồng Văn III, TX. Duy Tiên, Hà Nam",
+  "facility_info": {
+    "company": "EcoGarment Vietnam JSC",
+    "facility": "Nhà máy May & Năng lượng Hà Nam",
+    "address": "KCN Đồng Văn III, TX. Duy Tiên, Hà Nam",
+    "sector": "Dệt may & Năng lượng phụ trợ",
     "year": 2026,
-    "scope1_tco2e": 48.72,
-    "scope2_tco2e": 312.56,
-    "total_tco2e": 361.28,
-    "ci_lower": 344.1,
-    "ci_upper": 378.46,
+    "contact_name": "Nguyễn Thu Trang",
+    "contact_role": "Phụ trách HSE / Kỹ thuật",
+    "contact_phone": "0912 345 678",
+    "contact_email": "hse@ecogarment.vn",
+    "legal_rep": "Trần Văn Minh — Giám đốc Nhà máy",
+    "operating_status": "Đang hoạt động (từ 2018)"
+  },
+  "kpi": {
+    "scope1_tco2e": 7113.22,
+    "scope2_tco2e": 473.16,
+    "total_tco2e": 7586.37,
+    "ci_lower": 7169.12,
+    "ci_upper": 8003.62,
     "reliability": "A",
     "confidence_pct": 92.4,
-    "note": "Phạm vi 3 không được tính trong phiên bản hiện tại"
+    "total_rows": 504,
+    "monthly": [
+      {
+        "month": 1,
+        "s1": 531.31,
+        "s2": 32.67
+      },
+      {
+        "month": 2,
+        "s1": 542.49,
+        "s2": 30.4
+      },
+      {
+        "month": 3,
+        "s1": 553.66,
+        "s2": 35.09
+      },
+      {
+        "month": 4,
+        "s1": 564.83,
+        "s2": 37.77
+      },
+      {
+        "month": 5,
+        "s1": 576.01,
+        "s2": 42.17
+      },
+      {
+        "month": 6,
+        "s1": 587.18,
+        "s2": 46.79
+      },
+      {
+        "month": 7,
+        "s1": 598.35,
+        "s2": 48.74
+      },
+      {
+        "month": 8,
+        "s1": 609.53,
+        "s2": 47.8
+      },
+      {
+        "month": 9,
+        "s1": 620.7,
+        "s2": 42.68
+      },
+      {
+        "month": 10,
+        "s1": 631.87,
+        "s2": 38.63
+      },
+      {
+        "month": 11,
+        "s1": 643.05,
+        "s2": 35.89
+      },
+      {
+        "month": 12,
+        "s1": 654.22,
+        "s2": 34.52
+      }
+    ],
+    "sample_rows": [
+      {
+        "id": "SURVEY-0001",
+        "source": "Than trộn (antraxit + bitum) tháng 01/2026",
+        "scope": "Scope 1",
+        "qty": 18850.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 45.617
+      },
+      {
+        "id": "SURVEY-0002",
+        "source": "Than trộn (antraxit + bitum) tháng 02/2026",
+        "scope": "Scope 1",
+        "qty": 19200.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 46.464
+      },
+      {
+        "id": "SURVEY-0003",
+        "source": "Than trộn (antraxit + bitum) tháng 03/2026",
+        "scope": "Scope 1",
+        "qty": 19550.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 47.311
+      },
+      {
+        "id": "SURVEY-0004",
+        "source": "Than trộn (antraxit + bitum) tháng 04/2026",
+        "scope": "Scope 1",
+        "qty": 19900.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 48.158
+      },
+      {
+        "id": "SURVEY-0005",
+        "source": "Than trộn (antraxit + bitum) tháng 05/2026",
+        "scope": "Scope 1",
+        "qty": 20250.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 49.005
+      },
+      {
+        "id": "SURVEY-0006",
+        "source": "Than trộn (antraxit + bitum) tháng 06/2026",
+        "scope": "Scope 1",
+        "qty": 20600.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 49.852
+      },
+      {
+        "id": "SURVEY-0007",
+        "source": "Than trộn (antraxit + bitum) tháng 07/2026",
+        "scope": "Scope 1",
+        "qty": 20950.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 50.699
+      },
+      {
+        "id": "SURVEY-0008",
+        "source": "Than trộn (antraxit + bitum) tháng 08/2026",
+        "scope": "Scope 1",
+        "qty": 21300.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 51.546
+      },
+      {
+        "id": "SURVEY-0009",
+        "source": "Than trộn (antraxit + bitum) tháng 09/2026",
+        "scope": "Scope 1",
+        "qty": 21650.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 52.393
+      },
+      {
+        "id": "SURVEY-0010",
+        "source": "Than trộn (antraxit + bitum) tháng 10/2026",
+        "scope": "Scope 1",
+        "qty": 22000.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 53.24
+      },
+      {
+        "id": "SURVEY-0011",
+        "source": "Than trộn (antraxit + bitum) tháng 11/2026",
+        "scope": "Scope 1",
+        "qty": 22350.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 54.087
+      },
+      {
+        "id": "SURVEY-0012",
+        "source": "Than trộn (antraxit + bitum) tháng 12/2026",
+        "scope": "Scope 1",
+        "qty": 22700.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 54.934
+      },
+      {
+        "id": "SURVEY-0013",
+        "source": "Than bitum tháng 01/2026",
+        "scope": "Scope 1",
+        "qty": 24450.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 59.169
+      },
+      {
+        "id": "SURVEY-0014",
+        "source": "Than bitum tháng 02/2026",
+        "scope": "Scope 1",
+        "qty": 24900.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 60.258
+      },
+      {
+        "id": "SURVEY-0015",
+        "source": "Than bitum tháng 03/2026",
+        "scope": "Scope 1",
+        "qty": 25350.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 61.347
+      },
+      {
+        "id": "SURVEY-0016",
+        "source": "Than bitum tháng 04/2026",
+        "scope": "Scope 1",
+        "qty": 25800.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 62.436
+      },
+      {
+        "id": "SURVEY-0017",
+        "source": "Than bitum tháng 05/2026",
+        "scope": "Scope 1",
+        "qty": 26250.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 63.525
+      },
+      {
+        "id": "SURVEY-0018",
+        "source": "Than bitum tháng 06/2026",
+        "scope": "Scope 1",
+        "qty": 26700.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 64.614
+      },
+      {
+        "id": "SURVEY-0019",
+        "source": "Than bitum tháng 07/2026",
+        "scope": "Scope 1",
+        "qty": 27150.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 65.703
+      },
+      {
+        "id": "SURVEY-0020",
+        "source": "Than bitum tháng 08/2026",
+        "scope": "Scope 1",
+        "qty": 27600.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 66.792
+      },
+      {
+        "id": "SURVEY-0021",
+        "source": "Than bitum tháng 09/2026",
+        "scope": "Scope 1",
+        "qty": 28050.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 67.881
+      },
+      {
+        "id": "SURVEY-0022",
+        "source": "Than bitum tháng 10/2026",
+        "scope": "Scope 1",
+        "qty": 28500.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 68.97
+      },
+      {
+        "id": "SURVEY-0023",
+        "source": "Than bitum tháng 11/2026",
+        "scope": "Scope 1",
+        "qty": 28950.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 70.059
+      },
+      {
+        "id": "SURVEY-0024",
+        "source": "Than bitum tháng 12/2026",
+        "scope": "Scope 1",
+        "qty": 29400.0,
+        "unit": "kg",
+        "ef": 2.42,
+        "tco2e": 71.148
+      }
+    ]
   },
   "input_files": [
     {
-      "name": "Hóa đơn điện EVN (PDF)",
+      "name": "Hóa đơn điện EVN tháng 1 (PDF)",
       "filename": "electricity_month_01.pdf",
       "type": "PDF",
-      "icon": "⚡",
-      "desc": "Hóa đơn điện tháng 1/2026 — 12 tháng được xử lý tổng hợp"
+      "records": 1,
+      "scope": "Scope 2",
+      "desc": "Hóa đơn điện tử có lớp chữ (text-layer) tháng 01/2026"
     },
     {
       "name": "Dữ liệu điện tháng 2–12 (CSV)",
       "filename": "electricity_months_02_12.csv",
       "type": "CSV",
-      "icon": "📊",
-      "desc": "Tiêu thụ điện tháng 2–12/2026 từ hóa đơn số hóa"
+      "records": 11,
+      "scope": "Scope 2",
+      "desc": "Bảng kê tiêu thụ điện năng lưới EVN 11 tháng còn lại"
     },
     {
-      "name": "Nhiên liệu cố định (Excel)",
+      "name": "Nhiên liệu đốt cố định (Excel)",
       "filename": "fuel_stationary.xlsx",
       "type": "XLSX",
-      "icon": "🔥",
-      "desc": "Diesel & gas cho máy phát và lò hơi — Phạm vi 1"
+      "records": 36,
+      "scope": "Scope 1",
+      "desc": "Than trộn, dầu Diesel & gas LPG cho lò hơi, máy phát"
     },
     {
       "name": "Nhiên liệu di động (Word)",
       "filename": "fuel_mobile.docx",
       "type": "DOCX",
-      "icon": "🚛",
-      "desc": "Xăng dầu xe tải & xe nâng — Phạm vi 1"
+      "records": 24,
+      "scope": "Scope 1",
+      "desc": "Xăng & Diesel cho đội xe tải vận chuyển và xe nâng"
     },
     {
-      "name": "Dữ liệu giả lập tổng hợp (Excel)",
+      "name": "Dữ liệu tổng hợp 2026 (Excel)",
       "filename": "du_lieu_gia_lap_full_2026.xlsx",
       "type": "XLSX",
-      "icon": "📋",
-      "desc": "Tổng hợp 12 tháng: điện, nhiên liệu, nước thải"
+      "records": 12,
+      "scope": "Scope 1 & 2",
+      "desc": "Bảng tổng hợp đối chiếu chứng từ 12 tháng năm 2026"
     }
   ],
   "output_files": [
     {
-      "name": "Biểu khảo sát đã điền",
+      "title": "Biểu khảo sát",
       "filename": "Bang_khao_sat_da_dien.xlsx",
       "type": "XLSX",
-      "icon": "📗",
-      "desc": "Mẫu khảo sát ISO 14064-1 đã điền đầy đủ"
+      "primary": true
     },
     {
-      "name": "Kết quả kiểm kê GHG (Excel)",
+      "title": "Workbook kiểm kê",
       "filename": "GHGs_inventory_da_tinh.xlsx",
       "type": "XLSX",
-      "icon": "📊",
-      "desc": "Phát thải Phạm vi 1 & 2 theo tháng, có khoảng bất định"
+      "primary": false
     },
     {
-      "name": "Báo cáo kiểm kê KNK (Word)",
+      "title": "Báo cáo Word",
       "filename": "Bao_cao_kiem_ke_KNK.docx",
       "type": "DOCX",
-      "icon": "📄",
-      "desc": "Báo cáo Mẫu 02 — theo Nghị định 06/2022/NĐ-CP"
-    }
-  ],
-  "pipeline_steps": [
-    {
-      "icon": "📂",
-      "title": "Nạp chứng từ",
-      "desc": "OCR + trích xuất tự động từ PDF, Excel, CSV, Word"
-    },
-    {
-      "icon": "📝",
-      "title": "Điền biểu khảo sát",
-      "desc": "Tự động điền Mẫu Khảo sát ISO 14064-1"
-    },
-    {
-      "icon": "⚙️",
-      "title": "Tính toán phát thải",
-      "desc": "Phương pháp tất định + ước lượng khoảng bất định 95% CI"
-    },
-    {
-      "icon": "📋",
-      "title": "Xuất hồ sơ",
-      "desc": "Excel kiểm kê, Báo cáo Word Mẫu 02, HTML & PDF"
+      "primary": false
     }
   ]
 }
