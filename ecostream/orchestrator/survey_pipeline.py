@@ -114,8 +114,8 @@ def prepare_survey(
 FACTOR_IDS = {
     "mixed_coal": "EF-SCOPE1-COAL",
     "bituminous": "EF-SCOPE1-COAL",
-    "subbituminous": "EF-SCOPE1-COAL",
-    "anthracite": "EF-SCOPE1-COAL",
+    "subbituminous": "EF-SCOPE1-COAL-SUBBITUMINOUS",
+    "anthracite": "EF-SCOPE1-COAL-ANTHRACITE",
     "diesel": "EF-SCOPE1-DIESEL",
     "fo": "EF-SCOPE1-FO",
     "petrol": "EF-SCOPE1-PETROL",
@@ -123,6 +123,16 @@ FACTOR_IDS = {
     "lpg": "EF-SCOPE1-LPG",
     "electricity": "EF-SCOPE2-VN-GRID",
 }
+# Mobile combustion (sheet 1.2) has its own CH4/N2O factors in the inventory template.
+MOBILE_FACTOR_IDS = {"diesel": "EF-SCOPE1-DIESEL-MOBILE", "petrol": "EF-SCOPE1-PETROL-MOBILE"}
+
+
+def _factor_id(item) -> str:
+    if item.sheet == "1.2" and item.kind in MOBILE_FACTOR_IDS:
+        return MOBILE_FACTOR_IDS[item.kind]
+    return FACTOR_IDS[item.kind]
+
+
 BIOMASS_KINDS = {"wood", "charcoal", "bagasse", "rice_husk", "straw", "other_solid_biomass", "biogas", "liquid_biofuel"}
 
 
@@ -145,7 +155,7 @@ def _records(data: SurveyData, year: int) -> list[ActivityRecord]:
     for i, item in enumerate(data.items, 1):
         if item.kind not in FACTOR_IDS:
             continue
-        factor = db.get(FACTOR_IDS[item.kind])
+        factor = db.get(_factor_id(item))
         if factor is None or factor.unit != item.unit:
             raise SurveyValidationError(f"{item.sheet}!{item.coordinate}: không có hệ số phù hợp")
         if item.kind == "electricity":
@@ -156,7 +166,7 @@ def _records(data: SurveyData, year: int) -> list[ActivityRecord]:
             desc = FUEL_NAMES[item.kind]
         records.append(ActivityRecord(
             id=f"SURVEY-{i:04d}", description=f"{desc} tháng {item.month:02d}/{year}", scope=scope,
-            category=category, quantity=item.quantity, unit=item.unit, date=f"{year}-{item.month:02d}-01",
+            category=category, quantity=item.quantity, unit=item.unit, factor_id=factor.factor_id, date=f"{year}-{item.month:02d}-01",
             measurement_type=MeasurementType.ESTIMATED_ACTIVITY,
             evidence=EvidenceProvenance(source_document=item.source_document, document_type="SURVEY_WORKBOOK",
                 page_or_line=f"{item.sheet}!{item.coordinate}", snippet=item.source_location,
@@ -213,8 +223,10 @@ def calculate_survey(run_id: str, reviewed_file: str | None = None, base_runs_di
         warnings.append("Chưa có điện mua lưới; Scope 2 không được kết luận là bằng 0")
     if not any(item.kind != "electricity" for item in data.items):
         warnings.append("Chưa có nhiên liệu; Scope 1 không được kết luận là bằng 0")
-    if len({item.month for item in data.items if item.kind == "electricity"}) != 12:
-        warnings.append("Dữ liệu điện chưa đủ 12 tháng; không nội suy ngầm")
+    elec_months = {item.month for item in data.items if item.kind == "electricity"}
+    if elec_months and len(elec_months) != 12:
+        missing = ", ".join(str(m) for m in range(1, 13) if m not in elec_months)
+        warnings.append(f"Điện mua chỉ có {len(elec_months)}/12 tháng (thiếu tháng {missing}). Các tháng thiếu không được tự ước tính, hãy bổ sung chứng từ điện.")
     # Build and validate all outputs before publishing them to a run. A failed
     # workbook/report export must not replace the survey or completed outputs.
     with tempfile.TemporaryDirectory(prefix="survey_export_") as stage_dir:

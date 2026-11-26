@@ -193,4 +193,4 @@ Các tổng hợp do phần mềm tạo là kết quả xử lý theo dữ liệ
 
 ## Đóng góp
 
-Chạy test trước khi gửi thay đổi. Không đưa chứng từ, thông tin cá nhân, khóa API, khóa ký hoặc dữ liệu nội bộ của doanh nghiệp vào Git. Giấy phép dự án xem tại [LICENSE](LICENSE).
+Chạy test trước khi gửi thay đổi. Không đưa chứng từ, thông tin cá nhân, khóa API, khóa ký hoặc dữ liệu nội bộ của doanh nghiệp vào Git. Đây là phần mềm thương mại, không phải mã nguồn mở. Điều khoản sử dụng xem tại [LICENSE](LICENSE); bản quyền thuộc Vũ Thị Kim Oanh, Phạm Hồng Vân, Phạm Quang Vinh.

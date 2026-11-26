@@ -47,7 +47,7 @@ class TestCalculator(unittest.TestCase):
         self.assertLessEqual(calc.uncertainty_pct, 5.0)
 
     def test_scope1_diesel_calculation(self):
-        # 1000 L * 2.68 kg CO2/L = 2,680 kg = 2.68 tonnes
+        # 1000 L * 2.749382 kgCO2e/L (IPCC cấp 1, tỷ trọng 0,86, mẫu NĐ 06) = 2.749 tonnes
         rec = ActivityRecord(
             id="TEST-DIESEL",
             description="Diesel Fuel DO 0.05S",
@@ -70,7 +70,7 @@ class TestCalculator(unittest.TestCase):
             ),
         )
         calc = self.calculator.calculate_single(rec)
-        self.assertAlmostEqual(calc.co2e_tonnes, 2.68, places=2)
+        self.assertAlmostEqual(calc.co2e_tonnes, 2.749382, places=4)
 
     def test_scope3_spend_proxy_uncertainty(self):
         # Spend proxy must have high uncertainty (+/- 40% or higher)

@@ -15,12 +15,17 @@ class CarbonCalculator:
 
     def calculate_single(self, record: ActivityRecord) -> CarbonCalculation:
         # Find factor
-        factor = self.db.find_best_match(
-            scope=record.scope,
-            category=record.category,
-            unit=record.unit,
-            query=f"{record.description} {record.unit}",
-        )
+        if record.factor_id:
+            factor = self.db.get(record.factor_id)
+            if factor is None:
+                raise ValueError(f"Không tìm thấy hệ số phát thải {record.factor_id}")
+        else:
+            factor = self.db.find_best_match(
+                scope=record.scope,
+                category=record.category,
+                unit=record.unit,
+                query=f"{record.description} {record.unit}",
+            )
 
         if not factor:
             # Fallback conservative factor

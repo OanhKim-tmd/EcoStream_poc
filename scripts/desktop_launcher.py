@@ -118,6 +118,14 @@ def _open_native_app_window(url: str) -> bool:
         return False
 
 
+def _enable_downloads(webview_module) -> None:
+    """pywebview blocks file downloads by default, so Excel/Word exports would silently do nothing."""
+    try:
+        webview_module.settings["ALLOW_DOWNLOADS"] = True
+    except Exception as exc:
+        print(f"[EcoStream Desktop] Could not enable downloads: {exc}")
+
+
 def _headless_check(host: str = "127.0.0.1") -> int:
     """CI smoke test for the frozen app: start the server, fetch the UI and its offline CSS, exit."""
     port = find_available_port(8000, host)
@@ -176,6 +184,7 @@ def main() -> None:
         print(f"[EcoStream Desktop] Existing instance running at {url}, opening another app window...")
         try:
             import webview
+            _enable_downloads(webview)
             webview.create_window(title="EcoStream — Kiểm kê khí nhà kính", url=url, width=1320, height=880, min_size=(1024, 700))
             webview.start(private_mode=False)
         except Exception:
@@ -207,6 +216,7 @@ def main() -> None:
 
         # Open the native app window (WebView2 on Windows, WKWebView on macOS); no browser involved.
         try:
+            _enable_downloads(webview)
             webview.create_window(
                 title="EcoStream — Kiểm kê khí nhà kính",
                 url=url,

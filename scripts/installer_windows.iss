@@ -3,7 +3,7 @@
 
 #define MyAppName "EcoStream"
 #define MyAppVersion "0.3.0"
-#define MyAppPublisher "EcoStream (USTH Inno 2026)"
+#define MyAppPublisher "Vũ Thị Kim Oanh, Phạm Hồng Vân, Phạm Quang Vinh"
 #define MyAppURL "https://github.com/OanhKim-tmd/EcoStream_poc"
 #define MyAppExeName "EcoStream.exe"
 

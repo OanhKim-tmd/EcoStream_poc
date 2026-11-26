@@ -27,14 +27,14 @@ class CliTests(unittest.TestCase):
     def test_demo_reproduces_reference_total(self):
         code, out, _ = self._run(["--demo", "--runs-dir", self.tmp.name])
         self.assertEqual(code, 0)
-        self.assertIn("Tổng:    1495.783 tCO2e", out)
+        self.assertIn("Tổng:    1594.699 tCO2e", out)
 
     def test_run_id_recalculates_existing_session(self):
         _, out, _ = self._run(["--demo", "--runs-dir", self.tmp.name])
         run_id = re.search(r"Mã phiên: (\S+)", out).group(1)
         code, out2, _ = self._run(["--run-id", run_id, "--runs-dir", self.tmp.name])
         self.assertEqual(code, 0)
-        self.assertIn("Tổng:    1495.783 tCO2e", out2)
+        self.assertIn("Tổng:    1594.699 tCO2e", out2)
 
     def test_missing_input_path_returns_error_code(self):
         code, _, err = self._run(["--input", os.path.join(self.tmp.name, "khong_co.xlsx"), "--runs-dir", self.tmp.name])

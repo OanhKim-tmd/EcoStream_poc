@@ -108,14 +108,9 @@
     <!-- ── Sidebar: light botanical palette + 4 workflow steps ── -->
     <aside class="bg-[#e7f2e8] text-[#173f2f] border-b lg:border-b-0 lg:border-r border-[#d4e7d6] lg:w-64 shrink-0 flex flex-col">
         <div class="flex items-center gap-2.5 px-5 h-16 lg:h-20">
-            <div class="w-9 h-9 rounded-xl bg-[#b9e5a2] flex items-center justify-center text-[#174b32] shrink-0">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
-                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-                </svg>
-            </div>
+            <img src="/static/logo.png" alt="EcoStream" class="h-9 w-auto shrink-0">
             <div class="leading-tight">
-                <div class="font-bold text-lg tracking-tight text-[#173f2f]">EcoStream</div>
+                <img src="/static/wordmark.png" alt="EcoStream" class="h-6 w-auto mb-0.5">
                 <div class="text-[11px] text-[#527861]">Kiểm kê KNK cấp cơ sở</div>
             </div>
         </div>
@@ -801,12 +796,12 @@
 
         function showWarnings(id, warnings) {
             const box = byId(id);
-            const messages = Array.isArray(warnings) ? warnings : [];
+            const messages = Array.isArray(warnings) ? [...new Set(warnings.map(String))] : [];
             box.classList.toggle('hidden', messages.length === 0);
             box.replaceChildren();
             if (!messages.length) return;
             const title = document.createElement('strong');
-            title.textContent = 'Cần rà soát trước khi sử dụng kết quả:';
+            title.textContent = 'Cần kiểm tra trước khi dùng kết quả:';
             const list = document.createElement('ul');
             list.className = 'list-disc pl-5 mt-2 space-y-1';
             messages.forEach(message => {
@@ -1530,11 +1525,23 @@
             tbody.append(trTotal);
         }
 
+        // Tab order follows the survey workbook: Thông tin chung, Phạm vi 1 (1.1-1.6), Phạm vi 2 (2.1-2.2), then the rest.
+        function orderExcelTabs() {
+            const seq = ['info', 'Phạm vi 1', '11', '12', '1.3', '1.4', '1.5', '1.6',
+                'Phạm vi 2', '21', '2.2', 'Thông tin bổ sung', 'Biện pháp giảm thiểu'];
+            document.querySelectorAll('#excelTabBar .excel-tab-btn').forEach(btn => {
+                const key = btn.id.replace('excelTabBtn-', '');
+                const i = seq.indexOf(key);
+                btn.style.order = i >= 0 ? i : seq.length;
+            });
+        }
+
         function renderExcelEditor(state, keepCurrentTab = false) {
             surveyWorkbookState = state;
             surveyDirty = false;
             extraCellsEdits = {};
             renderExcelExtraTabs();
+            orderExcelTabs();
             renderExcelInfoTab();
             renderExcel11Tab();
             renderExcel12Tab();
@@ -1776,7 +1783,7 @@
                 return `<div class="bar-col" title="Tháng ${i + 1}: ${total.toFixed(2)} tCO₂e">
                     <span class="text-[10px] font-mono text-[#2c4a3c]">${total > 0 ? (total >= 100 ? total.toFixed(0) : total.toFixed(1)) : '–'}</span>
                     <div class="bar-stack" style="height:${h}%">
-                        <div style="height:${s1h}%;background:#003c33"></div>
+                        <div style="height:${s1h}%;background:#2f7a4a"></div>
                         <div style="flex:1;background:#a8d987"></div>
                     </div>
                     <span class="text-[10px] text-[#6a8978]">T${i + 1}</span>

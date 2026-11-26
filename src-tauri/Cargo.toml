@@ -2,7 +2,8 @@
 name = "ecostream"
 version = "1.0.0"
 description = "EcoStream AI Carbon Accounting Desktop Application"
-authors = ["EcoStream Technologies <contact@ecostream.vn>"]
+authors = ["Vũ Thị Kim Oanh", "Phạm Hồng Vân", "Phạm Quang Vinh"]
+license = "LicenseRef-Proprietary"
 edition = "2021"
 
 [build-dependencies]
