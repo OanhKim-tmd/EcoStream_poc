@@ -1,0 +1,97 @@
+{
+  "kpi": {
+    "company": "Nhà máy May & Năng lượng Hà Nam — Công ty CP May mặc EcoGarment Việt Nam",
+    "facility": "KCN Đồng Văn III, TX. Duy Tiên, Hà Nam",
+    "year": 2026,
+    "scope1_tco2e": 48.72,
+    "scope2_tco2e": 312.56,
+    "total_tco2e": 361.28,
+    "ci_lower": 344.1,
+    "ci_upper": 378.46,
+    "reliability": "A",
+    "confidence_pct": 92.4,
+    "note": "Phạm vi 3 không được tính trong phiên bản hiện tại"
+  },
+  "input_files": [
+    {
+      "name": "Hóa đơn điện EVN (PDF)",
+      "filename": "electricity_month_01.pdf",
+      "type": "PDF",
+      "icon": "⚡",
+      "desc": "Hóa đơn điện tháng 1/2026 — 12 tháng được xử lý tổng hợp"
+    },
+    {
+      "name": "Dữ liệu điện tháng 2–12 (CSV)",
+      "filename": "electricity_months_02_12.csv",
+      "type": "CSV",
+      "icon": "📊",
+      "desc": "Tiêu thụ điện tháng 2–12/2026 từ hóa đơn số hóa"
+    },
+    {
+      "name": "Nhiên liệu cố định (Excel)",
+      "filename": "fuel_stationary.xlsx",
+      "type": "XLSX",
+      "icon": "🔥",
+      "desc": "Diesel & gas cho máy phát và lò hơi — Phạm vi 1"
+    },
+    {
+      "name": "Nhiên liệu di động (Word)",
+      "filename": "fuel_mobile.docx",
+      "type": "DOCX",
+      "icon": "🚛",
+      "desc": "Xăng dầu xe tải & xe nâng — Phạm vi 1"
+    },
+    {
+      "name": "Dữ liệu giả lập tổng hợp (Excel)",
+      "filename": "du_lieu_gia_lap_full_2026.xlsx",
+      "type": "XLSX",
+      "icon": "📋",
+      "desc": "Tổng hợp 12 tháng: điện, nhiên liệu, nước thải"
+    }
+  ],
+  "output_files": [
+    {
+      "name": "Biểu khảo sát đã điền",
+      "filename": "Bang_khao_sat_da_dien.xlsx",
+      "type": "XLSX",
+      "icon": "📗",
+      "desc": "Mẫu khảo sát ISO 14064-1 đã điền đầy đủ"
+    },
+    {
+      "name": "Kết quả kiểm kê GHG (Excel)",
+      "filename": "GHGs_inventory_da_tinh.xlsx",
+      "type": "XLSX",
+      "icon": "📊",
+      "desc": "Phát thải Phạm vi 1 & 2 theo tháng, có khoảng bất định"
+    },
+    {
+      "name": "Báo cáo kiểm kê KNK (Word)",
+      "filename": "Bao_cao_kiem_ke_KNK.docx",
+      "type": "DOCX",
+      "icon": "📄",
+      "desc": "Báo cáo Mẫu 02 — theo Nghị định 06/2022/NĐ-CP"
+    }
+  ],
+  "pipeline_steps": [
+    {
+      "icon": "📂",
+      "title": "Nạp chứng từ",
+      "desc": "OCR + trích xuất tự động từ PDF, Excel, CSV, Word"
+    },
+    {
+      "icon": "📝",
+      "title": "Điền biểu khảo sát",
+      "desc": "Tự động điền Mẫu Khảo sát ISO 14064-1"
+    },
+    {
+      "icon": "⚙️",
+      "title": "Tính toán phát thải",
+      "desc": "Phương pháp tất định + ước lượng khoảng bất định 95% CI"
+    },
+    {
+      "icon": "📋",
+      "title": "Xuất hồ sơ",
+      "desc": "Excel kiểm kê, Báo cáo Word Mẫu 02, HTML & PDF"
+    }
+  ]
+}

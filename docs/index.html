@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="EcoStream — Demo kiểm kê phát thải khí nhà kính tự động cho doanh nghiệp vừa và nhỏ"/>
+  <title>EcoStream — Demo Kiểm Kê KNK 2026</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <style>
+    :root {
+      --green-dark:  #003c33;
+      --green-mid:   #2c4a3c;
+      --lime:        #9fe870;
+      --lime-dark:   #7bc94e;
+      --bg:          #f5f9f4;
+      --bg2:         #e8f3e4;
+      --text:        #091710;
+      --text-muted:  #4a6b5a;
+      --border:      #cce5c0;
+      --card-bg:     #ffffff;
+      --radius:      12px;
+      --radius-lg:   20px;
+      --shadow:      0 2px 12px rgba(0,60,51,.10);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ---- HEADER ---- */
+    header {
+      background: var(--green-dark);
+      color: white;
+      padding: 20px 20px 28px;
+      text-align: center;
+      position: relative;
+    }
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: var(--lime);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .logo-text { font-size: 1.9rem; font-weight: 800; letter-spacing: -.5px; }
+    .logo-text span { color: var(--lime); }
+    .tagline { font-size: .8rem; color: #cce5c0; letter-spacing: 2px; text-transform: uppercase; }
+    .demo-badge {
+      display: inline-block;
+      background: rgba(159,232,112,.18);
+      border: 1px solid rgba(159,232,112,.4);
+      color: var(--lime);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: .75rem;
+      margin-top: 10px;
+      letter-spacing: .5px;
+    }
+    .header-company {
+      margin-top: 14px;
+      background: rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      font-size: .85rem;
+      color: #d0e8d0;
+    }
+    .header-company strong { color: white; display: block; font-size: .95rem; }
+
+    /* ---- SECTION ---- */
+    section { padding: 24px 16px; max-width: 540px; margin: 0 auto; }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+    }
+
+    /* ---- INPUT FILE CARDS ---- */
+    .file-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+    }
+    .file-icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+    .file-name { font-weight: 600; font-size: .9rem; color: var(--text); }
+    .file-desc { font-size: .78rem; color: var(--text-muted); margin: 2px 0 6px; }
+    .file-badge {
+      background: var(--bg2);
+      color: var(--green-mid);
+      border-radius: 6px;
+      padding: 1px 8px;
+      font-size: .7rem;
+      font-weight: 600;
+    }
+
+    /* ---- PIPELINE STEPS ---- */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 12px;
+      text-align: center;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    .step-num {
+      position: absolute;
+      top: -1px; left: -1px;
+      background: var(--green-dark);
+      color: var(--lime);
+      font-size: .65rem;
+      font-weight: 800;
+      width: 22px; height: 22px;
+      border-radius: var(--radius) 0 var(--radius) 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-icon { font-size: 1.5rem; margin-bottom: 6px; }
+    .step-title { font-weight: 700; font-size: .85rem; color: var(--green-dark); margin-bottom: 4px; }
+    .step-desc { font-size: .72rem; color: var(--text-muted); line-height: 1.4; }
+
+    /* ---- KPI CARDS ---- */
+    .kpi-main {
+      background: var(--green-dark);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      text-align: center;
+      color: white;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 20px rgba(0,60,51,.25);
+    }
+    .kpi-main-label { font-size: .8rem; color: #cce5c0; letter-spacing: .5px; margin-bottom: 4px; }
+    .kpi-main-value {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: var(--lime);
+      line-height: 1;
+    }
+    .kpi-main-unit { font-size: .9rem; color: #9ed4c0; margin: 4px 0 8px; }
+    .kpi-ci {
+      background: rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: .75rem;
+      color: #cce5c0;
+      display: inline-block;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 8px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .kpi-card-label { font-size: .7rem; color: var(--text-muted); margin-bottom: 4px; line-height: 1.3; }
+    .kpi-card-value { font-size: 1.25rem; font-weight: 800; color: var(--green-dark); }
+    .kpi-card-unit { font-size: .65rem; color: var(--text-muted); }
+    .grade-pill {
+      display: inline-block;
+      background: var(--lime);
+      color: var(--green-dark);
+      border-radius: 20px;
+      padding: 2px 14px;
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .kpi-note {
+      font-size: .72rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* ---- DOWNLOAD ---- */
+    .dl-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      margin-bottom: 9px;
+      text-decoration: none;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .dl-btn:hover {
+      border-color: var(--lime-dark);
+      box-shadow: 0 4px 16px rgba(0,60,51,.15);
+    }
+    .dl-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .dl-info { flex: 1; }
+    .dl-name { font-weight: 600; font-size: .9rem; display: block; }
+    .dl-type {
+      font-size: .7rem;
+      background: var(--bg2);
+      color: var(--green-mid);
+      padding: 1px 7px;
+      border-radius: 5px;
+      font-weight: 600;
+    }
+    .dl-arrow {
+      font-size: 1.2rem;
+      color: var(--lime-dark);
+      font-weight: 700;
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      background: var(--green-dark);
+      color: #9ed4c0;
+      text-align: center;
+      padding: 24px 20px;
+      font-size: .8rem;
+      margin-top: 10px;
+    }
+    footer a { color: var(--lime); text-decoration: none; }
+    .footer-logo {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 6px;
+    }
+    .footer-logo span { color: var(--lime); }
+
+    /* ---- SECTION DIVIDER ---- */
+    .section-divider {
+      height: 6px;
+      background: linear-gradient(90deg, var(--green-dark) 0%, var(--lime) 100%);
+      opacity: .15;
+    }
+
+    /* ---- DISCLAIMER ---- */
+    .disclaimer {
+      background: #fff8e1;
+      border-left: 3px solid #f59e0b;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 10px 14px;
+      font-size: .75rem;
+      color: #78350f;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 360px) {
+      .kpi-main-value { font-size: 2rem; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-row">
+    <div class="logo-icon">🌱</div>
+    <div class="logo-text">ECO<span>Stream</span></div>
+  </div>
+  <div class="tagline">Measure · Optimize · Go Greener</div>
+  <div class="demo-badge">🎯 Phiên bản Demo — Dữ liệu mẫu 2026</div>
+  <div class="header-company">
+    <strong>Nhà máy May & Năng lượng Hà Nam — Công ty CP May mặc EcoGarment Việt Nam</strong>
+    📍 KCN Đồng Văn III, TX. Duy Tiên, Hà Nam
+  </div>
+</header>
+
+<!-- SECTION 1: INPUT FILES -->
+<section>
+  <div class="section-title">📂 Chứng từ đầu vào</div>
+  
+        <div class="file-card">
+          <div class="file-icon">⚡</div>
+          <div class="file-info">
+            <div class="file-name">Hóa đơn điện EVN (PDF)</div>
+            <div class="file-desc">Hóa đơn điện tháng 1/2026 — 12 tháng được xử lý tổng hợp</div>
+            <span class="file-badge">PDF</span>
+          </div>
+        </div>
+
+        <div class="file-card">
+          <div class="file-icon">📊</div>
+          <div class="file-info">
+            <div class="file-name">Dữ liệu điện tháng 2–12 (CSV)</div>
+            <div class="file-desc">Tiêu thụ điện tháng 2–12/2026 từ hóa đơn số hóa</div>
+            <span class="file-badge">CSV</span>
+          </div>
+        </div>
+
+        <div class="file-card">
+          <div class="file-icon">🔥</div>
+          <div class="file-info">
+            <div class="file-name">Nhiên liệu cố định (Excel)</div>
+            <div class="file-desc">Diesel & gas cho máy phát và lò hơi — Phạm vi 1</div>
+            <span class="file-badge">XLSX</span>
+          </div>
+        </div>
+
+        <div class="file-card">
+          <div class="file-icon">🚛</div>
+          <div class="file-info">
+            <div class="file-name">Nhiên liệu di động (Word)</div>
+            <div class="file-desc">Xăng dầu xe tải & xe nâng — Phạm vi 1</div>
+            <span class="file-badge">DOCX</span>
+          </div>
+        </div>
+
+        <div class="file-card">
+          <div class="file-icon">📋</div>
+          <div class="file-info">
+            <div class="file-name">Dữ liệu giả lập tổng hợp (Excel)</div>
+            <div class="file-desc">Tổng hợp 12 tháng: điện, nhiên liệu, nước thải</div>
+            <span class="file-badge">XLSX</span>
+          </div>
+        </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 2: PIPELINE -->
+<section>
+  <div class="section-title">⚙️ Quy trình xử lý</div>
+  <div class="steps-grid">
+    
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-icon">📂</div>
+          <div class="step-title">Nạp chứng từ</div>
+          <div class="step-desc">OCR + trích xuất tự động từ PDF, Excel, CSV, Word</div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-icon">📝</div>
+          <div class="step-title">Điền biểu khảo sát</div>
+          <div class="step-desc">Tự động điền Mẫu Khảo sát ISO 14064-1</div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-icon">⚙️</div>
+          <div class="step-title">Tính toán phát thải</div>
+          <div class="step-desc">Phương pháp tất định + ước lượng khoảng bất định 95% CI</div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-icon">📋</div>
+          <div class="step-title">Xuất hồ sơ</div>
+          <div class="step-desc">Excel kiểm kê, Báo cáo Word Mẫu 02, HTML & PDF</div>
+        </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 3: KPI RESULTS -->
+<section>
+  <div class="section-title">📈 Kết quả kiểm kê 2026</div>
+
+  <div class="disclaimer">
+    ⚠️ Dữ liệu demo — chỉ bao gồm <strong>Phạm vi 1 & 2</strong>. Phạm vi 3 không được tính trong phiên bản hiện tại.
+  </div>
+
+  <div class="kpi-main">
+    <div class="kpi-main-label">TỔNG PHÁT THẢI KHÍ NHÀ KÍNH</div>
+    <div class="kpi-main-value">361.28</div>
+    <div class="kpi-main-unit">tCO₂e · Phạm vi 1 + 2</div>
+    <div class="kpi-ci">📊 Khoảng bất định 95% CI: 344.1 – 378.5 tCO₂e</div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-card-label">Phạm vi 1<br/>(Phát thải trực tiếp)</div>
+      <div class="kpi-card-value">48.72</div>
+      <div class="kpi-card-unit">tCO₂e</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Phạm vi 2<br/>(Điện mua ngoài)</div>
+      <div class="kpi-card-value">312.56</div>
+      <div class="kpi-card-unit">tCO₂e</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Độ tin cậy<br/>(92.4%)</div>
+      <div class="kpi-card-value"><span class="grade-pill">A</span></div>
+      <div class="kpi-card-unit">Hạng</div>
+    </div>
+  </div>
+  <div class="kpi-note">* Phương pháp tất định + Monte Carlo 10,000 vòng lặp</div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- SECTION 4: DOWNLOADS -->
+<section>
+  <div class="section-title">📥 Tải hồ sơ đầu ra</div>
+  
+        <a class="dl-btn" href="demo-assets/Bang_khao_sat_da_dien.xlsx" download>
+          <span class="dl-icon">📗</span>
+          <span class="dl-info">
+            <span class="dl-name">Biểu khảo sát đã điền</span>
+            <span class="dl-type">XLSX</span>
+          </span>
+          <span class="dl-arrow">↓</span>
+        </a>
+
+        <a class="dl-btn" href="demo-assets/GHGs_inventory_da_tinh.xlsx" download>
+          <span class="dl-icon">📊</span>
+          <span class="dl-info">
+            <span class="dl-name">Kết quả kiểm kê GHG (Excel)</span>
+            <span class="dl-type">XLSX</span>
+          </span>
+          <span class="dl-arrow">↓</span>
+        </a>
+
+        <a class="dl-btn" href="demo-assets/Bao_cao_kiem_ke_KNK.docx" download>
+          <span class="dl-icon">📄</span>
+          <span class="dl-info">
+            <span class="dl-name">Báo cáo kiểm kê KNK (Word)</span>
+            <span class="dl-type">DOCX</span>
+          </span>
+          <span class="dl-arrow">↓</span>
+        </a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ECO<span>Stream</span></div>
+  <p>Nền tảng kiểm kê phát thải KNK tự động cho doanh nghiệp vừa và nhỏ</p>
+  <p style="margin-top:8px">
+    🌐 <a href="https://ecostream.vn">ecostream.vn</a>
+    &nbsp;·&nbsp;
+    📧 <a href="mailto:contact@ecostream.vn">contact@ecostream.vn</a>
+  </p>
+  <p style="margin-top:8px; font-size:.7rem; opacity:.7">
+    © 2026 EcoStream · Dữ liệu demo — không dùng cho mục đích thương mại
+  </p>
+</footer>
+
+</body>
+</html>
