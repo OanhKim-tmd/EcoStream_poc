@@ -286,11 +286,72 @@ def write_html(kpi: dict) -> None:
         /* Results charts */
         .bar-col {{ display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: .3rem; flex: 1; min-width: 0; height: 100%; }}
         .bar-stack {{ width: 70%; max-width: 26px; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column-reverse; background: #edf5e9; }}
+
+        /* ── Dark Mode Overrides ── */
+        html[data-theme="dark"] body {{ background-color: #0b1510 !important; color: #e4f0e8 !important; }}
+        html[data-theme="dark"] .app-shell {{ background-color: #101f17 !important; box-shadow: 0 24px 70px rgba(0, 0, 0, .55) !important; }}
+        html[data-theme="dark"] aside.bg-\[\#e7f2e8\] {{ background-color: #13251c !important; border-color: #213d2e !important; color: #d9ece0 !important; }}
+        html[data-theme="dark"] .bg-\[\#fbfdfb\] {{ background-color: #101f17 !important; }}
+        html[data-theme="dark"] .bg-white {{ background-color: #162b20 !important; }}
+        html[data-theme="dark"] .bg-white\/75 {{ background-color: rgba(22, 43, 32, 0.85) !important; }}
+        html[data-theme="dark"] .bg-\[\#f5f9f4\],
+        html[data-theme="dark"] .bg-\[\#f6faf6\],
+        html[data-theme="dark"] .bg-\[\#f7faf7\],
+        html[data-theme="dark"] .bg-\[\#edf5e9\],
+        html[data-theme="dark"] .bg-\[\#eaf3eb\],
+        html[data-theme="dark"] .bg-\[\#e5f2e5\],
+        html[data-theme="dark"] .bg-\[\#e8f4e8\] {{ background-color: #1b3427 !important; }}
+        html[data-theme="dark"] .bg-amber-50 {{ background-color: #2c2414 !important; border-color: #5c481c !important; }}
+        html[data-theme="dark"] .text-amber-950,
+        html[data-theme="dark"] .text-amber-900,
+        html[data-theme="dark"] .text-amber-800 {{ color: #f6d58e !important; }}
+        html[data-theme="dark"] .text-\[\#091710\],
+        html[data-theme="dark"] .text-\[\#173f2f\],
+        html[data-theme="dark"] .text-\[\#183026\] {{ color: #e6f2ea !important; }}
+        html[data-theme="dark"] .text-\[\#2c4a3c\],
+        html[data-theme="dark"] .text-\[\#315b43\],
+        html[data-theme="dark"] .text-\[\#426451\] {{ color: #b7d2c0 !important; }}
+        html[data-theme="dark"] .text-\[\#527861\],
+        html[data-theme="dark"] .text-\[\#6a8978\] {{ color: #86a994 !important; }}
+        html[data-theme="dark"] .text-\[\#235f3a\],
+        html[data-theme="dark"] .text-\[\#2f7a4a\],
+        html[data-theme="dark"] .text-\[\#2a5c47\],
+        html[data-theme="dark"] .text-\[\#4b8059\] {{ color: #8cd997 !important; }}
+        html[data-theme="dark"] .border-\[\#e2f0db\],
+        html[data-theme="dark"] .border-\[\#e2f0db\]\/80,
+        html[data-theme="dark"] .border-\[\#d4e7d6\],
+        html[data-theme="dark"] .border-\[\#cce5c0\],
+        html[data-theme="dark"] .border-\[\#cfe4d0\],
+        html[data-theme="dark"] .border-\[\#e0ece0\] {{ border-color: #244332 !important; }}
+        html[data-theme="dark"] .step-nav {{ color: #9fc0ac; }}
+        html[data-theme="dark"] .step-nav:hover {{ background: #1c3729; color: #e6f2ea; }}
+        html[data-theme="dark"] .step-num {{ background: #214030; color: #a7cbb4; }}
+        html[data-theme="dark"] .step-nav.is-done .step-num {{ background: #2b5e3c; color: #b9e5a2; }}
+        html[data-theme="dark"] .step-nav.is-active {{ background: #101f17; color: #e6f2ea; box-shadow: 0 4px 14px rgba(0,0,0,.35); }}
+        html[data-theme="dark"] .step-nav.is-active .step-num {{ background: #3b9158; color: #fff; }}
+        @media (min-width: 1024px) {{
+            html[data-theme="dark"] .step-nav.is-active::before {{ box-shadow: 6px 6px 0 6px #101f17; }}
+            html[data-theme="dark"] .step-nav.is-active::after {{ box-shadow: 6px -6px 0 6px #101f17; }}
+        }}
+        html[data-theme="dark"] .timeline-dot {{ background: #162b20; border-color: #2d553f; }}
+        html[data-theme="dark"] .timeline-card {{ background: #182e23; color: #c4ddd0; }}
+        html[data-theme="dark"] .timeline-sub {{ color: #82a590; }}
+        html[data-theme="dark"] .timeline-item.is-done .timeline-dot {{ background: #3b9158; border-color: #8cd997; }}
+        html[data-theme="dark"] .timeline-item.is-active .timeline-card {{ background: #1f3d2d; color: #e6f2ea; }}
+        html[data-theme="dark"] .timeline-item.is-active .timeline-sub {{ color: #a8ccb6; }}
+        html[data-theme="dark"] .bar-stack {{ background: #1c3528; }}
+        html[data-theme="dark"] tr:hover {{ background-color: #1c3528 !important; }}
     </style>
+    <script>
+        (function() {{
+            const t = localStorage.getItem('ecostream_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        }})();
+    </script>
 </head>
 <body class="antialiased bg-[#eaf3eb] lg:p-5 selection:bg-[#d2f0b7] selection:text-[#123b2b]">
 
-<div class="max-w-[1480px] mx-auto min-h-screen lg:min-h-[calc(100vh-2.5rem)] flex flex-col lg:flex-row bg-[#fbfdfb] lg:rounded-[28px] overflow-hidden shadow-[0_24px_70px_rgba(27,69,44,.12)]">
+<div class="app-shell max-w-[1480px] mx-auto min-h-screen lg:min-h-[calc(100vh-2.5rem)] flex flex-col lg:flex-row bg-[#fbfdfb] lg:rounded-[28px] overflow-hidden shadow-[0_24px_70px_rgba(27,69,44,.12)]">
 
     <!-- ── Sidebar ── -->
     <aside class="bg-[#e7f2e8] text-[#173f2f] border-b lg:border-b-0 lg:border-r border-[#d4e7d6] lg:w-64 shrink-0 flex flex-col">
@@ -298,36 +359,46 @@ def write_html(kpi: dict) -> None:
             <img src="static/logo.png" alt="EcoStream" class="h-9 w-auto shrink-0">
             <div class="leading-tight">
                 <img src="static/wordmark.png" alt="EcoStream" class="h-6 w-auto mb-0.5">
-                <div class="text-[11px] text-[#527861]">Kiểm kê KNK cấp cơ sở</div>
+                <div class="text-[11px] text-[#527861]" data-i18n="brand_sub">Kiểm kê KNK cấp cơ sở</div>
             </div>
         </div>
 
         <nav id="flowStepper" aria-label="Tiến trình kiểm kê" class="flex lg:flex-col gap-1 px-3 lg:pl-3 lg:pr-0 pb-3 lg:pb-0 lg:mt-4 overflow-x-auto">
             <button type="button" id="stepBadge1" onclick="goToStep(1)" class="step-nav is-done">
                 <span class="step-num">1</span>
-                <span class="truncate">Thông tin cơ sở</span>
+                <span class="truncate" data-i18n="step1_nav">Thông tin cơ sở</span>
             </button>
             <button type="button" id="stepBadge2" onclick="goToStep(2)" class="step-nav is-done">
                 <span class="step-num">2</span>
-                <span class="truncate">Nạp chứng từ</span>
+                <span class="truncate" data-i18n="step2_nav">Nạp chứng từ</span>
             </button>
             <button type="button" id="stepBadge3" onclick="goToStep(3)" class="step-nav is-done">
                 <span class="step-num">3</span>
-                <span class="truncate">Rà soát biểu Excel</span>
+                <span class="truncate" data-i18n="step3_nav">Rà soát biểu Excel</span>
             </button>
             <button type="button" id="stepBadge4" onclick="goToStep(4)" class="step-nav is-active">
                 <span class="step-num">4</span>
-                <span class="truncate">Kết quả &amp; báo cáo</span>
+                <span class="truncate" data-i18n="step4_nav">Kết quả &amp; báo cáo</span>
             </button>
         </nav>
 
         <div class="hidden lg:block mt-auto p-5 space-y-3">
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="openModal('settingsModal')" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/75 hover:bg-white border border-[#d4e7d6] text-xs font-semibold text-[#173f2f] transition cursor-pointer">
+                    <span aria-hidden="true">⚙️</span>
+                    <span data-i18n="nav_settings">Cài đặt</span>
+                </button>
+                <button type="button" onclick="openModal('supportModal')" class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/75 hover:bg-white border border-[#d4e7d6] text-xs font-semibold text-[#173f2f] transition cursor-pointer">
+                    <span aria-hidden="true">💬</span>
+                    <span data-i18n="nav_support">Hỗ trợ</span>
+                </button>
+            </div>
             <div class="rounded-2xl bg-white/75 border border-[#d4e7d6] p-4 text-xs leading-relaxed">
                 <div class="flex items-center gap-2 font-semibold text-[#2f7a4a]">
                     <span class="w-2 h-2 rounded-full bg-[#4b9b60]"></span>
-                    Bản Demo Tương Tác
+                    <span data-i18n="demo_badge_title">Bản Demo Tương Tác</span>
                 </div>
-                <p class="mt-1.5 text-[#527861]">Dữ liệu mẫu năm {FACILITY_INFO['year']} đã được tính sẵn. Bấm chọn từng bước để xem quy trình.</p>
+                <p class="mt-1.5 text-[#527861]" data-i18n="demo_badge_desc">Dữ liệu mẫu năm {FACILITY_INFO['year']} đã được tính sẵn. Bấm chọn từng bước để xem quy trình.</p>
             </div>
         </div>
     </aside>
@@ -348,6 +419,8 @@ def write_html(kpi: dict) -> None:
                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#e5f2e5] text-[11px] font-semibold text-[#2f7a4a]">
                     <span class="w-1.5 h-1.5 rounded-full bg-[#4b9b60]"></span>Demo 2026
                 </span>
+                <button type="button" onclick="openModal('settingsModal')" title="Cài đặt / Settings" aria-label="Cài đặt" class="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-[#d4e7d6] text-xs hover:bg-[#edf5e9] transition cursor-pointer">⚙️</button>
+                <button type="button" onclick="openModal('supportModal')" title="Hỗ trợ / Support" aria-label="Hỗ trợ" class="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-[#d4e7d6] text-xs hover:bg-[#edf5e9] transition cursor-pointer">💬</button>
             </div>
         </header>
 
@@ -359,11 +432,11 @@ def write_html(kpi: dict) -> None:
                 <!-- Welcome hero -->
                 <section class="relative overflow-hidden rounded-3xl bg-white border border-[#e2f0db] p-6 sm:p-7 flex items-center gap-6">
                     <div class="flex-1 min-w-0 space-y-2 relative z-10">
-                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#091710]">Xin chào! 🌱</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#091710]" data-i18n="hero_hello">Xin chào! 🌱</h2>
                         <p id="heroHint" class="text-sm text-[#2c4a3c] max-w-md">
                             Đây là kết quả kiểm kê mẫu cho {FACILITY_INFO['facility']}. Bạn có thể xem lại từng bước hoặc tải 3 hồ sơ đầu ra bên dưới.
                         </p>
-                        <p class="text-xs text-[#6a8978]">Biểu mẫu theo CV 1790/VNL-P16 · Nghị định 06/2022/NĐ-CP</p>
+                        <p class="text-xs text-[#6a8978]" data-i18n="hero_reg">Biểu mẫu theo CV 1790/VNL-P16 · Nghị định 06/2022/NĐ-CP</p>
                     </div>
                     <svg class="hidden sm:block w-44 h-32 shrink-0" viewBox="0 0 220 160" fill="none" aria-hidden="true">
                         <circle cx="150" cy="70" r="62" fill="#edf5e9"/>
@@ -639,53 +712,247 @@ def write_html(kpi: dict) -> None:
             <aside class="hidden xl:flex flex-col gap-5">
                 <section class="rounded-3xl bg-white border border-[#e2f0db] p-5">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-bold text-[#091710]">Tiến trình kiểm kê</h3>
+                        <h3 class="text-sm font-bold text-[#091710]" data-i18n="progress_title">Tiến trình kiểm kê</h3>
                         <span id="sideProgressText" class="text-[11px] font-semibold text-[#2a5c47] bg-[#edf5e9] px-2 py-0.5 rounded-full">4/4</span>
                     </div>
                     <ol class="mt-4 relative border-l-2 border-dashed border-[#cce5c0] ml-2 space-y-4">
-                        <li id="timelineStep1" onclick="goToStep(1)" class="timeline-item is-done"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold">Thông tin cơ sở</div><div class="timeline-sub">Phiếu thông tin chung</div></div></li>
-                        <li id="timelineStep2" onclick="goToStep(2)" class="timeline-item is-done"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold">Nạp chứng từ</div><div class="timeline-sub">PDF có chữ, Excel, Word, CSV</div></div></li>
-                        <li id="timelineStep3" onclick="goToStep(3)" class="timeline-item is-done"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold">Rà soát biểu Excel</div><div class="timeline-sub">Sửa, bổ sung ô còn trống</div></div></li>
-                        <li id="timelineStep4" onclick="goToStep(4)" class="timeline-item is-active"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold">Kết quả &amp; báo cáo</div><div class="timeline-sub">Scope 1/2, tải 3 tệp</div></div></li>
+                        <li id="timelineStep1" onclick="goToStep(1)" class="timeline-item is-done"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold" data-i18n="step1_nav">Thông tin cơ sở</div><div class="timeline-sub" data-i18n="step1_sub">Phiếu thông tin chung</div></div></li>
+                        <li id="timelineStep2" onclick="goToStep(2)" class="timeline-item is-done"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold" data-i18n="step2_nav">Nạp chứng từ</div><div class="timeline-sub" data-i18n="step2_sub">PDF có chữ, Excel, Word, CSV</div></div></li>
+                        <li id="timelineStep3" onclick="goToStep(3)" class="timeline-item is-done"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold" data-i18n="step3_nav">Rà soát biểu Excel</div><div class="timeline-sub" data-i18n="step3_sub">Sửa, bổ sung ô còn trống</div></div></li>
+                        <li id="timelineStep4" onclick="goToStep(4)" class="timeline-item is-active"><span class="timeline-dot"></span><div class="timeline-card"><div class="font-semibold" data-i18n="step4_nav">Kết quả &amp; báo cáo</div><div class="timeline-sub" data-i18n="step4_sub">Scope 1/2, tải 3 tệp</div></div></li>
                     </ol>
                 </section>
 
                 <section class="rounded-3xl bg-white border border-[#e2f0db] p-5 space-y-3">
-                    <h3 class="text-sm font-bold text-[#091710]">Lưu ý khi dùng</h3>
+                    <h3 class="text-sm font-bold text-[#091710]" data-i18n="notes_title">Lưu ý khi dùng</h3>
                     <div class="flex gap-3 text-xs text-[#2c4a3c]">
                         <span class="w-8 h-8 rounded-xl bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0 font-bold">PDF</span>
-                        <p>Chỉ đọc <b>PDF có chữ</b> (hóa đơn điện tử). PDF scan cần nhập tay ở bước 3.</p>
+                        <p data-i18n="note_pdf">Chỉ đọc <b>PDF có chữ</b> (hóa đơn điện tử). PDF scan cần nhập tay ở bước 3.</p>
                     </div>
                     <div class="flex gap-3 text-xs text-[#2c4a3c]">
                         <span class="w-8 h-8 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center shrink-0 font-bold">!</span>
-                        <p>Sinh khối, chất thải, LNG… chưa có hệ số riêng nên được ghi <b>CHƯA TÍNH</b>, không cộng vào tổng.</p>
+                        <p data-i18n="note_missing">Sinh khối, chất thải, LNG… chưa có hệ số riêng nên được ghi <b>CHƯA TÍNH</b>, không cộng vào tổng.</p>
                     </div>
                     <div class="flex gap-3 text-xs text-[#2c4a3c]">
                         <span class="w-8 h-8 rounded-xl bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0 font-bold">✓</span>
-                        <p>Kết quả là <b>bản dự thảo</b>, cần đối chiếu chứng từ gốc trước khi nộp.</p>
+                        <p data-i18n="note_draft">Kết quả là <b>bản dự thảo</b>, cần đối chiếu chứng từ gốc trước khi nộp.</p>
                     </div>
                 </section>
             </aside>
 
         </div><!-- /grid -->
 
-        <footer class="px-8 py-4 text-center text-xs text-[#6a8978]">
+        <footer class="px-8 py-4 text-center text-xs text-[#6a8978]" data-i18n="footer_text">
             EcoStream · Kiểm kê khí nhà kính cấp cơ sở (NĐ 06/2022/NĐ-CP) · Bản Demo Tĩnh
         </footer>
     </div><!-- /main area -->
 </div><!-- /app frame -->
 
+<!-- ── Settings Modal ── -->
+<div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle" onclick="if(event.target===this) closeModal('settingsModal')">
+    <div class="w-full max-w-md rounded-2xl bg-white border border-[#d4e7d6] shadow-2xl p-6 space-y-5">
+        <div class="flex items-center justify-between border-b border-[#e2f0db] pb-3">
+            <h2 id="settingsModalTitle" class="text-base font-bold text-[#091710] flex items-center gap-2">
+                <span aria-hidden="true">⚙️</span>
+                <span data-i18n="settings_title">Cài đặt</span>
+            </h2>
+            <button type="button" onclick="closeModal('settingsModal')" class="w-7 h-7 rounded-lg text-[#6a8978] hover:bg-[#edf5e9] flex items-center justify-center transition cursor-pointer" aria-label="Close">✕</button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="settings_theme_label">Giao diện (Theme)</label>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" id="btnThemeLight" onclick="setTheme('light')" class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
+                        <span aria-hidden="true">☀️</span>
+                        <span data-i18n="theme_light">Sáng</span>
+                    </button>
+                    <button type="button" id="btnThemeDark" onclick="setTheme('dark')" class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
+                        <span aria-hidden="true">🌙</span>
+                        <span data-i18n="theme_dark">Tối</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-[#4b8059]" data-i18n="settings_lang_label">Ngôn ngữ (Language)</label>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" id="btnLangVi" onclick="setLanguage('vi')" class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
+                        <span aria-hidden="true">🇻🇳</span>
+                        <span>Tiếng Việt</span>
+                    </button>
+                    <button type="button" id="btnLangEn" onclick="setLanguage('en')" class="p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer">
+                        <span aria-hidden="true">🇬🇧</span>
+                        <span>English</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-3 border-t border-[#e2f0db] flex justify-end">
+            <button type="button" onclick="closeModal('settingsModal')" class="px-5 py-2 rounded-lg text-xs font-semibold text-white gradient-brand transition cursor-pointer" data-i18n="btn_done">Xong</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Support Modal ── -->
+<div id="supportModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="supportModalTitle" onclick="if(event.target===this) closeModal('supportModal')">
+    <div class="w-full max-w-md rounded-2xl bg-white border border-[#d4e7d6] shadow-2xl p-6 space-y-5">
+        <div class="flex items-center justify-between border-b border-[#e2f0db] pb-3">
+            <h2 id="supportModalTitle" class="text-base font-bold text-[#091710] flex items-center gap-2">
+                <span aria-hidden="true">💬</span>
+                <span data-i18n="support_title">Hỗ trợ &amp; Báo lỗi</span>
+            </h2>
+            <button type="button" onclick="closeModal('supportModal')" class="w-7 h-7 rounded-lg text-[#6a8978] hover:bg-[#edf5e9] flex items-center justify-center transition cursor-pointer" aria-label="Close">✕</button>
+        </div>
+
+        <p class="text-xs text-[#2c4a3c] leading-relaxed" data-i18n="support_desc">
+            Gặp sự cố hoặc cần tư vấn về EcoStream? Liên hệ trực tiếp với đội ngũ EcoStream qua các kênh bên dưới.
+        </p>
+
+        <div class="space-y-2.5">
+            <a href="mailto:support@ecostream.vn?subject=%5BEcoStream%20Demo%5D%20B%C3%A1o%20l%E1%BB%97i%20%2F%20H%E1%BB%97%20tr%E1%BB%A3" class="flex items-center justify-between p-3.5 rounded-xl bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#d4e7d6] transition">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="w-8 h-8 rounded-lg bg-[#e5f2e5] text-[#235f3a] flex items-center justify-center shrink-0">✉️</span>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-[#091710]" data-i18n="support_email_title">Gửi Email hỗ trợ</div>
+                        <div class="text-[11px] text-[#6a8978] truncate">support@ecostream.vn</div>
+                    </div>
+                </div>
+                <span class="text-xs text-[#2f7a4a] font-semibold">↗</span>
+            </a>
+
+            <a href="https://github.com/OanhKim-tmd/EcoStream_poc/issues/new" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between p-3.5 rounded-xl bg-[#f5f9f4] hover:bg-[#edf5e9] border border-[#d4e7d6] transition">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="w-8 h-8 rounded-lg bg-[#e5f2e5] text-[#235f3a] flex items-center justify-center shrink-0">🐛</span>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-[#091710]" data-i18n="support_github_title">Báo lỗi trên GitHub Issues</div>
+                        <div class="text-[11px] text-[#6a8978] truncate">github.com/OanhKim-tmd/EcoStream_poc</div>
+                    </div>
+                </div>
+                <span class="text-xs text-[#2f7a4a] font-semibold">↗</span>
+            </a>
+
+            <button type="button" onclick="copyDiagnostics()" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-white hover:bg-[#f5f9f4] border border-[#d4e7d6] transition text-left cursor-pointer">
+                <div class="flex items-center gap-3 min-w-0">
+                    <span class="w-8 h-8 rounded-lg bg-[#edf5e9] text-[#235f3a] flex items-center justify-center shrink-0">📋</span>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-[#091710]" data-i18n="support_diag_title">Sao chép thông tin chẩn đoán</div>
+                        <div id="diagCopyStatus" class="text-[11px] text-[#6a8978]" data-i18n="support_diag_desc">Kèm thông số hệ thống khi gửi báo lỗi</div>
+                    </div>
+                </div>
+                <span class="text-xs text-[#2f7a4a] font-semibold" data-i18n="btn_copy">Copy</span>
+            </button>
+        </div>
+
+        <div class="pt-3 border-t border-[#e2f0db] flex justify-end">
+            <button type="button" onclick="closeModal('supportModal')" class="px-5 py-2 rounded-lg text-xs font-semibold text-white gradient-brand transition cursor-pointer" data-i18n="btn_close">Đóng</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const DEMO = {payload_json};
 
-const STEP_META = {{
-    1: {{ title: 'Thông tin cơ sở', hint: 'Thông tin chung của cơ sở được điền sẵn vào biểu khảo sát theo CV 1790/VNL-P16.' }},
-    2: {{ title: 'Nạp chứng từ', hint: '5 tệp chứng từ mẫu (PDF, CSV, Excel, Word) đã được đọc và trích xuất số liệu hoạt động.' }},
-    3: {{ title: 'Rà soát biểu Excel', hint: 'Kiểm tra lại các dòng dữ liệu Scope 1 & 2 trước khi hệ thống chạy tính toán phát thải.' }},
-    4: {{ title: 'Kết quả & báo cáo', hint: 'Đây là kết quả kiểm kê mẫu cho ' + DEMO.facility_info.facility + '. Bạn có thể xem lại từng bước hoặc tải 3 hồ sơ đầu ra bên dưới.' }},
+let currentDemoStep = 4;
+let currentTheme = localStorage.getItem('ecostream_theme') || 'light';
+let currentLang = localStorage.getItem('ecostream_lang') || 'vi';
+
+const I18N = {{
+    vi: {{
+        brand_sub: 'Kiểm kê KNK cấp cơ sở',
+        step1_nav: 'Thông tin cơ sở',
+        step2_nav: 'Nạp chứng từ',
+        step3_nav: 'Rà soát biểu Excel',
+        step4_nav: 'Kết quả & báo cáo',
+        step1_sub: 'Phiếu thông tin chung',
+        step2_sub: 'PDF có chữ, Excel, Word, CSV',
+        step3_sub: 'Sửa, bổ sung ô còn trống',
+        step4_sub: 'Scope 1/2, tải 3 tệp',
+        nav_settings: 'Cài đặt',
+        nav_support: 'Hỗ trợ',
+        demo_badge_title: 'Bản Demo Tương Tác',
+        demo_badge_desc: 'Dữ liệu mẫu năm ' + DEMO.facility_info.year + ' đã được tính sẵn. Bấm chọn từng bước để xem quy trình.',
+        hero_hello: 'Xin chào! 🌱',
+        hero_reg: 'Biểu mẫu theo CV 1790/VNL-P16 · Nghị định 06/2022/NĐ-CP',
+        progress_title: 'Tiến trình kiểm kê',
+        notes_title: 'Lưu ý khi dùng',
+        note_pdf: 'Chỉ đọc <b>PDF có chữ</b> (hóa đơn điện tử). PDF scan cần nhập tay ở bước 3.',
+        note_missing: 'Sinh khối, chất thải, LNG… chưa có hệ số riêng nên được ghi <b>CHƯA TÍNH</b>, không cộng vào tổng.',
+        note_draft: 'Kết quả là <b>bản dự thảo</b>, cần đối chiếu chứng từ gốc trước khi nộp.',
+        footer_text: 'EcoStream · Kiểm kê khí nhà kính cấp cơ sở (NĐ 06/2022/NĐ-CP) · Bản Demo Tĩnh',
+        settings_title: 'Cài đặt',
+        settings_theme_label: 'Giao diện (Theme)',
+        theme_light: 'Sáng',
+        theme_dark: 'Tối',
+        settings_lang_label: 'Ngôn ngữ (Language)',
+        btn_done: 'Xong',
+        support_title: 'Hỗ trợ & Báo lỗi',
+        support_desc: 'Gặp sự cố hoặc cần tư vấn về EcoStream? Liên hệ trực tiếp với đội ngũ EcoStream qua các kênh bên dưới.',
+        support_email_title: 'Gửi Email hỗ trợ',
+        support_github_title: 'Báo lỗi trên GitHub Issues',
+        support_diag_title: 'Sao chép thông tin chẩn đoán',
+        support_diag_desc: 'Kèm thông số hệ thống khi gửi báo lỗi',
+        support_diag_copied: '✓ Đã sao chép thông tin chẩn đoán!',
+        btn_copy: 'Copy',
+        btn_close: 'Đóng',
+        step_label: 'Bước',
+        steps: {{
+            1: {{ title: 'Thông tin cơ sở', hint: 'Thông tin chung của cơ sở được điền sẵn vào biểu khảo sát theo CV 1790/VNL-P16.' }},
+            2: {{ title: 'Nạp chứng từ', hint: '5 tệp chứng từ mẫu (PDF, CSV, Excel, Word) đã được đọc và trích xuất số liệu hoạt động.' }},
+            3: {{ title: 'Rà soát biểu Excel', hint: 'Kiểm tra lại các dòng dữ liệu Scope 1 & 2 trước khi hệ thống chạy tính toán phát thải.' }},
+            4: {{ title: 'Kết quả & báo cáo', hint: 'Đây là kết quả kiểm kê mẫu cho ' + DEMO.facility_info.facility + '. Bạn có thể xem lại từng bước hoặc tải 3 hồ sơ đầu ra bên dưới.' }},
+        }},
+    }},
+    en: {{
+        brand_sub: 'Facility-level GHG Inventory',
+        step1_nav: 'Facility Info',
+        step2_nav: 'Upload Evidence',
+        step3_nav: 'Review Survey',
+        step4_nav: 'Results & Reports',
+        step1_sub: 'General facility profile',
+        step2_sub: 'Text PDF, Excel, Word, CSV',
+        step3_sub: 'Edit & fill missing cells',
+        step4_sub: 'Scope 1/2, download 3 files',
+        nav_settings: 'Settings',
+        nav_support: 'Support',
+        demo_badge_title: 'Interactive Demo',
+        demo_badge_desc: 'Sample data for ' + DEMO.facility_info.year + ' is pre-computed. Click any step to explore the workflow.',
+        hero_hello: 'Hello! 🌱',
+        hero_reg: 'Template per CV 1790/VNL-P16 · Decree 06/2022/ND-CP',
+        progress_title: 'Inventory Progress',
+        notes_title: 'Usage Notes',
+        note_pdf: 'Only reads <b>text-layer PDFs</b> (e-invoices). Scanned PDFs must be entered manually in Step 3.',
+        note_missing: 'Biomass, waste, LNG… without custom factors are marked <b>NOT CALCULATED</b> and excluded from total.',
+        note_draft: 'Results are a <b>draft</b>; verify against original invoices before official submission.',
+        footer_text: 'EcoStream · Facility-level GHG Inventory (Decree 06/2022/ND-CP) · Static Demo',
+        settings_title: 'Settings',
+        settings_theme_label: 'Appearance (Theme)',
+        theme_light: 'Light',
+        theme_dark: 'Dark',
+        settings_lang_label: 'Language',
+        btn_done: 'Done',
+        support_title: 'Support & Bug Report',
+        support_desc: 'Having trouble or need help with EcoStream? Reach out to our team through the channels below.',
+        support_email_title: 'Send Support Email',
+        support_github_title: 'Report on GitHub Issues',
+        support_diag_title: 'Copy Diagnostic Info',
+        support_diag_desc: 'Include system details when reporting an issue',
+        support_diag_copied: '✓ Copied diagnostic info!',
+        btn_copy: 'Copy',
+        btn_close: 'Close',
+        step_label: 'Step',
+        steps: {{
+            1: {{ title: 'Facility Info', hint: 'General facility profile pre-filled into the survey template per CV 1790/VNL-P16.' }},
+            2: {{ title: 'Upload Evidence', hint: '5 sample files (PDF, CSV, Excel, Word) have been parsed and extracted.' }},
+            3: {{ title: 'Review Survey Sheet', hint: 'Review Scope 1 & 2 activity rows before running emissions calculation.' }},
+            4: {{ title: 'Results & Reports', hint: 'Sample GHG inventory results for ' + DEMO.facility_info.facility + '. Explore any step or download the 3 deliverables below.' }},
+        }},
+    }},
 }};
 
 function goToStep(step) {{
+    currentDemoStep = step;
     for (let s = 1; s <= 4; s++) {{
         const sec = document.getElementById('sectionStep' + s);
         const nav = document.getElementById('stepBadge' + s);
@@ -700,12 +967,89 @@ function goToStep(step) {{
             tl.classList.toggle('is-done', s !== step);
         }}
     }}
-    document.getElementById('topbarStep').textContent = `Bước ${{step}} / 4`;
-    document.getElementById('topbarTitle').textContent = STEP_META[step].title;
-    document.getElementById('heroHint').textContent = STEP_META[step].hint;
+    const dict = I18N[currentLang];
+    document.getElementById('topbarStep').textContent = `${{dict.step_label}} ${{step}} / 4`;
+    document.getElementById('topbarTitle').textContent = dict.steps[step].title;
+    document.getElementById('heroHint').textContent = dict.steps[step].hint;
     document.getElementById('sideProgressText').textContent = `${{step}}/4`;
     window.scrollTo({{ top: 0, behavior: 'smooth' }});
 }}
+
+function updateSettingsButtons() {{
+    const activeCls = 'border-[#2f7a4a] bg-[#e8f4e8] text-[#173f2f]';
+    const idleCls = 'border-[#d4e7d6] bg-white text-[#426451] hover:bg-[#f5f9f4]';
+    const applyPair = (idA, idB, isA) => {{
+        const a = document.getElementById(idA), b = document.getElementById(idB);
+        if (!a || !b) return;
+        a.className = `p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${{isA ? activeCls : idleCls}}`;
+        b.className = `p-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer ${{!isA ? activeCls : idleCls}}`;
+    }};
+    applyPair('btnThemeLight', 'btnThemeDark', currentTheme === 'light');
+    applyPair('btnLangVi', 'btnLangEn', currentLang === 'vi');
+}}
+
+function setTheme(theme) {{
+    currentTheme = theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    localStorage.setItem('ecostream_theme', currentTheme);
+    updateSettingsButtons();
+}}
+
+function setLanguage(lang) {{
+    currentLang = lang === 'en' ? 'en' : 'vi';
+    localStorage.setItem('ecostream_lang', currentLang);
+    document.documentElement.lang = currentLang;
+    const dict = I18N[currentLang];
+    document.querySelectorAll('[data-i18n]').forEach(el => {{
+        const key = el.getAttribute('data-i18n');
+        if (dict[key] !== undefined) {{
+            if (key.startsWith('note_')) {{
+                el.innerHTML = dict[key];
+            }} else {{
+                el.textContent = dict[key];
+            }}
+        }}
+    }});
+    document.getElementById('topbarStep').textContent = `${{dict.step_label}} ${{currentDemoStep}} / 4`;
+    document.getElementById('topbarTitle').textContent = dict.steps[currentDemoStep].title;
+    document.getElementById('heroHint').textContent = dict.steps[currentDemoStep].hint;
+    updateSettingsButtons();
+}}
+
+function openModal(id) {{
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('hidden');
+    updateSettingsButtons();
+}}
+
+function closeModal(id) {{
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+}}
+
+function copyDiagnostics() {{
+    const info = [
+        'App: EcoStream Static Demo',
+        `URL: ${{window.location.href}}`,
+        `Step: ${{currentDemoStep}}/4`,
+        `Theme: ${{currentTheme}}`,
+        `Language: ${{currentLang}}`,
+        `UserAgent: ${{navigator.userAgent}}`,
+        `Time: ${{new Date().toISOString()}}`,
+    ].join('\\n');
+    navigator.clipboard?.writeText(info).then(() => {{
+        const st = document.getElementById('diagCopyStatus');
+        if (st) st.textContent = I18N[currentLang].support_diag_copied;
+    }}).catch(() => {{}});
+}}
+
+document.addEventListener('keydown', e => {{
+    if (e.key === 'Escape') {{
+        closeModal('settingsModal');
+        closeModal('supportModal');
+    }}
+}});
 
 function toggleDetailsTable() {{
     const wrap = document.getElementById('detailsTableWrapper');
@@ -812,6 +1156,8 @@ function renderCharts() {{
 renderInputFiles();
 renderTables();
 renderCharts();
+setTheme(currentTheme);
+setLanguage(currentLang);
 </script>
 </body>
 </html>
