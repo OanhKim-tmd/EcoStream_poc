@@ -233,3 +233,7 @@ data/samples/test_input.xlsx
 
 # macOS Finder metadata
 .DS_Store
+
+# EcoStream Ingestion Markdown Cache
+.claude/references/cache/*.md
+references/cache/*.md
